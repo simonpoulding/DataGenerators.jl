@@ -3,9 +3,11 @@ GodelTest.jl
 
 GodelTest is a (work-in-progress) test generation package for Julia (http://julialang.org/). It can use techniques for search and optimization to find test inputs that improve your testing.
 
-It is based in a number of research articles:
+Even though GodelTest can be used as a stand-alone package it supports automated testing with the [AutoTest.jl package](http://www.github.com/robertfeldt/AutoTest.jl).
 
-* R. Feldt and S. Poulding, "[Finding Test Data with Specific Properties via Metaheuristic Search](http://www.robertfeldt.net/publications/feldt_2013_godeltest.html)", ISSRE 2013.
+GodelTest is based in a number of research articles:
+
+* R. Feldt and S. Poulding, "[Finding Test Data with Specific Properties via Metaheuristic Search](http://www.robertfeldt.net/publications/feldt_2013_godeltest.html)", ISSRE 2013 (Best paper award!).
 
 * S. Poulding and R. Feldt, "[Generating Structured Test Data with Specific Properties using Nested Monte-Carlo Search](http://www.robertfeldt.net/publications/poulding_2014_godeltest_with_nmcs.html)", GECCO 2014.
 
