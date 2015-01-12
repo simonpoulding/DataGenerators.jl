@@ -310,10 +310,10 @@ describe("default choice model - generate for model with multiple choice points"
 	gn = DCMChooseStringGen()
 	cm = DefaultChoiceModel(gn)
 	
-	test("full range of values generated using choice model") do
+	@repeat test("full range of values generated using choice model") do
 		td = gen(gn, choicemodel=cm)
 		@check ismatch(r"^a(b|c)d+ef?$", td)
-		@mcheck_values_include count(x->x in td, "d") [1,2,3]
+		@mcheck_values_include count(x->x=='d', td) [1,2,3]
 		@mcheck_values_are td[2] ['b','c']
 		@mcheck_values_are td[end] ['e','f']
 	end
