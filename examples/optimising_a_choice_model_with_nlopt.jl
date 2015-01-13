@@ -1,6 +1,6 @@
 require("../src/GodelTest.jl")
 using GodelTest
-using BlackBoxOptim
+using NLopt
 
 # generator for simple arithmetic expressions
 @generator SimpleExprGen begin
@@ -40,23 +40,48 @@ function fitnessfn(modelparams)
 	mean(map(expr->abs(16-length(expr)), exprs))
 end
 
-# optimise the choice model params with BlackBoxOptim
+# optimise the choice model params with different NLopt algorithms
+NLoptAlgs = [:LN_COBYLA, :LN_BOBYQA, :LN_NEWUOA, :LN_PRAXIS, :LN_NELDERMEAD, :LN_SBPLX]
+
 # paramranges returns a vector of tuples that specify the valid ranges of the model parameters
-# bboptimize is from the BlackBoxOptim package
-optimresult = bboptimize(fitnessfn; search_range = paramranges(cm), max_time = 10.0)
-bestmodelparams = optimresult[1]
+search_range = paramranges(cm)
+numparams = length(search_range)
 
-# apply the best parameters found
-setparams(cm, vec(bestmodelparams))
+run_nlopt(alg) = begin
+  opt = Opt(:LN_NELDERMEAD, length(search_range))
+  lower_bounds!(opt, map(first, search_range))
+  upper_bounds!(opt, map((t) -> t[2], search_range))
+  xtol_abs!(opt, 1e-8 * ones(numparams))
+  maxtime!(opt, 10.0)
+  min_objective!(opt, (x::Vector, grad::Vector) -> fitnessfn(x))
+  rand_from_range(t) = t[1] + (t[2] - t[1]) * rand()
+  rand_starting_point = map(rand_from_range, search_range)
+  println("Running NLopt with algorithm $alg")
+  optimresult = optimize(opt, rand_starting_point)
+  bestmodelparams = optimresult[2]
+end
 
-# generate data using the optimised model
-optimized_examples = [gen(gn, choicemodel=cm) for i in 1:NumSamples]
+results = Dict{Any, Any}()
+for alg in NLoptAlgs
+  bestmodelparams = run_nlopt(alg)
+
+  # apply the best parameters found
+  setparams(cm, vec(bestmodelparams))
+
+  # generate data using the optimised model
+  optimized_examples = [gen(gn, choicemodel=cm) for i in 1:NumSamples]
+
+  results[alg] = optimized_examples
+end
 
 # Print examples so they can be compared
 report(examples, desc) = begin
-  mean_length = mean(map(length, examples))
+  mean_length = round(mean(map(length, examples)), 3)
   println("\n", desc, " examples (avg. length = $mean_length):\n", 
     examples[1:min(10, length(examples))])
 end
+
 report(unoptimized_examples, "Unoptimized")
-report(optimized_examples, "Optimized (with BlackBoxOptim)")
+for alg in NLoptAlgs
+  report(results[alg], "Optimized (with NLopt $alg)")
+end
