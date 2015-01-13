@@ -55,7 +55,7 @@ optimized_examples = [gen(gn, choicemodel=cm) for i in 1:NumSamples]
 # Print examples so they can be compared
 report(examples, desc) = begin
   mean_length = mean(map(length, examples))
-  println("\n", desc, " examples (avg. length = $mean_length):\n", 
+  println("\n", desc, " examples (avg. length = $mean_length):\n  ", 
     examples[1:min(10, length(examples))])
 end
 report(unoptimized_examples, "Unoptimized")
