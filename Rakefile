@@ -6,12 +6,12 @@ Lib = "GodelTest"
 MainCommand = "#{Julia} -L src/#{Lib}.jl -L test/helper.jl"
 BaseCommand = "#{Julia} -L src/#{Lib}.jl"
 
-desc "Autotest testing"
+desc "AutoTest testing"
 task :atest do
   sh "#{BaseCommand} --color=yes test/runtests.jl"
 end
 
-desc "Continuous autotest testing"
+desc "Continuous AutoTest testing"
 task :autotest do
   #sh "#{Julia} --color=yes test/runtests.jl continuous &"
   sh "#{BaseCommand} --color=yes test/runtests.jl continuous &"
