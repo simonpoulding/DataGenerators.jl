@@ -1,7 +1,7 @@
 module GodelTest
 
 # exported functions that are used to generate objects from a generator
-export generate, gen, many, meta, choicepointinfo, GenerationTerminatedException
+export generate, gen, many, meta, choicepointinfo, robustgen, GenerationTerminatedException
 
 # exported functions that are used to register and match generators
 export register, generatorfor

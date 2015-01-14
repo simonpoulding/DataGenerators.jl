@@ -118,6 +118,21 @@ describe("limit on number of choice points") do
 	test("number of choices <= maxchoices parameter to generator") do	
 		exc = nothing
 		try
+			td = gen(c100gn, maxchoices = 99)
+		catch e
+			if isa(e,GenerationTerminatedException)
+				exc = e
+			else
+				throw(e)
+			end
+		end
+		# TODO use @check_throws instead
+		@check typeof(exc) == GenerationTerminatedException
+	end
+
+	test("number of choices > maxchoices parameter to generator") do	
+		exc = nothing
+		try
 			td = gen(c100gn, maxchoices = 100)
 		catch e
 			if isa(e,GenerationTerminatedException)
@@ -130,19 +145,12 @@ describe("limit on number of choice points") do
 		@check typeof(exc) != GenerationTerminatedException
 	end
 
-	test("number of choices <= maxchoices parameter to generator") do	
-		exc = nothing
-		try
-			td = gen(c100gn, maxchoices = 99)
-		catch e
-			if isa(e,GenerationTerminatedException)
-				exc = e
-			else
-				throw(e)
-			end
-		end
-		# TODO use @check_throws instead
-		@check typeof(exc) == GenerationTerminatedException
+	test("robustgen with number of choices <= maxchoices parameter to generator") do	
+		@check robustgen(c100gn, maxchoices = 99) == nothing
+	end
+
+	test("robustgen with number of choices > maxchoices parameter to generator") do	
+		@check robustgen(c100gn, maxchoices = 100) != nothing
 	end
 	
 end

@@ -2,11 +2,13 @@ require("../src/GodelTest.jl")
 using GodelTest
 using BlackBoxOptim
 
-# generator for simple arithmetic expressions
-@generator SimpleExprGen begin
+# recursive generator for arithmetic expressions
+@generator RecursiveExprGen begin
   start = expression
   expression = operand * " " * operator * " " * operand
-  operand = (choose(Bool) ? "-" : "") * join(plus(digit))
+  operand = number
+	operand = "(" * expression * ")"
+	number = (choose(Bool) ? "-" : "") * join(plus(digit))
   digit = string(choose(Int,0,9))
   operator = "+"
   operator = "-"
@@ -15,7 +17,7 @@ using BlackBoxOptim
 end
 
 # create a generator instance
-gn = SimpleExprGen()
+gn = RecursiveExprGen()
 
 # create a choice model using the sampler choice model
 cm = SamplerChoiceModel(gn)
@@ -33,7 +35,7 @@ unoptimized_examples = [robustgen(gn, choicemodel=cm, maxchoices=MaxChoices) for
 NumDataPerFitnessCalc = 12
 
 # Target length of expressions
-GoalLength = 16
+GoalLength = 40
 
 # handles length when string is nothing
 robustlength(x) = x==nothing ? 1000 : length(x)

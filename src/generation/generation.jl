@@ -87,7 +87,7 @@ end
 
 # Generate an object from the generator using the startrule as entry point. 
 # Uses the default choice model and creates a new state object unless one is given.
-function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), startrule = :start, maxchoices=10000)
+function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), startrule = :start, maxchoices = 10000)
 	state = (state == nothing) ? newstate(g, choicemodel, maxchoices) : state	
 	startfunc = functionforrulenamed(g, startrule)
 	# important: we evaluate in the current module since this (rather than GodelTest) will be where rule functions are defined
@@ -95,9 +95,27 @@ function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceMode
 	return (result, state)
 end
 
+#
 # Derived helper/convenience functions based on the core...
+#
+
 gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), maxchoices=10000) = first(generate(g; state = state, choicemodel = choicemodel, maxchoices=maxchoices))
+
 many(g, num = int(floor(rand() * 10))) = [gen(g) for i in 1:num]
+
+# call generator and handle termination exception
+# if termination occurs, return nothing as the object
+function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), maxchoices = 10000)
+	try
+		return first(generate(g; state = state, choicemodel = choicemodel, maxchoices=maxchoices))
+	catch e
+		if isa(e, GenerationTerminatedException)
+			return nothing
+		else
+			throw(e) # rethrow other types of error
+		end
+	end
+end
 
 
 #
