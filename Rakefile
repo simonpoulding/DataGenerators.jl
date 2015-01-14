@@ -6,6 +6,31 @@ TestDir = "test"
 MainFile = "src/#{Lib}.jl"
 BaseCommand = "#{Julia} --color=yes -L #{MainFile}"
 
+MoreFactor = 10
+MostFactor = 1000
+TimedTestMinFactor = 100
+TimedTestMaxFactor = 1000
+
+# General parameters that the user can set from the command line.
+Verbosity = ENV["verbosity"] || 2
+
+def run_autotest(minReps = 30, maxReps = 1000, maxRepTime = 1.0, 
+  func = "test", timeToRun = -1.0, slowprogressMode = false)
+  cmd = "#{BaseCommand} -e 'using AutoTest; AutoTest.#{func}(\"#{Lib}\"; testdir = \"#{TestDir}\", " + 
+    "verbosity = #{Verbosity}" +
+    ", MinRepetitions = #{minReps}, MaxRepetitions = #{maxReps}, MaxRepeatTime = #{maxRepTime}" +
+    ", timeToRun = #{timeToRun}" +
+    ", slowprogressMode = #{slowprogressMode}" +
+    ")'"
+  puts "Running AutoTest tests"
+  sh cmd
+end
+
+def timed_test(numSeconds)
+  run_autotest(30*TimedTestMinFactor, 1000*TimedTestMaxFactor, 1.0 * 2.0 * Math.log10(TimedTestMaxFactor), 
+    "test", numSeconds, true)
+end
+
 desc "AutoTest testing"
 task :atest do
   sh "#{BaseCommand} --color=yes test/runtests.jl"
@@ -15,6 +40,27 @@ desc "Continuous AutoTest testing"
 task :autotest do
   #sh "#{Julia} --color=yes test/runtests.jl continuous &"
   sh "#{BaseCommand} --color=yes test/runtests.jl continuous &"
+end
+
+desc "Test more; Run more repetitions of AutoTest tests"
+task :testmore do
+  run_autotest(30*MoreFactor, 1000*MoreFactor, 1.0 * 2.0 * Math.log10(MoreFactor))
+end
+
+desc "Test most; Run most repetitions of AutoTest tests"
+task :testmost do
+  run_autotest(30*MostFactor, 1000*MostFactor, 1.0 * 2.0 * Math.log10(MostFactor),
+    "test", -1.0, true)
+end
+
+desc "1 min of testing; Run AutoTest tests for ~1 minute"
+task :test1 do
+  timed_test(1 * 60)
+end
+
+desc "5 min of testing; Run AutoTest tests for ~5 minutes"
+task :test5 do
+  timed_test(5 * 60)
 end
 
 def filter_latest_changed_files(filenames, numLatestChangedToInclude = 1)
