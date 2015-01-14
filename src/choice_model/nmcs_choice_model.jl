@@ -1,5 +1,30 @@
-export NMCSChoiceModel
-export set_model_params, get_model_params, model_param_ranges
+#
+# Nested Monte Carlo Search choice model
+#
+# constructor usage:
+#
+#		NCMSChoiceModel(choicemodel, fitnessfn, samplesize)
+#
+# where:
+#	 choicemodel is an instance of another choice model (e.g. SamplerChoiceModel) used for simulating the outcome of choices
+#  fitnessfn is a fitness function that takes a generated object as a parameter and returns a fitness where lower values are better
+#  samplesize is the number of choices to sample when deciding on the value of each choice point
+#
+# example:
+#		scm = SamplerChoiceModel(gn)
+#		f = abs(size(x)-64)
+#		ncm = NMCSChoiceModel(scm, f, 2)
+#
+# To implement higher level NMCS, use an NMCS instance as the policy choice model.  For example:
+#		ncm2 = NMCSChoiceModel(NMCSChoiceModel(scm,f,2),f,2)
+# specifies a 2-level NMCS
+# While a little verbose, this can allow different sample sizes at different levels (and even different fitness functions).
+#
+# Note that NMCSChoiceModel does not require a fitness function that handles the termination exception (or, equivalently 
+# when using robustgen, nothing as the value returned by the generator).  Instead this is handled internally by the 
+# choice model.  However, the generator may still raise this exception (or return nothing when using robustgen) if 
+# all simulations at a particular choice points are terminated by the exception
+#
 
 type NMCSChoiceModel <: ChoiceModel
 	policychoicemodel::ChoiceModel
@@ -13,51 +38,46 @@ type NMCSChoiceModel <: ChoiceModel
 end
 
 
-function godel_number(cm::NMCSChoiceModel, cc::ChoiceContext)
-	# println()
-	# println("-----------")
+function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 	for i in 1:cm.samplesize
-		# println("SAMPLE: $(i)")
 		policychoicemodel = deepcopy(cm.policychoicemodel)
 		generator = deepcopy(cc.derivationstate.generator)
 		presetgodelsequence = deepcopy(cc.derivationstate.godelsequence)
-		# println("PRESETGODELSEQUENCE: $(cc.derivationstate.godelsequence)")
 		simulationcm = NMCSSimulationChoiceModel(policychoicemodel, presetgodelsequence)
-		# if typeof(policychoicemodel) == NMCSChoiceModel
-		# 	println(">> LOWER-LEVEL NMCS")
-		# 	println()
-		# end
-		(result, state) = generate(generator; choicemodel=simulationcm)
-		# if typeof(policychoicemodel) == NMCSChoiceModel
-		# 	println()
-		# 	println("<< LOWER-LEVEL NMCS")
-		# end
+		result, state = nothing, nothing
+		try
+			result, state = generate(generator; choicemodel=simulationcm, maxchoices=cc.derivationstate.maxchoices)
+		catch e
+		  if isa(e,GenerationTerminatedException)
+				continue # skip the remainder of this loop
+			else
+				throw(e)
+			end
+		end
 		fitness = cm.fitnessfunction(result)
-		# println("RESULT: $(result)")
-		# println("SEQUENCE: $(state.godelsequence)")
-		# println("FITNESS: $(fitness)")
 		if fitness <= cm.bestfitness
 			cm.bestfitness = fitness
 			cm.bestgodelsequence = deepcopy(state.godelsequence)
 		end
-		# println("BESTSEQUENCE: $(cm.bestgodelsequence)")
 	end
-	# println("GN: $(cm.bestgodelsequence[length(cc.derivationstate.godelsequence)+1])")
+	if length(cm.bestgodelsequence) <= length(cc.derivationstate.godelsequence)
+		throw(GenerationTerminatedException("for all simulations run at a choice point in NMCS, the number of the choices made exceeded $(cc.derivationstate.maxchoices): specify a larger value of maxchoices as a parameter to generate, or increase the NMCS sample size"))
+	end
 	cm.bestgodelsequence[length(cc.derivationstate.godelsequence)+1]
 end
 
-set_model_params(cm::NMCSChoiceModel, params) = set_model_params(cm.policychoicemodel, params)
-get_model_params(cm::NMCSChoiceModel) = get_model_params(cm.policychoicemodel)
-model_param_ranges(cm::NMCSChoiceModel) = model_param_ranges(cm.policychoicemodel)
+setparams(cm::NMCSChoiceModel, params) = setparams(cm.policychoicemodel, params)
+getparams(cm::NMCSChoiceModel) = getparams(cm.policychoicemodel)
+paramranges(cm::NMCSChoiceModel) = paramranges(cm.policychoicemodel)
 
 type NMCSSimulationChoiceModel <: ChoiceModel
 	policychoicemodel::ChoiceModel
 	presetgodelsequence::Vector{Real}
 end
 
-function godel_number(cm::NMCSSimulationChoiceModel, cc::ChoiceContext)
+function godelnumber(cm::NMCSSimulationChoiceModel, cc::ChoiceContext)
 	if isempty(cm.presetgodelsequence)
-		godel_number(cm.policychoicemodel, cc)
+		godelnumber(cm.policychoicemodel, cc)
 	else
 		shift!(cm.presetgodelsequence)
 	end

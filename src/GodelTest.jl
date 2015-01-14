@@ -26,6 +26,5 @@ include(joinpath("registry","registry.jl"))
 include(joinpath("choice_model","default_choice_model.jl"))
 include(joinpath("choice_model","sampler_choice_model.jl"))
 include(joinpath("choice_model","nmcs_choice_model.jl"))
-include(joinpath("choice_model","limiter_choice_model.jl"))
 
 end
