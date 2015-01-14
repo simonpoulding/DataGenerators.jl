@@ -29,15 +29,32 @@ unoptimized_examples = [gen(gn, choicemodel=cm) for i in 1:NumSamples]
 # Number of generated data items per fitness calculation
 NumDataPerFitnessCalc = 12
 
+# Target length of expressions
+TargetLength = 16
+
 # define a fitness function (here as a closure)
 # argument is a vector of model parameters
 function fitnessfn(modelparams)
 	# sets parameters of choice model
 	setparams(cm, vec(modelparams))  
 	# get a sample of data items from the generator using this choice model
-	exprs = [gen(gn, choicemodel=cm) for i in 1:NumDataPerFitnessCalc]
-	# calculate the fitness - here the mean distance of the length expression from 16
-	mean(map(expr->abs(16-length(expr)), exprs))
+	exprlengths = map(1:NumDataPerFitnessCalc) do i
+		exprlength = 0
+		try
+			exprlength = length(gen(gn, choicemodel=cm, maxchoices=100))
+			# maxchoices is the maximum number of choices made during generation; defaults to 10000
+			# a GenerationTerminatedException is raised if this limit is exceeded, and so prevents extremely large objects
+			# (e.g. from highly recursive generators) consuming all available resources
+		catch e
+			if isa(e, GenerationTerminatedException)
+				exprlength = 101 # set an arbitrary length that will penalise the fitness function
+			else
+				throw(e) # rethrow other types of error
+			end
+		end
+		abs(TargetLength - exprlength)
+	end
+	mean(exprlengths)
 end
 
 # optimise the choice model params with BlackBoxOptim

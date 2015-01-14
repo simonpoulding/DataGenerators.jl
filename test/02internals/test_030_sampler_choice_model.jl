@@ -93,7 +93,7 @@ describe("sampler choice model - rule choice point") do
 	# 	lowerbound::Real
 	# 	upperbound::Real
 	# end
-	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.RULE_CP, cpids[1], Int, 1, 4)
+	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.RULE_CP, cpids[1], Int, 1, 4)
 
 	@repeat test("valid Godel numbers returned") do
 		gnum = GodelTest.godelnumber(cm, cc)
@@ -128,7 +128,7 @@ describe("sampler choice model - sequence choice point") do
 	
 	describe("small finite range") do 
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.SEQUENCE_CP, cpids[1], Int, 0, 2)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 0, 2)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -141,7 +141,7 @@ describe("sampler choice model - sequence choice point") do
 
 	describe("large finite range") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.SEQUENCE_CP, cpids[1], Int, 11, 16)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -154,7 +154,7 @@ describe("sampler choice model - sequence choice point") do
 
 	describe("semi-finite range") do
 
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.SEQUENCE_CP, cpids[1], Int, 1, typemax(Int))
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 1, typemax(Int))
 
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -191,7 +191,7 @@ describe("sampler choice model - Bool value choice point") do
 	cpi = choicepointinfo(gn)
 	cpids = collect(keys(cpi))
 
-	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Bool, false, true)
+	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Bool, false, true)
 	
 	@repeat test("valid Godel numbers returned") do
 		gnum = GodelTest.godelnumber(cm, cc)
@@ -227,7 +227,7 @@ describe("sampler choice model - Int value choice point") do
 	
 	describe("small finite range") do
 
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Int, -1, 2)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, -1, 2)
 
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -240,7 +240,7 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("large finite range") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Int, 11, 16)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -253,7 +253,7 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("semi-finite range (upper)") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Int, 128, typemax(Int))
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, 128, typemax(Int))
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -266,7 +266,7 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("semi-finite range (lower)") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), 128)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), 128)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -279,7 +279,7 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("infinite range") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), typemax(Int))
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), typemax(Int))
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -318,7 +318,7 @@ describe("sampler choice model - Float64 value choice point") do
 	
 	describe("finite range") do
 
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Float64, -42.2, -8.7)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -42.2, -8.7)
 
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -332,7 +332,7 @@ describe("sampler choice model - Float64 value choice point") do
 
 	describe("semi-finite range (upper)") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Float64, 450001.6, Inf)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, 450001.6, Inf)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -346,7 +346,7 @@ describe("sampler choice model - Float64 value choice point") do
 
 	describe("semi-finite range (lower)") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, 450001.6)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, 450001.6)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
@@ -360,7 +360,7 @@ describe("sampler choice model - Float64 value choice point") do
 
 	describe("infinite range") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, Inf)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, Inf)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
