@@ -49,7 +49,7 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 			result, state = generate(generator; choicemodel=simulationcm, maxchoices=cc.derivationstate.maxchoices)
 		catch e
 		  if isa(e,GenerationTerminatedException)
-				continue # skip the remainder of this loop
+				continue # skip the remainder of this loop iteration
 			else
 				throw(e)
 			end
@@ -60,8 +60,10 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 			cm.bestgodelsequence = deepcopy(state.godelsequence)
 		end
 	end
-	if length(cm.bestgodelsequence) <= length(cc.derivationstate.godelsequence)
-		throw(GenerationTerminatedException("for all simulations run at a choice point in NMCS, the number of the choices made exceeded $(cc.derivationstate.maxchoices): specify a larger value of maxchoices as a parameter to generate, or increase the NMCS sample size"))
+	if isempty(cm.bestgodelsequence)
+		# if all of the loop iterations above caught a GenerationTerminatedException AND this is the first choice point, then no bestsequence
+		# is set - throw an exception since we cannot return a choice for the choice point
+		throw(GenerationTerminatedException("for all simulations run at the first choice point in NMCS, the number of the choices made exceeded $(cc.derivationstate.maxchoices): specify a larger value of maxchoices as a parameter to generate, or increase the NMCS sample size"))
 	end
 	cm.bestgodelsequence[length(cc.derivationstate.godelsequence)+1]
 end
