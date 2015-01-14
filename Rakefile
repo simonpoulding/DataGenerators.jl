@@ -8,8 +8,8 @@ BaseCommand = "#{Julia} --color=yes -L #{MainFile}"
 
 MoreFactor = 10
 MostFactor = 1000
-TimedTestMinFactor = 100
-TimedTestMaxFactor = 1000
+TimedTestMinFactor = 10
+TimedTestMaxFactor = 100
 
 # General parameters that the user can set from the command line.
 Verbosity = ENV["verbosity"] || 2
@@ -63,6 +63,12 @@ task :test5 do
   timed_test(5 * 60)
 end
 
+desc "X min of testing; Run AutoTest tests for ~X minutes (example: rake testX[20])"
+task :testX, [:X] do |t, args|
+  args.with_defaults(:X => "1.0")
+  timed_test(args[:X].to_f * 60.0)
+end
+
 def filter_latest_changed_files(filenames, numLatestChangedToInclude = 1)
   filenames.sort_by{ |f| File.mtime(f) }[-numLatestChangedToInclude, numLatestChangedToInclude]
 end
@@ -77,17 +83,22 @@ desc "Shorthand for testlatest: Run only the latest changed test file"
 task :t => :testlatest
 
 def loc_of_files(files)
-  loc = files.map {|fn| File.readlines(fn).length}.inject(0) {|s,e| s+e}
-  return loc, files.length
+  lines = files.map {|fn| File.readlines(fn)}
+  nonblanklines = lines.map {|ls| ls.select {|line| line.strip.length > 0}}
+  loc = lines.map {|ls| ls.length}.inject(0) {|s,e| s+e}
+  nbloc = nonblanklines.map {|ls| ls.length}.inject(0) {|s,e| s+e}
+  return loc, nbloc, files.length
 end
 
 desc "Count LOC"
 task :loc do
-  srcloc, numsrcfiles = loc_of_files(Dir["src/**/*.jl"])
-  testloc, numtestfiles = loc_of_files(Dir["test/**/*.jl"])
-  puts "Source files: #{numsrcfiles} files\t\t#{srcloc} LOC"
-  puts "Test   files: #{numtestfiles} files\t\t#{testloc} LOC"
-  puts("Test to code ratio: %.3f" % (testloc.to_f/srcloc))
+  srcloc, srcnbloc, numsrcfiles = loc_of_files(Dir["src/**/*.jl"])
+  testloc, testnbloc, numtestfiles = loc_of_files(Dir["test/**/*.jl"])
+  puts "Source files: #{numsrcfiles} files\t\t#{srcloc} LOC\t\t(#{srcnbloc} non-blank LOC)"
+  puts "Test   files: #{numtestfiles} files\t\t#{testloc} LOC\t\t(#{testnbloc} non-blank LOC)"
+  if testloc > 0 && srcloc > 0
+    puts("Test to code ratio:\t\t%.3f   \t\t(%.3f)" % [(testloc.to_f/srcloc), (testnbloc.to_f/srcnbloc)])
+  end
 end
 
 # Short hands
