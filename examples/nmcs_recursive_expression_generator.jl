@@ -36,19 +36,20 @@ fitnessfn(x) = abs(GoalLength-robustlength(x))
 # sampler choice model
 scm = SamplerChoiceModel(gn)
 
-# create a choice model using the sampler choice model
-# single level, samplesize of 2
-ncm = NMCSChoiceModel(scm,fitnessfn,2)
-# Note that NMCSChoiceModel does not require a fitness function that handles the termination exception or, equivalently 
-# when using robustgen, nothing as the value returned by the generator; instead this is handled internally by the 
-# choice model.  However, the generator may still raise this exception (or return nothing when using robustgen) if 
-# all simulations at a particular choice points are terminated by the exception
+
 
 # Generate examples from unoptimized model
 sampler_examples = [robustgen(gn, choicemodel=scm, maxchoices=MaxChoices) for i in 1:NumSamples]
 
 # generate data using the optimised model
-nmcs_examples = [robustgen(gn, choicemodel=ncm, maxchoices=MaxChoices) for i in 1:NumSamples]
+nmcs_examples = [robustgen(gn, choicemodel=NMCSChoiceModel(scm,fitnessfn,2), maxchoices=MaxChoices) for i in 1:NumSamples]
+# TODO: for the moment we need to create a fresh NMCS choice model on each run since it's stateful model
+# NMCSChoiceModel(scm,fitnessfn,2) creates a choice model using the sampler choice model
+# single level, samplesize of 2.
+# Note that NMCSChoiceModel does not require a fitness function that handles the termination exception or, equivalently 
+# when using robustgen, nothing as the value returned by the generator; instead this is handled internally by the 
+# choice model.  However, the generator may still raise this exception (or return nothing when using robustgen) if 
+# all simulations at a particular choice points are terminated by the exception
 
 # Print examples so they can be compared
 report(examples, desc) = begin
