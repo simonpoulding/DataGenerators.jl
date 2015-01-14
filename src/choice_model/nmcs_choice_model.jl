@@ -20,6 +20,11 @@
 # specifies a 2-level NMCS
 # While a little verbose, this can allow different sample sizes at different levels (and even different fitness functions).
 #
+# Note that NMCSChoiceModel does not require a fitness function that handles the termination exception (or, equivalently 
+# when using robustgen, nothing as the value returned by the generator).  Instead this is handled internally by the 
+# choice model.  However, the generator may still raise this exception (or return nothing when using robustgen) if 
+# all simulations at a particular choice points are terminated by the exception
+#
 
 type NMCSChoiceModel <: ChoiceModel
 	policychoicemodel::ChoiceModel
@@ -56,7 +61,7 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 		end
 	end
 	if length(cm.bestgodelsequence) <= length(cc.derivationstate.godelsequence)
-		throw(GenerationTerminatedException("for all simulations made at a choice point in NMCS, the number of the choices made exceeded $(s.maxchoices): specify a larger value of maxchoices as a parameter to generate, or increase NMCS sample size "))
+		throw(GenerationTerminatedException("for all simulations run at a choice point in NMCS, the number of the choices made exceeded $(cc.derivationstate.maxchoices): specify a larger value of maxchoices as a parameter to generate, or increase the NMCS sample size"))
 	end
 	cm.bestgodelsequence[length(cc.derivationstate.godelsequence)+1]
 end
