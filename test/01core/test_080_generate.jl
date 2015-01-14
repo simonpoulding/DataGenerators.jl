@@ -77,3 +77,72 @@ describe("generate a generator with sub-generators using default and non-default
 	end
 	
 end
+
+
+@generator GNInfRecursionGen() begin
+	start = [plus(start)]
+end
+
+@generator GN100ChoicesGen() begin
+	start = map(i->a,1:50) # each invocation of a requires two choice points
+	a = choose(Int,1,10)
+	a = plus(b)
+	b = 'b'
+end
+
+describe("limit on number of choice points") do
+
+	infgn = GNInfRecursionGen()
+	
+	test("infinite recursion throws GenerationTerminatedException") do	
+		exc = nothing
+		try
+			td = gen(infgn)
+		catch e
+			if isa(e,GenerationTerminatedException)
+				exc = e
+			else
+				throw(e)
+			end
+		end
+		# TODO use @check_throws instead
+		@check typeof(exc) == GenerationTerminatedException
+		# check for sensible reason that specifies the limit
+		@check match(r"choices", exc.reason) != nothing
+		@check match(r"exceeded", exc.reason) != nothing
+		@check match(r"10000", exc.reason) != nothing 
+	end
+	
+	c100gn = GN100ChoicesGen()
+	
+	test("number of choices <= maxchoices parameter to generator") do	
+		exc = nothing
+		try
+			td = gen(c100gn, maxchoices = 100)
+		catch e
+			if isa(e,GenerationTerminatedException)
+				exc = e
+			else
+				throw(e)
+			end
+		end
+		# TODO use @check_throws instead
+		@check typeof(exc) != GenerationTerminatedException
+	end
+
+	test("number of choices <= maxchoices parameter to generator") do	
+		exc = nothing
+		try
+			td = gen(c100gn, maxchoices = 99)
+		catch e
+			if isa(e,GenerationTerminatedException)
+				exc = e
+			else
+				throw(e)
+			end
+		end
+		# TODO use @check_throws instead
+		@check typeof(exc) == GenerationTerminatedException
+	end
+	
+end

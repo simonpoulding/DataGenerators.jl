@@ -41,6 +41,27 @@ generator(s::DerivationState) = s.generator
 
 choicemodel(s::DerivationState) = s.choicemodel
 
+
+# custom exception thrown when terminating generation
+type GenerationTerminatedException <: Exception
+	reason::String
+	GenerationTerminatedException(reason::String) = new(reason)
+end
+Base.showerror(io::IO, e::GenerationTerminatedException) = print(io, "generation was terminated because ", e.reason);
+
+# determines whether generation should continue or not
+# the default behaviour is to terminate, by throwing a custom error, if the limit on the length of the godel sequence
+# (i.e. number of choices made) would be exceeded
+# this is useful in cleaning terminating when recursive generation would lead to a extremely large or infinite object
+function checkterminationcriteria(s::DerivationState)
+	if length(s.godelsequence) >= s.maxchoices
+		throw(GenerationTerminatedException("number of the choices made exceeded $(s.maxchoices): specify a larger value of maxchoices as a parameter to generate"))
+	end
+end
+
+
+
+
 function log(s::DerivationState, cpid::Integer, godelnumber::Real)
 	push!(s.cpids, cpid)
 	push!(s.godelsequence, godelnumber)
@@ -53,8 +74,9 @@ type DefaultDerivationState <: DerivationState
 	choicemodel::ChoiceModel
 	godelsequence::Vector{Real} 		# Can be integers or floats
 	cpids::Vector{Integer}	# A choice point is identified by a unique integer number
-	function DefaultDerivationState(g::Generator, cm::ChoiceModel)
-		new(g, cm, Vector{Real}[], Vector{Integer}[])
+	maxchoices::Int # upper limit on the size of the Godel sequence
+	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int)
+		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices)
 	end
 end
 
@@ -65,8 +87,8 @@ end
 
 # Generate an object from the generator using the startrule as entry point. 
 # Uses the default choice model and creates a new state object unless one is given.
-function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), startrule = :start)
-	state = (state == nothing) ? newstate(g, choicemodel) : state	
+function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), startrule = :start, maxchoices=10000)
+	state = (state == nothing) ? newstate(g, choicemodel, maxchoices) : state	
 	startfunc = functionforrulenamed(g, startrule)
 	# important: we evaluate in the current module since this (rather than GodelTest) will be where rule functions are defined
 	result = eval(current_module(), Expr(:call, startfunc, g, state))
@@ -74,7 +96,7 @@ function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceMode
 end
 
 # Derived helper/convenience functions based on the core...
-gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel()) = first(generate(g; state = state, choicemodel = choicemodel))
+gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), maxchoices=10000) = first(generate(g; state = state, choicemodel = choicemodel, maxchoices=maxchoices))
 many(g, num = int(floor(rand() * 10))) = [gen(g) for i in 1:num]
 
 
@@ -165,6 +187,8 @@ end
 # All queries to choice model to retrieve Godel numbers made via this function
 # sets up ChoiceContext that may be used by choice model
 function querychoicemodel(s::DerivationState, cptype, cpid, datatype, lowerbound, upperbound)
+	# check if generation should continue or not - function raises an error if not
+	checkterminationcriteria(s)
 	# choicecontext = ChoiceContext(s, cptype, cpid, datatype, lowerbound, upperbound, 0)
 	choicecontext = ChoiceContext(s, cptype, cpid, datatype, lowerbound, upperbound)
 	# TODO recursiondepth
@@ -197,7 +221,7 @@ function functionforrulenamed(g::Generator, rulename::Symbol)
 end
 
 # Create a new derivation state object for a given generator and choice model.
-function newstate(g::Generator, choicemodel::ChoiceModel)
+function newstate(g::Generator, choicemodel::ChoiceModel, maxchoices::Int)
 	st = statetype(g)
-	st(g, choicemodel)
+	st(g, choicemodel, maxchoices)
 end
