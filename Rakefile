@@ -1,10 +1,10 @@
+Lib = "GodelTest"
 Julia = "julia"
 #Julia = "julia04"
+TestDir = "test"
 
-Lib = "GodelTest"
-
-MainCommand = "#{Julia} -L src/#{Lib}.jl -L test/helper.jl"
-BaseCommand = "#{Julia} -L src/#{Lib}.jl"
+MainFile = "src/#{Lib}.jl"
+BaseCommand = "#{Julia} --color=yes -L #{MainFile}"
 
 desc "AutoTest testing"
 task :atest do
@@ -16,6 +16,19 @@ task :autotest do
   #sh "#{Julia} --color=yes test/runtests.jl continuous &"
   sh "#{BaseCommand} --color=yes test/runtests.jl continuous &"
 end
+
+def filter_latest_changed_files(filenames, numLatestChangedToInclude = 1)
+  filenames.sort_by{ |f| File.mtime(f) }[-numLatestChangedToInclude, numLatestChangedToInclude]
+end
+
+desc "Run only the latest changed test file"
+task :testlatest do
+  latest_changed_test_file = filter_latest_changed_files(Dir["test/**/test*.jl"]).first
+  sh "#{BaseCommand} --color=yes -e 'using AutoTest; AutoTest.run_tests_in_file(\"#{Lib}\", \"#{latest_changed_test_file}\")'"
+end
+
+desc "Shorthand for testlatest: Run only the latest changed test file"
+task :t => :testlatest
 
 def loc_of_files(files)
   loc = files.map {|fn| File.readlines(fn).length}.inject(0) {|s,e| s+e}
@@ -32,7 +45,7 @@ task :loc do
 end
 
 # Short hands
-task :t => :at
+task :t => :testlatest
 
 # Default is to run the latest changed test file only:
 task :default => :atest
