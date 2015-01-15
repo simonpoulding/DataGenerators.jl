@@ -32,6 +32,11 @@ abstract Sampler
 # samplers can store the number of parameters as a field in the type and use the following method to return the value:
 numparams(s::Sampler) = s.nparams
 
+function assert_params_length(s::Sampler, params::Vector)
+  if length(params) != numparams(s)
+    error("expected $(numparams(s)) sampler parameter(s), but got $(length(params))")
+  end
+end
 
 
 #
@@ -430,7 +435,9 @@ getparams(s::BernoulliSampler) = s.params
 
 godelnumber(s::BernoulliSampler,  cc::ChoiceContext) = cc.lowerbound - s.distminimum + rand(s.dist)
 
-
+include(joinpath("samplers", "gaussian_sampler.jl"))
+include(joinpath("samplers", "mixture_sampler.jl"))
+include(joinpath("samplers", "transforming_sampler.jl"))
 
 #
 # Decay Uniform Sampler

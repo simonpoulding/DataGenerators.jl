@@ -1,20 +1,21 @@
 Lib = "GodelTest"
-Julia = "julia"
-#Julia = "julia04"
 TestDir = "test"
+
+# General parameters that the user can set from the command line.
+Julia = ENV["minreps"] || "julia"
+MinReps = (ENV["minreps"] || 30).to_i
+MaxReps = (ENV["maxreps"] || 1000).to_i
+MaxRepTime = (ENV["maxreptime"] || 1.0).to_f
+Verbosity = ENV["verbosity"] || 2
+MoreFactor = (ENV["morefactor"] || 10).to_i
+MostFactor = (ENV["mostfactor"] || 1000).to_i
+TimedTestMinFactor = (ENV["timedminfactor"] || 10).to_i
+TimedTestMaxFactor = (ENV["timedmaxfactor"] || 1000).to_i
 
 MainFile = "src/#{Lib}.jl"
 BaseCommand = "#{Julia} --color=yes -L #{MainFile}"
 
-MoreFactor = 10
-MostFactor = 1000
-TimedTestMinFactor = 10
-TimedTestMaxFactor = 100
-
-# General parameters that the user can set from the command line.
-Verbosity = ENV["verbosity"] || 2
-
-def run_autotest(minReps = 30, maxReps = 1000, maxRepTime = 1.0, 
+def run_autotest(minReps = MinReps, maxReps = MaxReps, maxRepTime = MaxRepTime, 
   func = "test", timeToRun = -1.0, slowprogressMode = false)
   cmd = "#{BaseCommand} -e 'using AutoTest; AutoTest.#{func}(\"#{Lib}\"; testdir = \"#{TestDir}\", " + 
     "verbosity = #{Verbosity}" +
@@ -27,7 +28,8 @@ def run_autotest(minReps = 30, maxReps = 1000, maxRepTime = 1.0,
 end
 
 def timed_test(numSeconds)
-  run_autotest(30*TimedTestMinFactor, 1000*TimedTestMaxFactor, 1.0 * 2.0 * Math.log10(TimedTestMaxFactor), 
+  run_autotest(MinReps*TimedTestMinFactor, MaxReps*TimedTestMaxFactor, 
+    MaxRepTime * 2.0 * Math.log10(TimedTestMaxFactor), 
     "test", numSeconds, true)
 end
 
@@ -42,14 +44,19 @@ task :autotest do
   sh "#{BaseCommand} --color=yes test/runtests.jl continuous &"
 end
 
+desc "Run AutoTest tests"
+task :test do
+  run_autotest(MinReps, MaxReps, 1.0 * 2.0 * Math.log10(MoreFactor))
+end
+
 desc "Test more; Run more repetitions of AutoTest tests"
 task :testmore do
-  run_autotest(30*MoreFactor, 1000*MoreFactor, 1.0 * 2.0 * Math.log10(MoreFactor))
+  run_autotest(MinReps*MoreFactor, MaxReps*MoreFactor, 1.0 * 2.0 * Math.log10(MoreFactor))
 end
 
 desc "Test most; Run most repetitions of AutoTest tests"
 task :testmost do
-  run_autotest(30*MostFactor, 1000*MostFactor, 1.0 * 2.0 * Math.log10(MostFactor),
+  run_autotest(MinReps*MostFactor, MaxReps*MostFactor, 1.0 * 2.0 * Math.log10(MostFactor),
     "test", -1.0, true)
 end
 
@@ -76,7 +83,7 @@ end
 desc "Run only the latest changed test file"
 task :testlatest do
   latest_changed_test_file = filter_latest_changed_files(Dir["test/**/test*.jl"]).first
-  sh "#{BaseCommand} --color=yes -e 'using AutoTest; AutoTest.run_tests_in_file(\"#{Lib}\", \"#{latest_changed_test_file}\")'"
+  sh "#{BaseCommand} --color=yes -e 'using AutoTest; AutoTest.run_tests_in_file(\"#{Lib}\", \"#{latest_changed_test_file}\"; MinRepetitions = #{MinReps}, MaxRepetitions = #{MaxReps})'"
 end
 
 desc "Shorthand for testlatest: Run only the latest changed test file"
