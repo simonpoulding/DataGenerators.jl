@@ -33,7 +33,12 @@ end
 
 function setparams(s::MixtureSampler, params::Vector)
   assert_params_length(s, params)
-  s.samplerdist = categorical_dist_from_vector(params[1:s.nsubsamplers])
+  try
+    s.samplerdist = categorical_dist_from_vector(params[1:s.nsubsamplers])
+  catch err
+    @show params[1:s.nsubsamplers]
+    thorw(err)
+  end
   set_subsampler_params(s.subsamplers, params, s.nsubsamplers + 1)
 end
 
