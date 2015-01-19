@@ -1,5 +1,7 @@
-if !isdefined(:MockCC)
-  # We need dummy ChoiceContext to test godelnumber.
+if !isdefined(:mockCC)
+  # dummy ChoiceContext to test godelnumber functions
   type MockDS <: GodelTest.DerivationState; end
-  MockCC = GodelTest.ChoiceContext(MockDS(), :d, 1, Float64, 0.0, 1e7)
+	function mockCC(lowerbound = 0.0, upperbound = 1e7, datatype = Float64, cptype = GodelTest.VALUE_CP, cpid = 1)
+  	GodelTest.ChoiceContext(MockDS(), cptype, cpid, datatype, lowerbound, upperbound)
+	end
 end

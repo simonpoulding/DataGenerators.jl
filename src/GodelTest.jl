@@ -12,6 +12,9 @@ export DefaultChoiceModel, SamplerChoiceModel, NMCSChoiceModel
 # exported Choice Model functions
 export paramranges, setparams, getparams
 
+using Distributions
+
+
 # generation and associated functions
 include(joinpath("generation","generation.jl"))
 
@@ -21,6 +24,12 @@ include(joinpath("generator_macro","generator_macro_choose_string.jl"))
 
 # updating and querying registry metadata
 include(joinpath("registry","registry.jl"))
+
+# dist(ribution)s (used by some samplers)
+include(joinpath("choice_model","dists","dists.jl"))
+
+# samplers (used by some choice models)
+include(joinpath("choice_model","samplers","samplers.jl"))
 
 # choice models
 include(joinpath("choice_model","default_choice_model.jl"))

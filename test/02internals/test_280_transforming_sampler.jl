@@ -17,7 +17,7 @@ describe("TransformingFuncSampler") do
 
   @repeat test("generates floating point godel numbers that are in valid range even if params outside of valid range") do
     setparams(TFS, [rand(-10.0:100.0), rand(-10.0:10.0)])
-    gnum = godelnumber(TFS, MockCC)
+    gnum = godelnumber(TFS, mockCC())
     @check typeof(gnum) <: FloatingPoint
     @check 0.0 <= gnum <= (100.0 + 8*10.0)
   end

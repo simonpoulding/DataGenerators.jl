@@ -48,7 +48,7 @@ describe("GaussianSampler") do
 
   @repeat test("generates floating point godel numbers that are in valid range even if params outside of valid range") do
     setparams(GSTypical, [rand(-10.0:100.0), rand(-10.0:10.0)])
-    gnum = godelnumber(GSTypical, MockCC)
+    gnum = godelnumber(GSTypical, mockCC())
     @check typeof(gnum) <: FloatingPoint
     @check GSTypical_min <= gnum <= GSTypical_max
   end
@@ -57,7 +57,7 @@ describe("GaussianSampler") do
 
   @repeat test("generates int godel numbers that are in valid range even if params outside of valid range") do
     setparams(GSTypicalInt, [rand(-10.0:100.0), rand(-10.0:10.0)])
-    gnum = godelnumber(GSTypicalInt, MockCC)
+    gnum = godelnumber(GSTypicalInt, mockCC())
     @check typeof(gnum) <: Integer
     @check typeof(gnum) == Int64
     @check GSTypical_min <= gnum <= GSTypical_max

@@ -27,7 +27,7 @@ describe("MixtureSampler") do
 
   @repeat test("samples from either of the two gaussian subsamplers") do
     setparams(Ms, Float64[0.5, 0.5, 0.0, 2.0, 1e3, 2.0])
-    gnum = godelnumber(Ms, MockCC)
+    gnum = godelnumber(Ms, mockCC())
     # It must be from either of the two allowed ranges. We can use max of the one
     # giving smallest numbers to know which one it is.
     local sampler

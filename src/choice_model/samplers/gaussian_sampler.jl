@@ -17,7 +17,7 @@ end
 function setparams(s::GaussianSampler, params::Vector)
   #@show s
   #println("GaussianSampler.setparams($params)")
-  assert_params_length(s, params)
+  assertparamslength(s, params)
   mu = min(s.maxmean, max(s.minmean, params[1]))
   sig = max(MinSigma, min(s.maxsigma, params[2]))
   s.dist = Normal(mu, sig)
