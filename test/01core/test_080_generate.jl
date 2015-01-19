@@ -175,15 +175,15 @@ describe("limit on sequence choice point reps (maxseqreps)") do
 	setparams(scm, [0.000001])
 
 	@repeat test("sequence are no longer than the default limit") do
-		gn = gen(gn, choicemodel = cm) # TODO produces a warning - how to test for it?
-		@check length(gn) <= GodelTest.MAX_SEQ_REPS_DEFAULT # check that limit applies
-		@check_that_sometimes length(gn) == GodelTest.MAX_SEQ_REPS_DEFAULT # check that behaviour is to truncate at this limit
+		td = gen(gn, choicemodel = scm) # TODO produces a warning - how to test for it?
+		@check length(td) <= GodelTest.MAX_SEQ_REPS_DEFAULT # check that limit applies
+		@mcheck_that_sometimes length(td) == GodelTest.MAX_SEQ_REPS_DEFAULT # check that behaviour is to truncate at this limit
 	end
 
 	@repeat test("sequence are no longer than the specified limit") do
-		gn = gen(gn, choicemodel = cm, maxseqreps = 87) # TODO produces a warning - how to test for it?
-		@check length(gn) <= 87 # check that limit applies
-		@check_that_sometimes length(gn) == 87 # check that behaviour is to truncate at this limit
+		td = gen(gn, choicemodel = scm, maxseqreps = 87) # TODO produces a warning - how to test for it?
+		@check length(td) <= 87 # check that limit applies
+		@mcheck_that_sometimes length(td) == 87 # check that behaviour is to truncate at this limit
 	end
 
 end
