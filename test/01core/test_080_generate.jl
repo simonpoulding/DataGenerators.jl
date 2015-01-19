@@ -90,7 +90,7 @@ end
 	b = 'b'
 end
 
-describe("limit on number of choice points") do
+describe("limit on number of choice points (maxchoices)") do
 
 	infgn = GNInfRecursionGen()
 	
@@ -110,7 +110,7 @@ describe("limit on number of choice points") do
 		# check for sensible reason that specifies the limit
 		@check match(r"choices", exc.reason) != nothing
 		@check match(r"exceeded", exc.reason) != nothing
-		@check match(r"10000", exc.reason) != nothing 
+		@check match(Regex("$(GodelTest.MAX_CHOICES_DEFAULT)"), exc.reason) != nothing 
 	end
 	
 	c100gn = GN100ChoicesGen()
@@ -153,4 +153,37 @@ describe("limit on number of choice points") do
 		@check robustgen(c100gn, maxchoices = 100) != nothing
 	end
 	
+end
+
+
+
+@generator GNMultGen() begin
+	start = mult(a)
+	a = :a
+end
+
+describe("limit on sequence choice point reps (maxseqreps)") do
+
+	gn = GNMultGen()
+	
+	# note that to force sufficiently long sequences to reach the default limit
+	# we need to use the sampler choice model rather than a default choice model
+	# (but sampler choice model itself is only tested later)
+	scm = SamplerChoiceModel(gn)
+	# sampler choice model should have a single parameter that controls the geometric distribution
+	# set this to a value close to zero so that median length is much larger than the default maxseqreps
+	setparams(scm, [0.000001])
+
+	@repeat test("sequence are no longer than the default limit") do
+		gn = gen(gn, choicemodel = cm) # TODO produces a warning - how to test for it?
+		@check length(gn) <= GodelTest.MAX_SEQ_REPS_DEFAULT # check that limit applies
+		@check_that_sometimes length(gn) == GodelTest.MAX_SEQ_REPS_DEFAULT # check that behaviour is to truncate at this limit
+	end
+
+	@repeat test("sequence are no longer than the specified limit") do
+		gn = gen(gn, choicemodel = cm, maxseqreps = 87) # TODO produces a warning - how to test for it?
+		@check length(gn) <= 87 # check that limit applies
+		@check_that_sometimes length(gn) == 87 # check that behaviour is to truncate at this limit
+	end
+
 end
