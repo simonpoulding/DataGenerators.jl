@@ -175,15 +175,45 @@ describe("limit on sequence choice point reps (maxseqreps)") do
 	setparams(scm, [0.000001])
 
 	@repeat test("sequence are no longer than the default limit") do
-		td = gen(gn, choicemodel = scm) # TODO produces a warning - how to test for it?
-		@check length(td) <= GodelTest.MAX_SEQ_REPS_DEFAULT # check that limit applies
-		@mcheck_that_sometimes length(td) == GodelTest.MAX_SEQ_REPS_DEFAULT # check that behaviour is to truncate at this limit
+		exc = nothing
+		td = nothing
+		try
+			td = gen(gn, choicemodel = scm)
+		catch e
+			if isa(e,GenerationTerminatedException)
+				exc = e
+			else
+				throw(e)
+			end
+		end
+		@check (exc != nothing) || (length(td) <= GodelTest.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+		@mcheck_that_sometimes typeof(exc) == GenerationTerminatedException
+		if (exc != nothing)
+			@check match(r"repetitions", exc.reason) != nothing
+			@check match(r"exceeded", exc.reason) != nothing
+			@check match(Regex("$(GodelTest.MAX_SEQ_REPS_DEFAULT)"), exc.reason) != nothing
+		end
 	end
 
 	@repeat test("sequence are no longer than the specified limit") do
-		td = gen(gn, choicemodel = scm, maxseqreps = 87) # TODO produces a warning - how to test for it?
-		@check length(td) <= 87 # check that limit applies
-		@mcheck_that_sometimes length(td) == 87 # check that behaviour is to truncate at this limit
+		exc = nothing
+		td = nothing
+		try
+			td = gen(gn, choicemodel = scm, maxseqreps = 87)
+		catch e
+			if isa(e,GenerationTerminatedException)
+				exc = e
+			else
+				throw(e)
+			end
+		end
+		@check (exc != nothing) || (length(td) <= GodelTest.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+		@mcheck_that_sometimes typeof(exc) == GenerationTerminatedException
+		if (exc != nothing)
+			@check match(r"repetitions", exc.reason) != nothing
+			@check match(r"exceeded", exc.reason) != nothing
+			@check match(Regex("87"), exc.reason) != nothing
+		end
 	end
 
 end
