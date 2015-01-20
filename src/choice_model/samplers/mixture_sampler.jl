@@ -37,13 +37,13 @@ function setparams(s::MixtureSampler, params::Vector)
     s.samplerdist = categorical_dist_from_vector(params[1:s.nsubsamplers])
   catch err
     @show params[1:s.nsubsamplers]
-    thorw(err)
+    throw(err)
   end
   set_subsampler_params(s.subsamplers, params, s.nsubsamplers + 1)
 end
 
 function paramranges(s::MixtureSampler)
-  [[(0.0, 1.0) for i in 1:s.nsubsamplers]..., map((ss) -> paramranges(ss), s.subsamplers)...]
+  [[(1e-7, 1.0) for i in 1:s.nsubsamplers]..., map((ss) -> paramranges(ss), s.subsamplers)...]
 end
 
 function getparams(s::MixtureSampler)
