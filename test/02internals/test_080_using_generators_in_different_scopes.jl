@@ -38,4 +38,10 @@ describe("generator defined in a module") do
     d = gen(g)
     @check typeof(d) <: Int
   end
+
+  # This also fails. Skipping until we fix.
+  _test("use Int generator from function internal to a module") do
+    d = GenDefinedInModuleThatIncludesGodelTest.generate_in_a_function()
+    @check typeof(d) <: Int
+  end
 end
