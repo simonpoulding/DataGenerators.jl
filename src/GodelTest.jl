@@ -26,10 +26,10 @@ include(joinpath("generator_macro","generator_macro_choose_string.jl"))
 include(joinpath("registry","registry.jl"))
 
 # dist(ribution)s (used by some samplers)
-include(joinpath("choice_model","dists","dists.jl"))
+include(joinpath("choice_model","dists","dist.jl"))
 
 # samplers (used by some choice models)
-include(joinpath("choice_model","samplers","samplers.jl"))
+include(joinpath("choice_model","samplers","sampler.jl"))
 
 # choice models
 include(joinpath("choice_model","default_choice_model.jl"))

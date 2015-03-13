@@ -2,25 +2,22 @@
 # Bernoulli Distribution
 #
 
-type BernoulliDist <: Dist
-	nparams::Int
+type BernoulliDist <: DiscreteDist
+	paramranges::Vector{(Float64,Float64)}
 	params::Vector{Float64}
 	distribution::Bernoulli
-	supportlowerbound::Int
+	supportlowerbound::Int64
 	function BernoulliDist()
-		d = new(1)
-		setparams(d, [0.5])
+		d = new([(0.0,1.0)])
+		assignparams(d, [0.5])
 		d
 	end
 end
 
-function setparams(d::BernoulliDist, params::Vector{Float64})
-	assertparamslength(d, params)
-	params[1] = min(1.0, max(0.0, params[1])) 	# the parameter must be in the closed interval [0,1]
+function assignparams(d::BernoulliDist, params::Vector{Float64})
 	d.params = params
 	d.distribution = Bernoulli(d.params[1])
 	d.supportlowerbound = minimum(d.distribution)
 end
 
-paramranges(d::BernoulliDist) = [(0.0, 1.0)]
 

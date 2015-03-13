@@ -2,31 +2,41 @@
 # Discrete Uniform Distribution
 #
 
-type DiscreteUniformDist <: Dist
-	nparams
-	lowerbound::Integer
-	upperbound::Integer
+type DiscreteUniformDist <: DiscreteDist
+	lowerbound::Int64
+	upperbound::Int64
+	paramranges::Vector{(Float64,Float64)}
 	params::Vector{Float64}
 	distribution::DiscreteUniform
-	supportlowerbound::Integer
+	supportlowerbound::Int64
 	function DiscreteUniformDist(lowerbound::Integer, upperbound::Integer)
-		# Distributions.DiscreteUniform assumes an Int, so raise error if outside this range
-		# in addition, range typemin(Int) to typemax(Int) causes error in rand(), so for consistency disallow typemin(Int) regardless of upperbound
-		lowerbound >= typemin(Int) + 1 || error("lower bound must be no less than $(typemin(Int)+1)")
-		upperbound <= typemax(Int) || error("upper bound must be no greater than $(typemax(Int))")
-		lowerbound <= upperbound || error("lower bound must not be greater than the upper bound")
-		d = new(0, lowerbound, upperbound)
-		setparams(d, Float64[])
+		lowerbound <= upperbound || error("lowerbound must be less than or equal to upperbound")
+		# Distributions.DiscreteUniform only accommodates Int64 domain
+		if upperbound > typemax(Int64)
+			warn("upperbound adjusted to typemax(Int64)")
+			upperbound = typemax(Int64)
+		end
+		if upperbound == typemax(Int64)
+			if lowerbound < (typemin(Int64)+1)
+				# additionally, if the entire Int64 domain,  Distributions.DiscreteUniform raises an error, so
+				# here choose to adjust lower part of range to avoid the error
+				warn("lowerbound adjusted to typemin(Int64)+1")
+				lowerbound = typemin(Int64)+1
+			end
+		else
+			if lowerbound < typemin(Int64)
+				warn("lowerbound adjusted to typemin(Int64)")
+				lowerbound = typemin(Int64)
+			end
+		end
+		d = new(lowerbound, upperbound, (Float64,Float64)[])
+		assignparams(d, Float64[])
 		d
 	end
 end
 
-function setparams(d::DiscreteUniformDist, params::Vector{Float64})
-	assertparamslength(d, params)
+function assignparams(d::DiscreteUniformDist, params::Vector{Float64}, check=true)
 	d.params = params
 	d.distribution = DiscreteUniform(d.lowerbound, d.upperbound)
 	d.supportlowerbound = minimum(d.distribution)
 end
-
-paramranges(d::DiscreteUniformDist) = (Float64,Float64)[]
-

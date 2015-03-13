@@ -17,4 +17,3 @@ function godelnumber(s::TransformingFuncSampler, cc::ChoiceContext)
   s.fn(godelnumber(s.subsampler, cc))::Number
 end
 
-EnsurePositiveSampler(ss::Sampler) = TransformingFuncSampler(ss, (gn::Number) -> abs(gn)::Number)

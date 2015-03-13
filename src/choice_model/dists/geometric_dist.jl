@@ -8,27 +8,25 @@
 # convenient one for modification with the Decay Dist
 
 
-type GeometricDist <: Dist
-	nparams::Int
+type GeometricDist <: DiscreteDist
+	paramranges::Vector{(Float64,Float64)}
 	params::Vector{Float64}
 	distribution::Geometric
-	supportlowerbound::Int
-	supportlowerquartile::Real
+	supportlowerbound::Int64
+	# supportlowerquartile::Real
 	function GeometricDist()
-		d = new(1)
-		setparams(d, [0.5])
+		d = new([(0.0, 1.0)])
+		assignparams(d, [0.5])
 		d
 	end
 end
 
-function setparams(d::GeometricDist, params::Vector{Float64})
-	assertparamslength(d, params)
-	params[1] = min(1.0-1e-5, max(1e-5, params[1])) # parameter of Distribution.Geometric must be in the open interval (0,1), so adjust if necessary
+function assignparams(d::GeometricDist, params::Vector{Float64})
+	# parameter of Distribution.Geometric must be in the open interval (0,1), so silently adjust if necessary
+	params[1] = min(0.99999, max(0.00001, params[1])) 
 	d.params = params
 	d.distribution = Geometric(d.params[1])
 	d.supportlowerbound = minimum(d.distribution)
-	d.supportlowerquartile = quantile(d.distribution, 0.25)
+	# d.supportlowerquartile = quantile(d.distribution, 0.25)
 end
-
-paramranges(d::GeometricDist) = [(0.0, 1.0)]
 

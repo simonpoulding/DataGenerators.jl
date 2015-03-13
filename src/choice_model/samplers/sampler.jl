@@ -21,39 +21,21 @@ abstract Sampler
 #	Note also that for consistency, samplers allow parameters to be specified in their constructor, but if
 # the parameter array is empty, sensible defaults are set instead.  However, this is not required.
 
-# It is assumed that the number of parameters remains constant after construction, and so, for efficiency, 
-# samplers can store the number of parameters as a field in the type and use the following method to return the value:
+# # It is assumed that the number of parameters remains constant after construction, and so, for efficiency,
+# # samplers can store the number of parameters as a field in the type and use the following method to return the value:
+#
+# numparams(s::Sampler) = s.nparams
+#
+# function assertparamslength(s::Sampler, params::Vector)
+#   if length(params) != numparams(s)
+#     error("expected $(numparams(s)) sampler parameter(s), but got $(length(params))")
+#   end
+# end
 
-numparams(s::Sampler) = s.nparams
+# DistSamplers - samplers mapping to an atomic underlying distribution (Dist)
+include(joinpath("dist_samplers","dist_sampler.jl"))
 
-function assertparamslength(s::Sampler, params::Vector)
-  if length(params) != numparams(s)
-    error("expected $(numparams(s)) sampler parameter(s), but got $(length(params))")
-  end
-end
-
-# a dist sampler is based directly on a probability distribution in the form a Dist
-# therefore many methods at the sampler level simply pass through to the underlying Dist 
-abstract DistSampler <: Sampler
-
-numparams(ds::DistSampler) = numparams(ds.dist)
-
-paramranges(ds::DistSampler) = paramranges(ds.dist)
-
-setparams(ds::DistSampler, params::Vector{Float64}) = setparams(ds.dist, params)
-
-getparams(ds::DistSampler) = getparams(ds.dist)
-
-godelnumber(ds::DistSampler,  cc::ChoiceContext) = sample(ds.dist) + cc.lowerbound - ds.dist.supportlowerbound
-
-# The following are DistSamplers
-include("bernoulli_sampler.jl")
-include("categorical_sampler.jl")
-include("discrete_uniform_sampler.jl")
-include("geometric_sampler.jl")
-include("uniform_sampler.jl")
-
-# Other samplers that modify or combine other samplers
-include("gaussian_sampler.jl")
+# Samplers that modify or combine other samplers
 include("mixture_sampler.jl")
 include("transforming_sampler.jl")
+include("constrained_parameters_sampler.jl")

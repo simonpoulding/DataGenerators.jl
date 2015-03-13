@@ -2,9 +2,6 @@
 # SamplerChoiceModel
 #
 
-# A dist is a 'raw' probability distribution outside of the context of choice point
-abstract Dist
-
 #
 # SamplerChoiceModel
 #
@@ -43,34 +40,33 @@ end
 #				varying bounds: range of distribution is adapted
 #				infinite bounds: (finitized to arbitarily large values for practical reasons - see comment in UniformSampler)
 #
-function SamplerChoiceModel(g::Generator, subgencms=[])
+function SamplerChoiceModel(g::Generator, mappingfn=defaultsamplerchoicemodelmapping)
 	samplers = (Uint=>Sampler)[]
 	for (cpid, info) in choicepointinfo(g) # gets info from sub-generators also
-		cptype = info[:type]
-		if cptype == RULE_CP
-			sampler = CategoricalSampler(info[:max])
-		elseif cptype == SEQUENCE_CP
-			sampler = GeometricSampler()
-		elseif cptype == VALUE_CP
-			datatype = info[:datatype]
-			if datatype <: Bool
-				sampler = BernoulliSampler()
-			elseif datatype <: Integer # order of if clauses matters here since Bool <: Integer
-				sampler = DiscreteUniformSampler()
-			else # floating point, but may also be a rational type
-				sampler = UniformSampler()
-			end
-		else
-			error("unrecognised choice point type when creating sampler choice model")
-		end
-		samplers[cpid] = sampler
-	end
-	for subgencm in subgencms
-		merge!(samplers, subgencm.samplers)
+		samplers[cpid] = mappingfn(info)
 	end
 	SamplerChoiceModel(samplers)
 end
 
+function defaultsamplerchoicemodelmapping(info::Dict)
+	cptype = info[:type]
+	if cptype == RULE_CP
+		sampler = CategoricalSampler(info[:max])
+	elseif cptype == SEQUENCE_CP
+		sampler = GeometricSampler()
+	elseif cptype == VALUE_CP
+		datatype = info[:datatype]
+		if datatype <: Bool
+			sampler = BernoulliSampler()
+		elseif datatype <: Integer # order of if clauses matters here since Bool <: Integer
+			sampler = DiscreteUniformSampler()
+		else # floating point, but may also be a rational type
+			sampler = UniformSampler()
+		end
+	else
+		error("unrecognised choice point type when creating sampler choice model")
+	end
+end
 
 
 #
@@ -163,21 +159,6 @@ function getparams(cm::SamplerChoiceModel)
 	end
 	params
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #

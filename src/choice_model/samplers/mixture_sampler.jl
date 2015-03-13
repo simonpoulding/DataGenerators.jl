@@ -1,64 +1,48 @@
+#
+# Mixture Sampler
+#
+
 type MixtureSampler <: Sampler
-  nparams::Int64           # number of parameters is the domain length (number of values specified in the range)
-  samplerdist::Categorical # dist to select among subsamplers
-  nsubsamplers::Int64
-  subsamplers::Vector{Sampler}
-  function MixtureSampler(samplers::Vector, params = Float64[])
-    nsubsamplers = length(samplers)
-    if length(params) >= nsubsamplers
-      ownparams = params[1:nsubsamplers]
-    else
-      ownparams = ones(nsubsamplers) / nsubsamplers
-    end
-    samplerdist = categorical_dist_from_vector(ownparams)
-    nsubparams = sum(map(numparams, samplers))
-    ms = new(nsubsamplers + nsubparams, samplerdist, nsubsamplers, samplers)
-    if length(params) == (nsubsamplers + nsubparams)
-      set_subsampler_params(samplers, params, nsubsamplers + 1)
-    end
-    ms
-  end
+	subsamplers::Vector{Sampler}
+	internaldist::CategoricalDist
+	function MixtureSampler(subsamplers::Vector)
+		length(subsamplers) >= 2 || error("At least two subsamplers are required")
+		new(subsamplers, CategoricalDist(length(subsamplers)))
+	end
 end
 
-categorical_dist_from_vector(v) = Categorical(prob_vector(v))
-prob_vector(ary) = ary ./ sum(ary)
+numparams(ds::MixtureSampler) = numparams(ds.internaldist) + sum(numparams, ds.subsamplers)
 
-function set_subsampler_params(subsamplers::Vector, params::Vector, i::Int64)
-  map(subsamplers) do subsampler
-    nsubparams = numparams(subsampler)
-    setparams(subsampler, params[i:(i+nsubparams-1)])
-    i += nsubparams
-  end
+function paramranges(ds::MixtureSampler)
+	pr =  paramranges(ds.internaldist)
+	for subsampler in ds.subsamplers
+		pr = [pr, paramranges(subsampler)]
+	end
+	pr
 end
 
-function setparams(s::MixtureSampler, params::Vector)
-  assertparamslength(s, params)
-  try
-    s.samplerdist = categorical_dist_from_vector(params[1:s.nsubsamplers])
-  catch err
-    @show params[1:s.nsubsamplers]
-    throw(err)
-  end
-  set_subsampler_params(s.subsamplers, params, s.nsubsamplers + 1)
+function setparams(ds::MixtureSampler, params::Vector{Float64})
+	nparams = numparams(ds)
+	length(params) == nparams || error("expected $(nparams) parameters but got $(length(params))")
+	
+	paramstart = 1
+	paramcount = numparams(ds.internaldist)
+	setparams(ds.internaldist, params[paramstart:(paramstart+paramcount-1)])
+	
+	for subsampler in ds.subsamplers
+		paramstart += paramcount
+		paramcount = numparams(subsampler)
+		setparams(subsampler, params[paramstart:(paramstart+paramcount-1)])
+	end
 end
 
-function paramranges(s::MixtureSampler)
-  [[(0.0, 1.0) for i in 1:s.nsubsamplers]..., map((ss) -> paramranges(ss), s.subsamplers)...]
+function getparams(ds::MixtureSampler)
+	ps =  getparams(ds.internaldist)
+	for subsampler in ds.subsamplers
+		ps = [ps, getparams(subsampler)]
+	end
+	ps
 end
 
-function getparams(s::MixtureSampler)
-  res = copy(params(s.samplerdist)[1])
-  for subsampler in s.subsamplers
-    append!(res, getparams(subsampler))
-  end
-  res
-end
+godelnumber(ds::MixtureSampler,  cc::ChoiceContext) = godelnumber(ds.subsamplers[sample(ds.internaldist)], cc)
 
-function godelnumber(s::MixtureSampler, cc::ChoiceContext)
-  # get the subsampler we should sample
-  isubsampler = rand(s.samplerdist)
-  subsampler = s.subsamplers[isubsampler]
-
-  # and sample the subsampler
-  godelnumber(subsampler, cc)
-end

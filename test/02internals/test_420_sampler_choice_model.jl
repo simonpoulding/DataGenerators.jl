@@ -104,17 +104,15 @@ describe("sampler choice model - rule choice point") do
 	test("sampler uses a Categorical distribution") do
 		@check length(cm.samplers) == 1
 		sampler = first(values(cm.samplers))
-		@check typeof(sampler.dist) <: Distributions.Categorical
+		@check typeof(sampler) <: GodelTest.CategoricalSampler
 	end
 
 	test("get and set sampler parameters") do
 		sampler = first(values(cm.samplers))
-		@check sampler.dist.p ==[0.25,0.25,0.25,0.25,]
 		@check getparams(cm) == [0.25,0.25,0.25,0.25,]
 		@check paramranges(cm) == [(0.0,1.0),(0.0,1.0),(0.0,1.0),(0.0,1.0),]
-		setparams(cm,[3,3,1,1])
-		@check sampler.dist.p == [0.375,0.375,0.125,0.125,]
-		@check getparams(cm) == [0.375,0.375,0.125,0.125,]
+		setparams(cm,[0.03,0.03,0.01,0.01])
+		@check round(getparams(cm),4) == [0.375,0.375,0.125,0.125,] # round to avoid precision errors
 	end
 		
 end
@@ -128,11 +126,11 @@ describe("sampler choice model - sequence choice point") do
 	
 	describe("small finite range") do 
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 0, 2)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 0, 2)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 0 <= gnum <= 2
 			@mcheck_values_are gnum [0,1,2]
 		end
@@ -141,11 +139,11 @@ describe("sampler choice model - sequence choice point") do
 
 	describe("large finite range") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 11, 16)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 11 <= gnum <= 16
 			@mcheck_values_include gnum [11,13,16]
 		end
@@ -154,12 +152,12 @@ describe("sampler choice model - sequence choice point") do
 
 	describe("semi-finite range") do
 
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 1, typemax(Int))
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 1, typemax(Int64))
 
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
-			@check 1 <= gnum <= typemax(Int)
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
+			@check 1 <= gnum <= typemax(Int64)
 			@mcheck_values_vary gnum
 		end
 		
@@ -168,16 +166,14 @@ describe("sampler choice model - sequence choice point") do
 	test("sampler uses a Geometric distribution") do
 		@check length(cm.samplers) == 1
 		sampler = first(values(cm.samplers))
-		@check typeof(sampler.dist) <: Distributions.Geometric
+		@check typeof(sampler) <: GodelTest.GeometricSampler
 	end
 
 	test("get and set sampler parameters") do
 		sampler = first(values(cm.samplers))
-		@check sampler.dist.p == 0.5
 		@check getparams(cm) == [0.5,]
 		@check paramranges(cm) == [(0.0,1.0),]
 		setparams(cm,[0.6])
-		@check sampler.dist.p == 0.6
 		@check getparams(cm) == [0.6,]
 	end
 	
@@ -202,23 +198,21 @@ describe("sampler choice model - Bool value choice point") do
 	test("sampler uses a Bernoulli distribution") do
 		@check length(cm.samplers) == 1
 		sampler = first(values(cm.samplers))
-		@check typeof(sampler.dist) <: Distributions.Bernoulli
+		@check typeof(sampler) <: GodelTest.BernoulliSampler
 	end
 
 	test("get and set sampler parameters") do
 		sampler = first(values(cm.samplers))
-		@check sampler.dist.p == 0.5
 		@check getparams(cm) == [0.5,]
 		@check paramranges(cm) == [(0.0,1.0),]
 		setparams(cm,[0.6])
-		@check sampler.dist.p == 0.6
 		@check getparams(cm) == [0.6,]
 	end
 	
 end
 
 
-describe("sampler choice model - Int value choice point") do
+describe("sampler choice model - Int64 value choice point") do
 
 	gn = SCMChooseIntGen()
 	cm = SamplerChoiceModel(gn)
@@ -227,11 +221,11 @@ describe("sampler choice model - Int value choice point") do
 	
 	describe("small finite range") do
 
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, -1, 2)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, -1, 2)
 
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check -1 <= gnum <= 2
 			@mcheck_values_are gnum [-1,0,1,2]
 		end
@@ -240,11 +234,11 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("large finite range") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, 11, 16)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 11 <= gnum <= 16
 			@mcheck_values_include gnum [11,13,16] # just a selection of possible values including end points
 		end
@@ -253,12 +247,12 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("semi-finite range (upper)") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, 128, typemax(Int))
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, 128, typemax(Int64))
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
-			@check 128 <= gnum <= typemax(Int)
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
+			@check 128 <= gnum <= typemax(Int64)
 			@mcheck_values_vary gnum
 		end
 		
@@ -266,12 +260,12 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("semi-finite range (lower)") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), 128)
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, typemin(Int64), 128)
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
-			@check typemin(Int) <= gnum <= 128
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
+			@check typemin(Int64) <= gnum <= 128
 			@mcheck_values_vary gnum
 		end
 		
@@ -279,12 +273,12 @@ describe("sampler choice model - Int value choice point") do
 
 	describe("infinite range") do
 	
-		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), typemax(Int))
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, typemin(Int64), typemax(Int64))
 		
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
-			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
-			@check typemin(Int) <= gnum <= typemax(Int)
+			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
+			@check typemin(Int64) <= gnum <= typemax(Int64)
 			@mcheck_values_vary gnum
 		end
 		
@@ -295,7 +289,7 @@ describe("sampler choice model - Int value choice point") do
 		test("sampler uses a DiscreteUniform distribution") do
 			@check length(cm.samplers) == 1
 			sampler = first(values(cm.samplers))
-			@check typeof(sampler.dist) <: Distributions.DiscreteUniform
+			@check typeof(sampler) <: GodelTest.DiscreteUniformSampler
 		end
 
 		test("get and set sampler parameters") do
@@ -338,7 +332,7 @@ describe("sampler choice model - Float64 value choice point") do
 			gnum = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check 450001.6 <= gnum
-			@mcheck_that_sometimes int(gnum) != gnum
+			# @mcheck_that_sometimes int(gnum) != gnum
 			@mcheck_values_vary gnum
 		end
 		
@@ -352,7 +346,7 @@ describe("sampler choice model - Float64 value choice point") do
 			gnum = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check gnum <= 450001.6
-			@mcheck_that_sometimes int(gnum) != gnum
+			# @mcheck_that_sometimes int(gnum) != gnum
 			@mcheck_values_vary gnum
 		end
 		
@@ -365,7 +359,7 @@ describe("sampler choice model - Float64 value choice point") do
 		@repeat test("valid Godel numbers returned") do
 			gnum = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
-			@mcheck_that_sometimes int(gnum) != gnum
+			# @mcheck_that_sometimes int(gnum) != gnum
 			@mcheck_values_vary gnum
 		end
 		
@@ -376,7 +370,7 @@ describe("sampler choice model - Float64 value choice point") do
 		test("sampler uses a Uniform distribution") do
 			@check length(cm.samplers) == 1
 			sampler = first(values(cm.samplers))
-			@check typeof(sampler.dist) <: Distributions.Uniform
+			@check typeof(sampler) <: GodelTest.UniformSampler
 		end
 
 		test("get and set sampler parameters") do
@@ -392,7 +386,7 @@ end
 describe("sampler choice model - generate for model with multiple choice points") do
 
 	gn = SCMChooseStringGen()
-	cm = DefaultChoiceModel(gn)
+	cm = SamplerChoiceModel(gn)
 	
 	@repeat test("full range of values generated using choice model") do
 		td = gen(gn, choicemodel=cm)
@@ -402,5 +396,37 @@ describe("sampler choice model - generate for model with multiple choice points"
 		@mcheck_values_are td[end] ['e','f']
 	end
 
+end
+
+describe("sampler choice model - non-default mapping") do
+
+	gn = SCMRuleGen()
+	
+	function nondefaultmapping(info::Dict)
+		cptype = info[:type]
+		if cptype == GodelTest.RULE_CP
+			sampler = GodelTest.DiscreteUniformSampler()
+		elseif cptype == GodelTest.SEQUENCE_CP
+			sampler = GodelTest.GeometricSampler()
+		elseif cptype == GodelTest.VALUE_CP
+			datatype = info[:datatype]
+			if datatype <: Bool
+				sampler = GodelTest.BernoulliSampler()
+			elseif datatype <: Integer # order of if clauses matters here since Bool <: Integer
+				sampler = GodelTest.DiscreteUniformSampler()
+			else # floating point, but may also be a rational type
+				sampler = GodelTest.UniformSampler()
+			end
+		else
+			error("unrecognised choice point type when creating non-default choice model")
+		end
+	end
+
+	cm = SamplerChoiceModel(gn, nondefaultmapping)
+	
+	@check length(cm.samplers) == 1
+	sampler = first(values(cm.samplers))
+	@check typeof(sampler) <: GodelTest.DiscreteUniformSampler
+		
 end
 

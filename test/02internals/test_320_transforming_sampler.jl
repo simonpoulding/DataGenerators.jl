@@ -4,7 +4,7 @@ include("mock_choice_context.jl")
 
 describe("TransformingFuncSampler") do
 
-  GSTypical = GaussianSampler(0.0, 100.0, 10.0)
+  GSTypical = GaussianSampler()
   TFS = TransformingFuncSampler(GSTypical, (gn::Number) -> abs(gn)::Number)
 
   @repeat test("methods are just deferred down to the subsampler") do
@@ -15,10 +15,11 @@ describe("TransformingFuncSampler") do
     @check paramranges(TFS) == paramranges(GSTypical)
   end
 
-  @repeat test("generates floating point godel numbers that are in valid range even if params outside of valid range") do
-    setparams(TFS, [rand(-10.0:100.0), rand(-10.0:10.0)])
-    gnum = godelnumber(TFS, mockCC())
-    @check typeof(gnum) <: FloatingPoint
+  cc = mockCC(-Inf,Inf,Float64)
+  @repeat test("transformation is applied") do
+    setparams(TFS, [rand(-100.0:100.0), rand(0.0:10.0)])
+    gnum = godelnumber(TFS, cc)
+    @check typeof(gnum) <: Float64
     @check 0.0 <= gnum <= (100.0 + 8*10.0)
   end
 

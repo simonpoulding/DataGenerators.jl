@@ -2,39 +2,37 @@
 # Uniform Dist
 #
 
-type UniformDist <: Dist
-	nparams
-	lowerbound::Real
-	upperbound::Real
+type UniformDist <: ContinuousDist
+	lowerbound::Float64
+	upperbound::Float64
+	paramranges::Vector{(Float64,Float64)}
 	params::Vector{Float64}
 	distribution::Uniform
-	supportlowerbound::Real
+	supportlowerbound::Float64
 	function UniformDist(lowerbound::Real, upperbound::Real)
- 		lowerbound <= upperbound || error("lower bound must not be greater than the upper bound")
-		d = new(0, lowerbound, upperbound)
-		setparams(d, Float64[])
+		lowerbound <  upperbound || error("lowerbound must be less than upperbound")
+		# Distributions.Uniform returns samples of NaN if lower bound is -Inf
+		# and (+)Inf if length of domain is more than (approx?) realmax(Float64) ~= 1.79e308
+		# therefore limit lower and upper ranges to -/+ realmax(Float64) / 2
+		if lowerbound < -realmax(Float64)/2
+			warn("lowerbound adjusted to -realmax(Float64)/2")
+			lowerbound = -realmax(Float64)/2
+		end
+		if upperbound > realmax(Float64)/2
+			warn("upperbound adjusted to realmax(Float64)/2")
+			upperbound = realmax(Float64)/2
+		end
+		d = new(lowerbound, upperbound, (Float64,Float64)[])
+		assignparams(d, Float64[])
 		d
 	end
 end
 
-function setparams(d::UniformDist, params::Vector{Float64})
-	assertparamslength(d, params)
+function assignparams(d::UniformDist, params::Vector{Float64})
 	d.params = params
 	d.distribution = Uniform(d.lowerbound, d.upperbound)
 	d.supportlowerbound = minimum(d.distribution)
 end
 
-paramranges(d::UniformDist) = (Float64,Float64)[]
-
-# when lowerbound is -Inf, rand(::Distributions.Uniform) returns NaN - fix this here
-function sample(d::UniformDist)
-	if d.supportlowerbound == -Inf
-		if maximum(d.distribution) == Inf
-			return (rand() < 0.5) ? -Inf : Inf
-		else
-			return -Inf
-		end
-	end
-	return rand(d.distribution)
-end
+# TODO should sample actually sample Inf?
 

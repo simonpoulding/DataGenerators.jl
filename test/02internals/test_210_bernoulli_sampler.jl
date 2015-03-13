@@ -2,71 +2,74 @@ include("mock_choice_context.jl")
 
 describe("Bernoulli Sampler") do
 
-	test("no params constructor") do
+	test("constructor") do
 		s = GodelTest.BernoulliSampler()
 		@check typeof(s.dist) == GodelTest.BernoulliDist
 	end
 	
-	# TODO check num param error
-
 	test("numparams") do
 		s = GodelTest.BernoulliSampler()
-		@check numparams(s) == 1
+		@check GodelTest.numparams(s) == 1
 	end
 
 	test("paramranges") do
 		s = GodelTest.BernoulliSampler()
 		pr = paramranges(s)
+		@check typeof(pr) == Vector{(Float64,Float64)}
 		@check length(pr)==1
 		@check all(x->x==(0.0,1.0),pr)		
 	end
 
-	test("getparams and default value") do
+	test("getparams and default params") do
 		s = GodelTest.BernoulliSampler()
-		@check getparams(s) == [0.5]
+		ps = getparams(s)
+		@check typeof(ps) == Vector{Float64}
+		@check ps == [0.5]
 	end
 
-	test("setparams and getparams") do
+	test("setparams") do
 		s = GodelTest.BernoulliSampler()
 		setparams(s, [0.7])
 		@check typeof(s.dist) == GodelTest.BernoulliDist
 		@check getparams(s) == [0.7]
 	end
 
-
-	test("godelnumber") do
+	describe("godelnumber") do
 	
 		s = GodelTest.BernoulliSampler()
-		cc = mockCC(0,1,Int)
+		cc = mockCC(0,1,Int64)
 	
-		@repeat test("godelnumber sampled across full range of support") do
-			gn = godelnumber(s,cc)
-			@check typeof(gn) == Int
+		@repeat test("GodelTest.godelnumber sampled across full range of support") do
+			gn = GodelTest.godelnumber(s,cc)
+			@check typeof(gn) == Int64
 			@mcheck_values_are gn [0,1]
 		end
 		
 	end
 	
-	@repeat test("respects choice context lower bound for random parameters") do
+	describe("random parameters") do
+
 		s = GodelTest.BernoulliSampler()
-		setparams(s, [rand()])
-		lowerbound = floor(int(rand()*100))-50
-		upperbound = lowerbound+floor(int(rand()*100))
-		cc = mockCC(lowerbound,upperbound,Int)
-		gn = godelnumber(s,cc)
-		@check typeof(gn) == Int
-		@check cc.lowerbound <= gn
+		@repeat test("respects choice context bounds for random parameters") do
+			setparams(s, [rand()])
+			lowerbound = floor(int(rand()*100))-50
+			upperbound = lowerbound+floor(int(rand()*100))
+			cc = mockCC(lowerbound,upperbound,Int64)
+			gn = GodelTest.godelnumber(s,cc)
+			@check typeof(gn) == Int64
+			@check cc.lowerbound <= gn <= cc.upperbound
+		end
+
 	end
-	
 	
 	describe("godelnumber handles finite lower and 'infinite' upper choice context bound") do
 	
 		s = GodelTest.BernoulliSampler()
-		cc = mockCC(42,typemax(Int),Int)
+		cc = mockCC(42,typemax(Int64),Int64)
 	
-		@repeat test("godelnumbers sampled across full range of support") do
-			gn = godelnumber(s,cc)
-			@check typeof(gn) == Int
+		@repeat test("GodelTest.godelnumbers sampled across full range of support") do
+			gn = GodelTest.godelnumber(s,cc)
+			@check typeof(gn) == Int64
 			# @mcheck_values_are gn [cc.lowerbound, cc.lowerbound+1]
 			# TODO since above requires literal values on RHS, use instead:
 			@check cc.lowerbound <= gn <= (cc.lowerbound+1)
@@ -79,11 +82,11 @@ describe("Bernoulli Sampler") do
 	describe("godelnumber handles 'infinite' lower and finite upper choice context bound") do
 	
 		s = GodelTest.BernoulliSampler()
-		cc = mockCC(typemin(Int),42,Int)
+		cc = mockCC(typemin(Int64),42,Int64)
 	
-		@repeat test("godelnumbers sampled across full range of support") do
-			gn = godelnumber(s,cc)
-			@check typeof(gn) == Int
+		@repeat test("GodelTest.godelnumbers sampled across full range of support") do
+			gn = GodelTest.godelnumber(s,cc)
+			@check typeof(gn) == Int64
 			# @mcheck_values_are gn [cc.lowerbound, cc.lowerbound+1]
 			# TODO since above requires literal values on RHS, use instead:
 			@check cc.lowerbound <= gn <= (cc.lowerbound+1)
@@ -96,11 +99,11 @@ describe("Bernoulli Sampler") do
 	describe("godelnumber handles 'infinite' lower and upper choice context bound") do
 	
 		s = GodelTest.BernoulliSampler()
-		cc = mockCC(typemin(Int),typemax(Int),Int)
+		cc = mockCC(typemin(Int64),typemax(Int64),Int64)
 	
-		@repeat test("godelnumbers sampled across full range of support") do
-			gn = godelnumber(s,cc)
-			@check typeof(gn) == Int
+		@repeat test("GodelTest.godelnumbers sampled across full range of support") do
+			gn = GodelTest.godelnumber(s,cc)
+			@check typeof(gn) == Int64
 			# @mcheck_values_are gn [cc.lowerbound, cc.lowerbound+1]
 			# TODO since above requires literal values on RHS, use instead:
 			@check cc.lowerbound <= gn <= (cc.lowerbound+1)
