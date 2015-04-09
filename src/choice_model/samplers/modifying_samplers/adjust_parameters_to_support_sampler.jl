@@ -1,19 +1,19 @@
 #
-# Adjust to Support Sampler
+# Adjust Parameters to Support Sampler
 #
 # adjust the parameters of the sampler so that values are returned in support
 # Only some samplers can be adjusted in this way; for others an error is raised on construction
 #
 
-type AdjustToSupportSampler <: ModifyingSampler
+type AdjustParametersToSupportSampler <: ModifyingSampler
 	subsampler::Sampler
-	function AdjustToSupportSampler(subsampler::Sampler)
-		typeof(subsampler) in (UniformSampler, DiscreteUniformSampler,) || error("$(typeof(subsampler)) samplers are not supported by AdjustToSupportSampler")
+	function AdjustParametersToSupportSampler(subsampler::Sampler)
+		typeof(subsampler) in (UniformSampler, DiscreteUniformSampler,) || error("$(typeof(subsampler)) samplers are not supported by AdjustParametersToSupportSampler")
 		new(subsampler)
 	end
 end
 
-function paramranges(s::AdjustToSupportSampler)
+function paramranges(s::AdjustParametersToSupportSampler)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		return Float64[]
 	else
@@ -21,7 +21,7 @@ function paramranges(s::AdjustToSupportSampler)
 	end
 end
 
-function getparams(s::AdjustToSupportSampler)
+function getparams(s::AdjustParametersToSupportSampler)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		return (Float64,Float64)[]
 	else
@@ -29,7 +29,7 @@ function getparams(s::AdjustToSupportSampler)
 	end
 end
 
-function setparams(s::AdjustToSupportSampler, params::Vector{Float64})
+function setparams(s::AdjustParametersToSupportSampler, params::Vector{Float64})
 	length(params) == length(paramranges(s)) || error("expected $(length(pranges)) parameters but got $(length(params))")
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		nothing
@@ -38,7 +38,7 @@ function setparams(s::AdjustToSupportSampler, params::Vector{Float64})
 	end
 end
 
-function sample(s::AdjustToSupportSampler, support::(Real,Real))
+function sample(s::AdjustParametersToSupportSampler, support::(Real,Real))
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		setparams(s.subsampler, [float64(support[1]), float64(support[2])])
 	else
