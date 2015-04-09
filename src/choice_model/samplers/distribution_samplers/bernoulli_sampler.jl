@@ -5,7 +5,7 @@
 # 	(1) 0 <= p <= 1
 #
 
-type BernoulliSampler <: DistributionSampler
+type BernoulliSampler <: DiscreteDistributionSampler
 	paramranges::Vector{(Float64,Float64)}
 	params::Vector{Float64}
 	distribution::Bernoulli

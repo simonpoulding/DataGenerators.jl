@@ -5,7 +5,7 @@
 # (1)-(n)  0 <= w_i <= 1
 #
 
-type CategoricalSampler <: DistributionSampler
+type CategoricalSampler <: DiscreteDistributionSampler
 	numcategories::Int
 	paramranges::Vector{(Float64,Float64)}
 	params::Vector{Float64}

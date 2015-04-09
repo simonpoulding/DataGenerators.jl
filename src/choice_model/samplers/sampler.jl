@@ -41,7 +41,8 @@ function checkparamranges(s::Sampler, params::Vector{Float64})
 	end	
 end
 
-include(joinpath("distribution_samplers", "distribution_sampler.jl")
+include(joinpath("distribution_samplers", "distribution_sampler.jl"))
+include(joinpath("modifying_samplers", "modifying_sampler.jl"))
 
 #
 #

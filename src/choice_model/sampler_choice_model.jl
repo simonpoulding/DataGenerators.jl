@@ -3,7 +3,7 @@
 #
 
 # define abstract sampler type, the type tree of which it is a root, and concrete implementations of these types
-include(joinpath("samplers", "sampler.jl")
+include(joinpath("samplers", "sampler.jl"))
 
 
 # The sampler choice model is a set of samplers, one assigned to each choice point (indexed by choice point id)

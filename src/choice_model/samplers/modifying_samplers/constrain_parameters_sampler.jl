@@ -1,12 +1,13 @@
 #
-# Constrained Parameters Sampler
-# used to constain the subsamplers param ranges
+# Constrain Parameters Sampler
+#
+# constrains the parameter ranges of the subsampler
 #
 
-type ConstrainedParametersSampler <: Sampler
+type ConstrainParametersSampler <: ModifyingSampler
 	subsampler::Sampler
 	constrainedparamranges::Vector{(Float64,Float64)}
-	function ConstrainedParametersSampler(subsampler::Sampler, constrainedparamranges::Vector{(Float64,Float64)})
+	function ConstrainParametersSampler(subsampler::Sampler, constrainedparamranges::Vector{(Float64,Float64)})
 		samplerparamranges = paramranges(subsampler)
 		samplerparams = getparams(subsampler)
 		adjustedsamplerparams = Float64[]
@@ -26,21 +27,7 @@ type ConstrainedParametersSampler <: Sampler
 	end
 end
 
-numparams(ds::ConstrainedParametersSampler) = length(ds.constrainedparamranges)
-
-paramranges(ds::ConstrainedParametersSampler) = ds.constrainedparamranges
-
-function setparams(ds::ConstrainedParametersSampler, params::Vector{Float64})
-	for i in 1:length(ds.constrainedparamranges)
-		param = params[i]
-		constrainedparamrange = ds.constrainedparamranges[i]
-		if !(constrainedparamrange[1] <= param <= constrainedparamrange[2])
-			error("$(i)th parameter should be in range $(constrainedparamrange[1]) to $(constrainedparamrange[2]), but got $(param)")
-		end
-	end
-	setparams(ds.subsampler, params)
+function setparams(s::ConstrainParametersSampler, params::Vector{Float64})
+	checkparamranges(s, params)
+	setparams(s.subsampler, params)
 end
-
-getparams(ds::ConstrainedParametersSampler) = getparams(ds.subsampler)
-
-godelnumber(ds::ConstrainedParametersSampler,  cc::ChoiceContext) = godelnumber(ds.subsampler, cc)
