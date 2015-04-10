@@ -14,9 +14,11 @@ end
 
 estimateparams(s::ModifyingSampler, traces) = estimateparams(s.subsampler, map(trace->trace[:sub], traces))
 
+amendtrace(s::ModifyingSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], x)
+
 include("mixture_sampler.jl")
 include("truncate_to_support_sampler.jl")
 include("adjust_parameters_to_support_sampler.jl")
 include("align_min_support_sampler.jl")
-include("transforming_sampler.jl")
+include("transform_sampler.jl")
 include("constrain_parameters_sampler.jl")

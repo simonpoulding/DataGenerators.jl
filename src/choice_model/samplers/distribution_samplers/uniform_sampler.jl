@@ -27,6 +27,8 @@ function setparams(s::UniformSampler, params)
 	else
 		a, b = params[[2,1]]
 	end
+	# Uniform samples from semi-open [a,b), but we interpret params as specifying closed interval [a,b], so we adjust:
+	b += nextfloat(b)
 	# Distributions.Uniform returns samples of NaN if lower bound is -Inf,
 	# and (+)Inf if length of domain is more than (approx?) realmax(Float64) ~= 1.79e308
 	# therefore limit lower and upper bounds to -/+ realmax(Float64) / 2

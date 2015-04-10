@@ -24,6 +24,6 @@ function sample(s::TruncateToSupportSampler, support)
 	# as to clear any stored truncated distribution
 	truncateddistribution = Truncated(s.subsampler.distribution, support[1], support[2])
 	x = rand(truncateddistribution)
-	x, {:sub=>{:dist=>x}}
+	x, {:sub=>{:val=>x}}
 end
 
