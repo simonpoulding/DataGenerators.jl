@@ -8,9 +8,8 @@
 type CategoricalSampler <: DiscreteDistributionSampler
 	numcategories::Int
 	paramranges::Vector{(Float64,Float64)}
-	params::Vector{Float64}
 	distribution::Categorical
-	function CategoricalSampler(numcategories::Int, params::Vector{Float64}=Float64[])
+	function CategoricalSampler(numcategories::Int, params=Float64[])
 		numcategories >= 1 || error("number of categories must be at least one")
 		s = new(numcategories, fill((0.0,1.0), numcategories))
 		# Note: could parameterise using number of parameters that is one less than the domain size
@@ -21,16 +20,18 @@ type CategoricalSampler <: DiscreteDistributionSampler
 	end
 end
 
-function setparams(s::CategoricalSampler, params::Vector{Float64})
+function setparams(s::CategoricalSampler, params)
 	checkparamranges(s, params)
 	totalweight = sum(params)
 	if totalweight == 0.0
-		normalisedparams = fill(1.0/s.numcategories, s.numcategories)
+		weights = fill(1.0/s.numcategories, s.numcategories)
 	else
-		normalisedparams = params ./ totalweight
+		weights = params ./ totalweight
 	end
 	# TODO we assume that sum of params is close enough (even with rounding errors) to 1.0 to satisfy the Categorical constructor
 	# so we do not need handle the rounding errors
-	s.params = normalisedparams
-	s.distribution = Categorical(s.params)
+	s.distribution = Categorical(weights)
 end
+
+getparams(s::CategoricalSampler) = copy(s.distribution.p)
+

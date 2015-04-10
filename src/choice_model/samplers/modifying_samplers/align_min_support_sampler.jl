@@ -14,8 +14,9 @@ type AlignMinSupportSampler <: ModifyingSampler
 	end
 end
 
-function sample(s::AlignMinSupportSampler, support::(Real,Real))
+function sample(s::AlignMinSupportSampler, support)
 	delta = support[1] - minimum(s.subsampler.distribution)
-	delta + sample(s.subsampler, (support[1]-delta, support[2]-delta))
+	x, trace = sample(s.subsampler, (support[1]-delta, support[2]-delta))
+	x + delta, {:sub=>trace}
 end
 

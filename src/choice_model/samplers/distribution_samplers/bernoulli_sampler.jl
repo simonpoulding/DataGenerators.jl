@@ -7,19 +7,18 @@
 
 type BernoulliSampler <: DiscreteDistributionSampler
 	paramranges::Vector{(Float64,Float64)}
-	params::Vector{Float64}
 	distribution::Bernoulli
-	function BernoulliSampler(params::Vector{Float64}=Float64[])
+	function BernoulliSampler(params=Float64[])
 		s = new([(0.0,1.0)])
 		setparams(s, isempty(params) ? Float64[0.5] : params)
 		s
 	end
 end
 
-function setparams(s::BernoulliSampler, params::Vector{Float64})
+function setparams(s::BernoulliSampler, params)
 	checkparamranges(s, params)
-	s.params = copy(params)
-	s.distribution = Bernoulli(s.params[1])
+	p = params[1]
+	s.distribution = Bernoulli(p)
 end
 
-
+getparams(s::BernoulliSampler) = [s.distribution.p]

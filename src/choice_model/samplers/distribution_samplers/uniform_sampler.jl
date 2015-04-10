@@ -10,37 +10,36 @@ type UniformSampler <: ContinuousDistributionSampler
 	paramranges::Vector{(Float64,Float64)}
 	params::Vector{Float64}
 	distribution::Uniform
-	function UniformSampler(params::Vector{Float64}=Float64[])
-		lbound, ubound = typemin(Float64), typemax(Float64)
-		s = new([(lbound,ubound), (lbound,ubound)])
-		setparams(s, isempty(params) ? [lbound, ubound] : params)
+	function UniformSampler(params=Float64[])
+		floatbounds = (typemin(Float64), typemax(Float64))
+		s = new([floatbounds, floatbounds])
+		# rather than defaulting to entire int range, we use a 'pragmatic' (and arbitrary) range of [-1.0, 1.0]
+		setparams(s, isempty(params) ? [-1.0, 1.0] : params)
 		s
 	end
 end
 
-function setparams(s::UniformSampler, params::Vector{Float64})
+function setparams(s::UniformSampler, params)
 	checkparamranges(s, params)
 	# swap parameters if necessary (as a silent repair during search)
 	if params[1] <= params[2]
-		orderedparams = params[[1,2]]
+		a, b = params[[1,2]]
 	else
-		orderedparams = params[[2,1]]
+		a, b = params[[2,1]]
 	end
 	# Distributions.Uniform returns samples of NaN if lower bound is -Inf,
 	# and (+)Inf if length of domain is more than (approx?) realmax(Float64) ~= 1.79e308
 	# therefore limit lower and upper bounds to -/+ realmax(Float64) / 2
 	bound = realmax(Float64)/2
-	if orderedparams[1] < -bound
-		orderedparams[1] = -bound
-		warn("lower bound adjusted to $(orderedparams[1]) in UniformSampler")
+	if a < -bound
+		a = -bound
+		warn("lower bound adjusted to $(adjustedparams[1]) in UniformSampler")
 	end
-	if orderedparams[2] > bound
-		orderedparams[2] = bound
-		warn("upper bound adjusted to $(orderedparams[2]) in UniformSampler")
+	if b > bound
+		b = bound
+		warn("upper bound adjusted to $(adjustedparams[2]) in UniformSampler")
 	end
-	s.params = orderedparams
-	s.distribution = Uniform(orderedparams[1], orderedparams[2])
+	s.distribution = Uniform(a, b)
 end
 
-# TODO should sample actually sample Inf?
-
+getparams(s::UniformSampler) = [s.distribution.a, s.distribution.b]

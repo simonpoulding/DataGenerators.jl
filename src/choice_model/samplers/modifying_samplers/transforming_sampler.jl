@@ -13,6 +13,9 @@ type TransformingSampler <: ModifyingSampler
   end
 end
 
-sample(s::TransformingSampler, support::(Real,Real)) = s.fn(sample(s.subsampler, map(s.invfn, support)))
+function sample(s::TransformingSampler, support)
+	x, trace = sample(s.subsampler, map(s.invfn, support))
+	s.fn(x), {:sub=>trace}
+end
 
 

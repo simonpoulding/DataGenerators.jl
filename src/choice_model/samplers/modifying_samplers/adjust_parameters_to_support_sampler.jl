@@ -29,7 +29,7 @@ function getparams(s::AdjustParametersToSupportSampler)
 	end
 end
 
-function setparams(s::AdjustParametersToSupportSampler, params::Vector{Float64})
+function setparams(s::AdjustParametersToSupportSampler, params)
 	length(params) == length(paramranges(s)) || error("expected $(length(pranges)) parameters but got $(length(params))")
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		nothing
@@ -38,12 +38,13 @@ function setparams(s::AdjustParametersToSupportSampler, params::Vector{Float64})
 	end
 end
 
-function sample(s::AdjustParametersToSupportSampler, support::(Real,Real))
+function sample(s::AdjustParametersToSupportSampler, support)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		setparams(s.subsampler, [float64(support[1]), float64(support[2])])
 	else
 		@assert false
 	end
-	sample(s.subsampler, support)
+	x, trace = sample(s.subsampler, support)
+	x, {:sub=>trace}
 end
 

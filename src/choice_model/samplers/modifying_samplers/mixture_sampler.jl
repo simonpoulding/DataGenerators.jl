@@ -26,7 +26,7 @@ function paramranges(s::MixtureSampler)
 	pr
 end
 
-function setparams(s::MixtureSampler, params::Vector{Float64})
+function setparams(s::MixtureSampler, params)
 	nparams = numparams(s)
 	length(params) == nparams || error("expected $(nparams) parameters but got $(length(params))")
 	paramstart = 1
@@ -47,8 +47,21 @@ function getparams(s::MixtureSampler)
 	ps
 end
 
-function sample(s::MixtureSampler, support::(Real,Real))
-	selection = sample(s.selectionsampler, (1,length(s.subsamplers)))
-	sample(s.subsamplers[selection], support)
+function sample(s::MixtureSampler, support)
+	selectionindex, selectiontrace = sample(s.selectionsampler, (1,length(s.subsamplers)))
+	x, trace = sample(s.subsamplers[selectionindex], support)
+	x, {:selidx=>selectionindex, :sel=>selectiontrace, :sub=>trace}
+end
+
+function estimateparams(s::MixtureSampler, traces)
+	estimateparams(s.selectionsampler, map(trace->trace[:sel], traces))
+	subsamplertraces = map(i->{}, 1:length(s.subsamplers))
+	for trace in traces
+		selectionindex = trace[:selidx]
+		push!(subsamplertraces[selectionindex], trace[:sub])
+	end
+	for i in 1:length(s.subsamplers)
+		estimateparams(s.subsamplers[i], subsamplertraces[i])		
+	end
 end
 

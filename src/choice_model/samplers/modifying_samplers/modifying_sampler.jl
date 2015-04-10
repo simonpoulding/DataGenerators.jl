@@ -5,9 +5,14 @@ paramranges(s::ModifyingSampler) = paramranges(s.subsampler)
 
 getparams(s::ModifyingSampler) = getparams(s.subsampler)
 
-setparams(s::ModifyingSampler, params::Vector{Float64}) = setparams(s.subsampler, params)
+setparams(s::ModifyingSampler, params) = setparams(s.subsampler, params)
 
-sample(s::ModifyingSampler, support::(Real,Real)) = sample(s.subsampler, support)
+function sample(s::ModifyingSampler, support)
+	x, trace = sample(s.subsampler, support)
+	x, {:sub=>trace}
+end
+
+estimateparams(s::ModifyingSampler, traces) = estimateparams(s.subsampler, map(trace->trace[:sub], traces))
 
 include("mixture_sampler.jl")
 include("truncate_to_support_sampler.jl")
@@ -15,5 +20,3 @@ include("adjust_parameters_to_support_sampler.jl")
 include("align_min_support_sampler.jl")
 include("transforming_sampler.jl")
 include("constrain_parameters_sampler.jl")
-
-

@@ -8,42 +8,43 @@
 
 type DiscreteUniformSampler <: DiscreteDistributionSampler
 	paramranges::Vector{(Float64,Float64)}
-	params::Vector{Float64}
 	distribution::DiscreteUniform
-	function DiscreteUniformSampler(params::Vector{Float64}=Float64[])
-		lbound, ubound = float64(typemin(Int)), float64(typemax(Int))
-		s = new([(lbound,ubound), (lbound,ubound)])
-		setparams(s, isempty(params) ? [lbound, ubound] : params)
+	function DiscreteUniformSampler(params=Float64[])
+		intbounds = (float64(typemin(Int)), float64(typemax(Int)))
+		s = new([intbounds, intbounds])
+		# rather than defaulting to entire int range, we use a 'pragmatic' (and arbitrary) default of the 16-bit range
+		setparams(s, isempty(params) ? [float64(typemin(Int16)), float64(typemax(Int16))] : params)
 		s
 	end
 end
 
-function setparams(s::DiscreteUniformSampler, params::Vector{Float64})
+function setparams(s::DiscreteUniformSampler, params)
 	checkparamranges(s, params)
 	# swap parameters if necessary (as a silent repair during search)
 	if params[1] <= params[2]
-		orderedparams = params[[1,2]]
+		a, b = params[[1,2]]
 	else
-		orderedparams = params[[2,1]]
+		a, b = params[[2,1]]
 	end
 	# we convert temporarily to int128 to avoid InexactErrors that can arise because
 	# for example int(float64(typemax(Int))) is above typemax(Int) owing to rounding errors
 	# (since it is a rounding error, we do this silently)
-	orderedparams = int128(round(orderedparams))
-	if orderedparams[1] < typemin(Int)
-		orderedparams[1] = typemin(Int)
+	a, b = int128(round(a)), int128(round(b))
+	if a < typemin(Int)
+		a = typemin(Int)
 	end
-	if orderedparams[2] > typemax(Int)
-		orderedparams[2] = typemax(Int)
+	if b > typemax(Int)
+		b = typemax(Int)
 	end
 	# now can convert to default Int on the platform
-	orderedparams = int(orderedparams)
-	if orderedparams[1] == typemin(Int) && orderedparams[2] == typemax(Int)
+	a, b = int(a), int(b)
+	if a == typemin(Int) && b == typemax(Int)
 		# if the entire Int domain,  Distributions.DiscreteUniform raises an error, so
 		# here choose to adjust lower part of range to avoid the error
-		orderedparams[1] = typemin(Int)+1
-		warn("lower bound adjusted to $(orderedparams[1]) in DiscreteUniformSampler")
+		a = typemin(Int)+1
+		warn("lower bound adjusted to $(adjustedparams[1]) in DiscreteUniformSampler")
 	end
-	s.params = orderedparams
-	s.distribution = DiscreteUniform(orderedparams[1], orderedparams[2])
+	s.distribution = DiscreteUniform(a, b)
 end
+
+getparams(s::DiscreteUniformSampler) = [float64(s.distribution.a), float64(s.distribution.b)]

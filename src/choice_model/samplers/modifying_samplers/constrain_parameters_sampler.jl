@@ -7,7 +7,7 @@
 type ConstrainParametersSampler <: ModifyingSampler
 	subsampler::Sampler
 	constrainedparamranges::Vector{(Float64,Float64)}
-	function ConstrainParametersSampler(subsampler::Sampler, constrainedparamranges::Vector{(Float64,Float64)})
+	function ConstrainParametersSampler(subsampler::Sampler, constrainedparamranges)
 		samplerparamranges = paramranges(subsampler)
 		samplerparams = getparams(subsampler)
 		adjustedsamplerparams = Float64[]
@@ -27,7 +27,7 @@ type ConstrainParametersSampler <: ModifyingSampler
 	end
 end
 
-function setparams(s::ConstrainParametersSampler, params::Vector{Float64})
+function setparams(s::ConstrainParametersSampler, params)
 	checkparamranges(s, params)
 	setparams(s.subsampler, params)
 end
