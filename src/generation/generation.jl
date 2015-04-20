@@ -182,8 +182,9 @@ function choosereps(s::GodelTest.DerivationState, cpid, minreps, maxreps, params
 	end
 	reps = querychoicemodel(s, SEQUENCE_CP, cpid, Int, minreps, maxreps)
 	if reps > s.maxseqreps
-		warn("choice model specified $(reps) repetitions for a sequence choice point, but this is being reduced to the maximum of $(s.maxseqreps) - specify a larger value of maxseqreps as a parameter to generate if this is not the required behaviour")
-		reps = s.maxseqreps
+		throw(GenerationTerminatedException("a sequence choice point made more than $(reps) repetitions and so exceeded the limit of $(s.maxseqreps): specify a larger value of maxseqrep as a parameter to generate"))
+		# warn("choice model specified $(reps) repetitions for a sequence choice point, but this is being reduced to the maximum of $(s.maxseqreps) - specify a larger value of maxseqreps as a parameter to generate if this is not the required behaviour")
+		# reps = s.maxseqreps
 	end
 	reps
 end
