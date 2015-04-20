@@ -47,7 +47,7 @@ function godelnumber(cm::ChoiceModel, cc::ChoiceContext)
 		gn = floor(gn)
 		# note that query_choice_model will convert to the appropriate type, so need to use int() nor convert() here
 	end
-	gn
+	gn, Dict()
 end
 
 

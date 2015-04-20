@@ -65,7 +65,8 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 		# is set - throw an exception since we cannot return a choice for the choice point
 		throw(GenerationTerminatedException("for all simulations run at the first choice point in NMCS, the number of the choices made exceeded $(cc.derivationstate.maxchoices): specify a larger value of maxchoices as a parameter to generate, or increase the NMCS sample size"))
 	end
-	cm.bestgodelsequence[length(cc.derivationstate.godelsequence)+1]
+	gn = cm.bestgodelsequence[length(cc.derivationstate.godelsequence)+1]
+	gn, Dict()
 end
 
 setparams(cm::NMCSChoiceModel, params) = setparams(cm.policychoicemodel, params)
@@ -79,8 +80,9 @@ end
 
 function godelnumber(cm::NMCSSimulationChoiceModel, cc::ChoiceContext)
 	if isempty(cm.presetgodelsequence)
-		godelnumber(cm.policychoicemodel, cc)
+		gn, trace = godelnumber(cm.policychoicemodel, cc)
 	else
-		shift!(cm.presetgodelsequence)
+		gn, trace = shift!(cm.presetgodelsequence), Dict()
 	end
+	gn, trace
 end

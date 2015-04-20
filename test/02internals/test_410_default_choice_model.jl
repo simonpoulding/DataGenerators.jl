@@ -92,7 +92,7 @@ describe("default choice model - rule choice point") do
 	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.RULE_CP, cpids[1], Int, 1, 4)
 
 	@repeat test("valid Godel numbers returned") do
-		gnum = GodelTest.godelnumber(cm, cc)
+		gnum, trace = GodelTest.godelnumber(cm, cc)
 		@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 		@mcheck_values_are gnum [1,2,3,4]
 	end
@@ -111,7 +111,7 @@ describe("default choice model - sequence choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 0, 2)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check 0 <= gnum <= 2 # default choice model restricts sequence lengths to a maximum of 3 more than minimum
 			@mcheck_values_are gnum [0,1,2]
@@ -124,7 +124,7 @@ describe("default choice model - sequence choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check 11 <= gnum <= 13 # default choice model restricts sequence lengths to a maximum of 3 more than minimum
 			@mcheck_values_are gnum [11,12,13]
@@ -137,7 +137,7 @@ describe("default choice model - sequence choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int, 1, typemax(Int))
 
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check 1 <= gnum <= 3 # default choice model restricts sequence lengths to a maximum of 3 more than minimum
 			@mcheck_values_are gnum [1,2,3]
@@ -158,7 +158,7 @@ describe("default choice model - Bool value choice point") do
 	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Bool, false, true)
 	
 	@repeat test("valid Godel numbers returned") do
-		gnum = GodelTest.godelnumber(cm, cc)
+		gnum, trace = GodelTest.godelnumber(cm, cc)
 		@check convert(Bool,gnum) != nothing  # raises exception if value can't be converted
 		@mcheck_values_are gnum [false,true]
 	end
@@ -178,7 +178,7 @@ describe("default choice model - Int value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, -1, 2)
 
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check -1 <= gnum <= 2
 			@mcheck_values_are gnum [-1,0,1,2]
@@ -191,7 +191,7 @@ describe("default choice model - Int value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check 11 <= gnum <= 16
 			@mcheck_values_include gnum [11,13,16] # just a selection of possible values including end points
@@ -204,7 +204,7 @@ describe("default choice model - Int value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, 128, typemax(Int))
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check 128 <= gnum <= typemax(Int)
 			@mcheck_values_vary gnum
@@ -217,7 +217,7 @@ describe("default choice model - Int value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), 128)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check typemin(Int) <= gnum <= 128
 			@mcheck_values_vary gnum
@@ -230,7 +230,7 @@ describe("default choice model - Int value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int, typemin(Int), typemax(Int))
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 			@check typemin(Int) <= gnum <= typemax(Int)
 			@mcheck_values_vary gnum
@@ -253,7 +253,7 @@ describe("default choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -42.2, -8.7)
 
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check -42.2 <= gnum <= -8.7
 			@mcheck_that_sometimes int(gnum) != gnum
@@ -267,7 +267,7 @@ describe("default choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, 450001.6, Inf)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check 450001.6 <= gnum
 			@mcheck_that_sometimes int(gnum) != gnum
@@ -281,7 +281,7 @@ describe("default choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, 450001.6)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check gnum <= 450001.6
 			@mcheck_that_sometimes int(gnum) != gnum
@@ -295,7 +295,7 @@ describe("default choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, Inf)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@mcheck_that_sometimes int(gnum) != gnum
 			@mcheck_values_vary gnum

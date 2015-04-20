@@ -67,7 +67,7 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 	for samplecount in 0:cm.maxresamplings
 		x, trace = sample(sampler, (lowerbound, upperbound))
 		if lowerbound <= x <= upperbound
-			return x #, trace
+			return x, trace
 		end
 	end
 	warn("falling back to a uniform distribution after too many resamplings in sampler choice model")
@@ -79,10 +79,9 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 		@assert false
 	end
 	fallbackx, fallbacktrace = sample(fallbacksampler, (lowerbound, upperbound))
-	@assert lowerbound <= fallbackx <= upperbound
 	# we use the last trace form the 'proper' sampler but place in it this fallback sampled value
 	amendtrace(sampler, trace, fallbackx)
-	return fallbackx #, trace
+	return fallbackx, trace
 end
 
 

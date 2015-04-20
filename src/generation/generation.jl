@@ -65,8 +65,8 @@ end
 
 
 
-function log(s::DerivationState, cpid::Integer, godelnumber::Real)
-	push!(s.cpids, cpid)
+function log(s::DerivationState, cpid::Integer, godelnumber::Real, trace::Dict)
+	push!(s.cptrace, (cpid, trace))
 	push!(s.godelsequence, godelnumber)
 end
 
@@ -76,7 +76,7 @@ type DefaultDerivationState <: DerivationState
 	generator::Generator
 	choicemodel::ChoiceModel
 	godelsequence::Vector{Real} 		# Can be integers or floats
-	cpids::Vector{Integer}	# A choice point is identified by a unique integer number
+	cptrace::Vector{(Integer,Dict)}	# choice point plus trace info returned from the choice model
 	maxchoices::Int # upper limit on the size of the Godel sequence
 	maxseqreps::Int # upper limit on the length of sequences from sequence choice points
 	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT)
@@ -221,10 +221,9 @@ function querychoicemodel(s::DerivationState, cptype, cpid, datatype, lowerbound
 	# choicecontext = ChoiceContext(s, cptype, cpid, datatype, lowerbound, upperbound, 0)
 	choicecontext = ChoiceContext(s, cptype, cpid, datatype, lowerbound, upperbound)
 	# TODO recursiondepth
-	gn = godelnumber(s.choicemodel, choicecontext)
-	# since the log of godel numbers is used by choice models such as nested monte-carlo search to 'replay' a sequence,
-	# it is arguably more robust to store the original (pre-conversion) vaue in the log
-	log(s, cpid, gn)
+	gn, trace = godelnumber(s.choicemodel, choicecontext)
+	@assert lowerbound <= gn <= upperbound
+	log(s, cpid, gn, trace)
 	# convert the godel number to the specified type
 	# this is most useful for choose_number to ensure returned value is of specified type
 	# note that for Bool, convert treats 0 as false, and 1 as true

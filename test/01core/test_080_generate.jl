@@ -33,7 +33,7 @@ end
 type GNMinimumValueChoiceModel <: GodelTest.ChoiceModel; end
 import GodelTest.godelnumber
 function godelnumber(cm::GNMinimumValueChoiceModel, cc::GodelTest.ChoiceContext)
-	return cc.lowerbound
+	return cc.lowerbound, Dict()
 end
 
 describe("generate using default and non-default choice models") do

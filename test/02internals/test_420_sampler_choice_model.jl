@@ -95,7 +95,7 @@ describe("sampler choice model - rule choice point") do
 	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.RULE_CP, cpids[1], Int, 1, 4)
 
 	@repeat test("valid Godel numbers returned") do
-		gnum = GodelTest.godelnumber(cm, cc)
+		gnum, trace = GodelTest.godelnumber(cm, cc)
 		@check convert(Int,gnum) != nothing  # raises exception if value can't be converted
 		@mcheck_values_are gnum [1,2,3,4]
 	end
@@ -128,7 +128,7 @@ describe("sampler choice model - sequence choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 0, 2)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 0 <= gnum <= 2
 			@mcheck_values_are gnum [0,1,2]
@@ -141,7 +141,7 @@ describe("sampler choice model - sequence choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 11 <= gnum <= 16
 			@mcheck_values_include gnum [11,13,16]
@@ -154,7 +154,7 @@ describe("sampler choice model - sequence choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 1, typemax(Int64))
 
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 1 <= gnum <= typemax(Int64)
 			@mcheck_values_vary gnum
@@ -167,7 +167,7 @@ describe("sampler choice model - sequence choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 7, typemax(Int64))
 
 		test("sampler consistent with a offset geometric distribution") do
-			xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+			xs = map(i->first(GodelTest.godelnumber(cm, cc)), 1:100)
 			ys = cc.lowerbound + rand(Distributions.Geometric(0.5), 100)
 			@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
 		end
@@ -195,13 +195,13 @@ describe("sampler choice model - Bool value choice point") do
 	cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Bool, false, true)
 	
 	@repeat test("valid Godel numbers returned") do
-		gnum = GodelTest.godelnumber(cm, cc)
+		gnum, trace = GodelTest.godelnumber(cm, cc)
 		@check convert(Bool,gnum) != nothing  # raises exception if value can't be converted
 		@mcheck_values_are gnum [false,true]
 	end
 
 	test("sampler consistent with a Bernoulli distribution") do
-		xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+		xs = map(i->first(GodelTest.godelnumber(cm, cc)), 1:100)
 		ys = rand(Distributions.Bernoulli(0.5), 100)
 		@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
 	end
@@ -229,7 +229,7 @@ describe("sampler choice model - Int64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, -1, 2)
 
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check -1 <= gnum <= 2
 			@mcheck_values_are gnum [-1,0,1,2]
@@ -242,7 +242,7 @@ describe("sampler choice model - Int64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, 11, 16)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 11 <= gnum <= 16
 			@mcheck_values_include gnum [11,13,16] # just a selection of possible values including end points
@@ -255,7 +255,7 @@ describe("sampler choice model - Int64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, 128, typemax(Int64))
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check 128 <= gnum <= typemax(Int64)
 			@mcheck_values_vary gnum
@@ -268,7 +268,7 @@ describe("sampler choice model - Int64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, typemin(Int64), 128)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check typemin(Int64) <= gnum <= 128
 			@mcheck_values_vary gnum
@@ -281,7 +281,7 @@ describe("sampler choice model - Int64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Int64, typemin(Int64), typemax(Int64))
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Int64,gnum) != nothing  # raises exception if value can't be converted
 			@check typemin(Int64) <= gnum <= typemax(Int64)
 			@mcheck_values_vary gnum
@@ -294,7 +294,7 @@ describe("sampler choice model - Int64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, 29, 301)
 
 		test("sampler consistent with a discrete uniform distribution") do
-			xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+			xs = map(i->first(GodelTest.godelnumber(cm, cc)), 1:100)
 			ys = rand(Distributions.DiscreteUniform(cc.lowerbound, cc.upperbound), 100)
 			@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
 		end
@@ -322,7 +322,7 @@ describe("sampler choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -42.2, -8.7)
 
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check -42.2 <= gnum <= -8.7
 			@mcheck_that_sometimes int(gnum) != gnum
@@ -336,7 +336,7 @@ describe("sampler choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, 450001.6, Inf)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check 450001.6 <= gnum
 			# @mcheck_that_sometimes int(gnum) != gnum
@@ -350,7 +350,7 @@ describe("sampler choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, 450001.6)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			@check gnum <= 450001.6
 			# @mcheck_that_sometimes int(gnum) != gnum
@@ -364,7 +364,7 @@ describe("sampler choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -Inf, Inf)
 		
 		@repeat test("valid Godel numbers returned") do
-			gnum = GodelTest.godelnumber(cm, cc)
+			gnum, trace = GodelTest.godelnumber(cm, cc)
 			@check convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 			# @mcheck_that_sometimes int(gnum) != gnum
 			@mcheck_values_vary gnum
@@ -377,7 +377,7 @@ describe("sampler choice model - Float64 value choice point") do
 		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -180.7, 123.728)
 
 		test("sampler consistent with a uniform distribution") do
-			xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+			xs = map(i->first(GodelTest.godelnumber(cm, cc)), 1:100)
 			ys = rand(Distributions.Uniform(cc.lowerbound, cc.upperbound), 100)
 			@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
 		end
