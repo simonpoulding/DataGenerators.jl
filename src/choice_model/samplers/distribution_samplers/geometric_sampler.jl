@@ -12,7 +12,6 @@
 
 type GeometricSampler <: DiscreteDistributionSampler
 	paramranges::Vector{(Float64,Float64)}
-	params::Vector{Float64}
 	distribution::Geometric
 	function GeometricSampler(params=Float64[])
 		s = new([(0.0, 1.0)])
@@ -24,6 +23,7 @@ end
 function setparams(s::GeometricSampler, params)
 	checkparamranges(s, params)
 	# parameter of Distribution.Geometric must be in the open interval (0,1), so silently adjust if necessary
+	# note nextfloat(0.0), prevfloat(1.0) insufficient adjustment: gives rise to InexactValue error
 	p = min(0.99999, max(0.00001, params[1]))
 	s.distribution = Geometric(p)
 end

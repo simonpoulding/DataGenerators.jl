@@ -1,6 +1,7 @@
 # tests sampler choice model
 
 using GodelTest
+using HypothesisTests
 
 @generator SCMGen begin # prefix SCM (for Sampler Choice Model) to avoid type name clashes
 	start() = reps(a,1+1,2+2) # non-literal arguments to allow us to pass range to godelnumber during testing
@@ -163,18 +164,24 @@ describe("sampler choice model - sequence choice point") do
 		
 	end
 	
-	test("sampler uses a Geometric distribution") do
-		@check length(cm.samplers) == 1
-		sampler = first(values(cm.samplers))
-		@check typeof(sampler) <: GodelTest.GeometricSampler
-	end
+	describe("sampler") do
 
-	test("get and set sampler parameters") do
-		sampler = first(values(cm.samplers))
-		@check getparams(cm) == [0.5,]
-		@check paramranges(cm) == [(0.0,1.0),]
-		setparams(cm,[0.6])
-		@check getparams(cm) == [0.6,]
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.SEQUENCE_CP, cpids[1], Int64, 7, typemax(Int64))
+
+		test("sampler consistent with a offset geometric distribution") do
+			xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+			ys = cc.lowerbound + rand(Distributions.Geometric(0.5), 100)
+			@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
+		end
+	
+		test("get and set sampler parameters") do
+			sampler = first(values(cm.samplers))
+			@check getparams(cm) == [0.5,]
+			@check paramranges(cm) == [(0.0,1.0),]
+			setparams(cm,[0.6])
+			@check getparams(cm) == [0.6,]
+		end
+
 	end
 	
 end
@@ -195,10 +202,10 @@ describe("sampler choice model - Bool value choice point") do
 		@mcheck_values_are gnum [false,true]
 	end
 
-	test("sampler uses a Bernoulli distribution") do
-		@check length(cm.samplers) == 1
-		sampler = first(values(cm.samplers))
-		@check typeof(sampler) <: GodelTest.BernoulliSampler
+	test("sampler consistent with a Bernoulli distribution") do
+		xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+		ys = rand(Distributions.Bernoulli(0.5), 100)
+		@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
 	end
 
 	test("get and set sampler parameters") do
@@ -286,10 +293,12 @@ describe("sampler choice model - Int64 value choice point") do
 	
 	describe("sampler") do
 		
-		test("sampler uses a DiscreteUniform distribution") do
-			@check length(cm.samplers) == 1
-			sampler = first(values(cm.samplers))
-			@check typeof(sampler) <: GodelTest.DiscreteUniformSampler
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, 29, 301)
+
+		test("sampler consistent with a discrete uniform distribution") do
+			xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+			ys = rand(Distributions.DiscreteUniform(cc.lowerbound, cc.upperbound), 100)
+			@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
 		end
 
 		test("get and set sampler parameters") do
@@ -367,10 +376,12 @@ describe("sampler choice model - Float64 value choice point") do
 	
 	describe("sampler") do
 	
-		test("sampler uses a Uniform distribution") do
-			@check length(cm.samplers) == 1
-			sampler = first(values(cm.samplers))
-			@check typeof(sampler) <: GodelTest.UniformSampler
+		cc = GodelTest.ChoiceContext(GodelTest.DefaultDerivationState(gn, cm, 10000), GodelTest.VALUE_CP, cpids[1], Float64, -180.7, 123.728)
+
+		test("sampler consistent with a uniform distribution") do
+			xs = map(i->GodelTest.godelnumber(cm, cc), 1:100)
+			ys = rand(Distributions.Uniform(cc.lowerbound, cc.upperbound), 100)
+			@check pvalue(MannWhitneyUTest(xs,ys)) > 0.0001			
 		end
 
 		test("get and set sampler parameters") do
@@ -422,7 +433,7 @@ describe("sampler choice model - non-default mapping") do
 		end
 	end
 
-	cm = SamplerChoiceModel(gn, nondefaultmapping)
+	cm = SamplerChoiceModel(gn, choicepointmapping=nondefaultmapping)
 	
 	@check length(cm.samplers) == 1
 	sampler = first(values(cm.samplers))

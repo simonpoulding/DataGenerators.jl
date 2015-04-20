@@ -22,8 +22,13 @@ function sample(s::TruncateToSupportSampler, support)
 	# TODO: check whether it is better to store truncated distribution, and only
 	# recreate when support changes.  If so, will need to trap setparams call so
 	# as to clear any stored truncated distribution
-	truncateddistribution = Truncated(s.subsampler.distribution, support[1], support[2])
-	x = rand(truncateddistribution)
-	x, {:sub=>{:val=>x}}
+	if support[1] == support[2]
+		# can give an error when support[1] == support[2]
+		x = support[1]
+	else
+		truncateddistribution = Truncated(s.subsampler.distribution, support[1], support[2])
+		x = rand(truncateddistribution)
+	end
+	x, {:sub=>{:rnd=>x}}
 end
 

@@ -8,12 +8,12 @@
 
 type UniformSampler <: ContinuousDistributionSampler
 	paramranges::Vector{(Float64,Float64)}
-	params::Vector{Float64}
-	distribution::Uniform
+	distribution::Union(Uniform,Float64)
+	# to handle case where a==b (which raises error in Uniform), we
+	# indicate this case by setting distribution to a fixed value
 	function UniformSampler(params=Float64[])
-		floatbounds = (typemin(Float64), typemax(Float64))
-		s = new([floatbounds, floatbounds])
-		# rather than defaulting to entire int range, we use a 'pragmatic' (and arbitrary) range of [-1.0, 1.0]
+		s = new( [(-realmax(Float64), realmax(Float64)), (-realmax(Float64), realmax(Float64))] )
+		# rather than defaulting to entire float range, we use a 'pragmatic' (and arbitrary) range of [-1.0, 1.0]
 		setparams(s, isempty(params) ? [-1.0, 1.0] : params)
 		s
 	end
@@ -27,21 +27,26 @@ function setparams(s::UniformSampler, params)
 	else
 		a, b = params[[2,1]]
 	end
-	# Uniform samples from semi-open [a,b), but we interpret params as specifying closed interval [a,b], so we adjust:
-	b += nextfloat(b)
-	# Distributions.Uniform returns samples of NaN if lower bound is -Inf,
-	# and (+)Inf if length of domain is more than (approx?) realmax(Float64) ~= 1.79e308
-	# therefore limit lower and upper bounds to -/+ realmax(Float64) / 2
-	bound = realmax(Float64)/2
-	if a < -bound
-		a = -bound
-		warn("lower bound adjusted to $(adjustedparams[1]) in UniformSampler")
+	# note that Distributions.Uniform samples from closed interval [a,b], but currently raises an error when a==b, temporary workaround:
+	if a==b
+		s.distribution = b
+		# see note in type definition: this is workaround for error raised in Uniform constructor when a==b
+	else
+		# adjust a,b to be at most realmax(Float64) apart, otherwise Uniform will always return Inf
+		m = robustmidpoint(a,b) # util function that avoids overflow to Inf
+		if (m-a) > realmax(Float64)/2
+			a = m - realmax(Float64)/2
+			b = m + realmax(Float64)/2
+			warn("interval of Uniform sampler adjusted to [$a,$b]")
+		end
+		s.distribution = Uniform(a, b)
 	end
-	if b > bound
-		b = bound
-		warn("upper bound adjusted to $(adjustedparams[2]) in UniformSampler")
-	end
-	s.distribution = Uniform(a, b)
 end
 
-getparams(s::UniformSampler) = [s.distribution.a, s.distribution.b]
+getparams(s::UniformSampler) = typeof(s.distribution) <: Uniform ? [s.distribution.a, s.distribution.b] : [s.distribution, s.distribution]
+
+function sample(s::UniformSampler, support)
+ x = typeof(s.distribution) <: Uniform ? rand(s.distribution) : s.distribution
+ # we return both the sampled value, and a dict as trace information
+ x, {:rnd=>x}
+end

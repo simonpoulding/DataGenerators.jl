@@ -8,16 +8,18 @@ include(joinpath("samplers", "sampler.jl"))
 # The sampler choice model is a set of samplers, one assigned to each choice point (indexed by choice point id)
 type SamplerChoiceModel <: ChoiceModel
 	samplers::Dict{Uint, Sampler}
-	maxresamplings::Uint
+	maxresamplings::Int
 end
 
-function SamplerChoiceModel(g::Generator; maxresamplings::Uint=9, choicepointmapping::Function=defaultchoicepointmapping)
+function SamplerChoiceModel(g::Generator; choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
 	samplers = (Uint=>Sampler)[]
 	for (cpid, info) in choicepointinfo(g) # gets info from sub-generators also
-		samplers[cpid] = cpmappingfn(info)
+		samplers[cpid] = choicepointmapping(info)
 	end
+	maxresamplings >= 0 || ("maxresamplings cannot be negative")
 	SamplerChoiceModel(samplers, maxresamplings)
 end
+
 
 function defaultchoicepointmapping(info::Dict)
 	cptype = info[:type]
@@ -26,9 +28,9 @@ function defaultchoicepointmapping(info::Dict)
 		# justification: expected be a small range, is guaranteed to be closed, and no meaning is attached to order
 		# varying support: not possible
 	elseif cptype == SEQUENCE_CP
-		sampler = AlignMinSupportSampler(GeometricSampler())
+		sampler = AlignMinimumSupportSampler(GeometricSampler())
 		# justification: often builds recursive structures, so smaller number of repetitions should be more likely
-		# varying support: lower handled by AlignMinSupportSampler; upper by rejection sampling
+		# varying support: lower handled by AlignMinimumSupportSampler; upper by rejection sampling
 	elseif cptype == VALUE_CP
 		datatype = info[:datatype]
 		if datatype <: Bool
@@ -59,23 +61,25 @@ end
 # resample if necessary - usually because upperbound cannot be enforced directly by sampler,
 # but eventually fall back to uniform distribution
 function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
+	lowerbound = isfinite(cc.lowerbound) ? cc.lowerbound : sign(cc.lowerbound) * realmax(Float64)
+	upperbound = isfinite(cc.upperbound) ? cc.upperbound : sign(cc.upperbound) * realmax(Float64)
 	sampler = cm.samplers[cc.cpid]
 	for samplecount in 0:cm.maxresamplings
-		x, trace = sample(sampler, (cc.lowerbound, cc.upperbound))
-		if cc.lowerbound <= x <= cc.upperbound
+		x, trace = sample(sampler, (lowerbound, upperbound))
+		if lowerbound <= x <= upperbound
 			return x #, trace
 		end
 	end
 	warn("falling back to a uniform distribution after too many resamplings in sampler choice model")
 	if cc.datatype <: Integer # includes Bool
-		fallbacksampler = DiscreteUniformSampler([cc.lowerbound, cc.upperbound])
+		fallbacksampler = DiscreteUniformSampler([lowerbound, upperbound])
 	elseif cc.datatype <: FloatingPoint
-		fallbacksampler = UniformSampler([cc.lowerbound, cc.upperbound])
+		fallbacksampler = UniformSampler([lowerbound, upperbound])
 	else
 		@assert false
 	end
-	fallbackx, fallbacktrace = sample(fallbacksampler, (cc.lowerbound, cc.upperbound))
-	@assert cc.lowerbound <= fallbackx <= cc.upperbound
+	fallbackx, fallbacktrace = sample(fallbacksampler, (lowerbound, upperbound))
+	@assert lowerbound <= fallbackx <= upperbound
 	# we use the last trace form the 'proper' sampler but place in it this fallback sampled value
 	amendtrace(sampler, trace, fallbackx)
 	return fallbackx #, trace

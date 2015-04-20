@@ -42,7 +42,7 @@ function setparams(s::DiscreteUniformSampler, params)
 		# if the entire Int domain,  Distributions.DiscreteUniform raises an error, so
 		# here choose to adjust lower part of range to avoid the error
 		a = typemin(Int)+1
-		warn("lower bound adjusted to $(adjustedparams[1]) in DiscreteUniformSampler")
+		warn("interval of DiscreteUniform sampler adjusted to [$a,$b]")
 	end
 	s.distribution = DiscreteUniform(a, b)
 end

@@ -1,5 +1,5 @@
 #
-# Align Min Support Sampler
+# Align Minimum Support Sampler
 #
 # adds a fixed value to sampled value so that minimum of requested support is aligned to minimum of support of 
 # the subsampler (which is assumed to be a DistributionSampler)
@@ -7,17 +7,17 @@
 # if it is infinite
 #
 
-type AlignMinSupportSampler <: ModifyingSampler
+type AlignMinimumSupportSampler <: ModifyingSampler
 	subsampler::DistributionSampler
-	function AlignMinSupportSampler(subsampler::DistributionSampler)
+	function AlignMinimumSupportSampler(subsampler::DistributionSampler)
 		new(subsampler)
 	end
 end
 
-function sample(s::AlignMinSupportSampler, support)
+function sample(s::AlignMinimumSupportSampler, support)
 	delta = support[1] - minimum(s.subsampler.distribution)
 	x, trace = sample(s.subsampler, (support[1]-delta, support[2]-delta))
 	x + delta, {:sub=>trace, :delta=>delta}
 end
 
-amendtrace(s::AlignMinSupportSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], x - trace[:delta])
+amendtrace(s::AlignMinimumSupportSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], x - trace[:delta])

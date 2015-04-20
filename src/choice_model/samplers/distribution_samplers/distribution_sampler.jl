@@ -9,7 +9,7 @@ paramranges(s::DistributionSampler) = copy(s.paramranges)
 function sample(s::DistributionSampler, support)
  x = rand(s.distribution)
  # we return both the sampled value, and a dict as trace information
- x, {:val=>x}
+ x, {:rnd=>x}
 end
 
 function estimateparams(s::DistributionSampler, traces)
@@ -21,8 +21,9 @@ function estimateparams(s::DistributionSampler, traces)
 	end
 end
 
-amendtrace(s::DistributionSampler, trace, x) = trace[:val] = x
+amendtrace(s::DistributionSampler, trace, x) = trace[:rnd] = x
 
+include("sampler_utils.jl")
 include("bernoulli_sampler.jl")
 include("categorical_sampler.jl")
 include("discrete_uniform_sampler.jl")

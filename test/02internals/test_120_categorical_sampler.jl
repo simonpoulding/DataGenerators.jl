@@ -1,97 +1,87 @@
+include("sampler_test_utils.jl")
+
 describe("Categorical Sampler") do
 
-	test("constructor") do
-		s = GodelTest.CategoricalSampler(4)
-		@check s.paramranges == [(0.0,1.0),(0.0,1.0),(0.0,1.0),(0.0,1.0),]
-		@check s.params == [0.25, 0.25, 0.25, 0.25,]			
-		@check typeof(s.distribution) == Distributions.Categorical
-		@check s.distribution.K == 4
-		@check s.distribution.p == [0.25, 0.25, 0.25, 0.25,]
-	end
+	describe("default construction") do
 
-	test("constructor checks") do
-		@check_throws s = GodelTest.CategoricalSampler(0) # must be >= 1 categories
-	end
-		
-	test("constructor with params") do
-		s = GodelTest.CategoricalSampler(3, [0.8, 0.1, 0.1])
-		@check s.paramranges == [(0.0,1.0),(0.0,1.0),(0.0,1.0),]
-		@check s.params == [0.8, 0.1, 0.1,]			
-		@check typeof(s.distribution) == Distributions.Categorical
-		@check s.distribution.K == 3
-		@check s.distribution.p == [0.8, 0.1, 0.1,]
-	end
+		s = GodelTest.CategoricalSampler(4)
+
+		test("numparams and paramranges") do
+			@check GodelTest.numparams(s) == 4
+			@check GodelTest.paramranges(s) == fill((0.0,1.0), GodelTest.numparams(s))
+		end
 	
-	test("numparams") do
-		s = GodelTest.CategoricalSampler(7)
-		@check GodelTest.numparams(s) == 7
-	end
-
-	test("paramranges") do
-		s = GodelTest.CategoricalSampler(13)
-		pr = paramranges(s)
-		@check typeof(pr) == Vector{(Float64,Float64)}
-		@check length(pr)==13
-		@check all(x->x==(0.0, 1.0), pr)
-	end
-
-	test("setparams") do
-		s = GodelTest.CategoricalSampler(3)
-		setparams(s, [0.7, 0.1, 0.2])
-		@check typeof(s.distribution) == Distributions.Categorical
-		@check s.distribution.K == 3
-		@check s.distribution.p == [0.7, 0.1, 0.2]
-		@check s.params == [0.7, 0.1, 0.2]
-	end
-
-	test("setparams checks") do
-		s = GodelTest.CategoricalSampler(3)
-		@check_throws setparams(s, [0.7, 0.3]) # too few params
-		@check_throws setparams(s, [0.4, 0.2, 0.2, 0.2]) # too many params
-		setparams(s, [0.0, 1.0, 0.0])
-		@check s.distribution.p == [0.0, 1.0, 0.0]
-		@check_throws setparams(s, [0.0, 1.01, 0.0]) # > 1
-		@check_throws setparams(s, [0.0, 1.0, -0.01]) # < 0
-	end
-
-	test("setparams adjustments") do
-		s = GodelTest.CategoricalSampler(4)
-		setparams(s, [0.2, 0.1, 0.1, 0.1])
-		@check s.params == [0.4, 0.2, 0.2, 0.2]
-		@check s.distribution.p == [0.4, 0.2, 0.2, 0.2]
-		setparams(s, [0.5, 1.0, 0.5, 0.0])
-		@check s.params == [0.25, 0.5, 0.25, 0.0]
-		@check s.distribution.p == [0.25, 0.5, 0.25, 0.0]
-		setparams(s, [0.0, 0.0, 0.0, 0.0])
-		@check s.params == [0.25, 0.25, 0.25, 0.25]
-		@check s.distribution.p == [0.25, 0.25, 0.25, 0.25]
-	end
-
-	test("getparams") do
-		s = GodelTest.CategoricalSampler(2)
-		setparams(s, [0.4, 0.6])
-		@check getparams(s) == [0.4, 0.6]
-	end
-		
-	describe("sampling") do
-
-		s = GodelTest.CategoricalSampler(4)
+		test("default params") do
+			@check GodelTest.getparams(s) == [0.25, 0.25, 0.25, 0.25]
+			@check isconsistentcategorical(s, GodelTest.getparams(s))
+		end
 	
-		@repeat test("across full range of support") do
-			setparams(s, [0.25, 0.25, 0.25, 0.25],)
-			x = GodelTest.sample(s, [1,4])
-			@check typeof(x) == Int64
+		@repeat test("default sampling") do
+			x, trace = GodelTest.sample(s, (0,1))
+			@check typeof(x) <: Int
 			@mcheck_values_are x [1,2,3,4]
 		end
+		
+	end
+		
+	describe("non-default construction") do
 
-		@repeat test("random parameters") do
-			setparams(s, [rand(), rand(), rand(), rand()])
-			x = GodelTest.sample(s, [-32,10])
-			@check typeof(x) == Int64
-			@check 1 <= x <= 4
+		s = GodelTest.CategoricalSampler(5, [0.3,0.2,0.1,0.2,0.2])
+		
+		test("constructor with params") do
+			@check getparams(s) == [0.3,0.2,0.1,0.2,0.2]
+			@check isconsistentcategorical(s, GodelTest.getparams(s))
+		end
+
+	end
+	
+	describe("parameter setting") do
+	
+		s = GodelTest.CategoricalSampler(4)
+		prs = GodelTest.paramranges(s)
+		midparams = map(pr->robustmidpoint(pr[1],pr[2]), prs)
+
+		test("setparams with wrong number of parameters") do
+			@check_throws GodelTest.setparams(s, midparams[1:end-1])
+			@check_throws GodelTest.setparams(s, [midparams, 0.5])
+		end
+
+		test("setparams boundary values") do
+			for pidx = 1:length(prs)
+				pr = prs[pidx]
+				params = copy(midparams)
+				params[pidx] = pr[1] 
+				GodelTest.setparams(s, params)
+				@check isconsistentcategorical(s, params)
+				params[pidx] = prevfloat(pr[1])
+				@check_throws GodelTest.setparams(s, params)
+				params[pidx] = pr[2] 
+				GodelTest.setparams(s, params)
+				@check isconsistentcategorical(s, params)
+				params[pidx] = nextfloat(pr[2])
+				@check_throws GodelTest.setparams(s, params)
+			end
+		end
+	
+		test("setparams normalises weights") do
+			GodelTest.setparams(s, [0.4, 0.6, 0.7, 0.3])
+			@check getparams(s) == [0.2, 0.3, 0.35, 0.15]
+			@check isconsistentcategorical(s, GodelTest.getparams(s))
+		end
+	
+		test("setparams adjusts when all weights are zero") do
+			GodelTest.setparams(s, [0.0, 0.0, 0.0, 0.0])
+			@check getparams(s) == [0.25, 0.25, 0.25, 0.25]
+			@check isconsistentcategorical(s, GodelTest.getparams(s))
+		end
+
+		@repeat test("setparams with random parameters") do
+			params = map(pr->robustmidpoint(pr[1],pr[2])+(2.0*rand()-1.0)*(pr[2]-robustmidpoint(pr[1],pr[2])), prs)
+			# convulated expression involving middle to avoid overflow to Inf
+			GodelTest.setparams(s, params)
+			@check isconsistentcategorical(s, params)
 		end
 		
 	end
-
-	
+		
 end

@@ -10,9 +10,11 @@ type NormalSampler <: ContinuousDistributionSampler
 	paramranges::Vector{(Float64,Float64)}
 	distribution::Normal
 	function NormalSampler(params=Float64[])
-		# Distributions.Normal returns samples of NaN if mean is -Inf and sigma is Inf
-		# therefore limit sigma to realmax(Float64)
-		s = new([(-Inf,Inf),(0.0,realmax(Float64))])
+		# We restrict the range of the real-values parameters to less than the entire float range
+		# in order to avoid overflow errors in Distributions.Normal
+		# We use sqrt of the bound for sigma on the basis that it is the calculation of the variance
+		# that can cause an overflow
+		s = new( [(-realmax(Float64), realmax(Float64)), (0, realmax(Float64))] )
 		setparams(s, isempty(params) ? [0.0, 1.0] : params)
 		s
 	end
@@ -20,8 +22,7 @@ end
 
 function setparams(s::NormalSampler, params)
 	checkparamranges(s, params)
-	μ = params[1]
-	σ = max(eps(0.0),params[2]) # sigma cannot be exactly 0.0
+	μ, σ = params[1], max(nextfloat(0.0), params[2]) # sigma cannot be zero
 	s.distribution = Normal(μ, σ)
 end
 
