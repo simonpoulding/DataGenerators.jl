@@ -53,45 +53,39 @@ gn = RecursiveExprGen()
 #   GodelTest.SamplerChoiceModel(samplers)
 # end
 
-# SMP - converted the above to use these new features now avaiable (and thereby avoid any kludges):
-# (1) mappingfn parameter to SamplerChoiceModel to modify samplers used
-# (2) ConstrainedParametersSampler to specify range of (new, standard) GaussianSampler
-# (3) use TransformingFuncSampler to add cp minimum value to value returned by GaussianSampler (as well as converting it to a non-negative integer)- this ensures that it always satisfies the minimum value of the choice point, and so the Gaussian doesn't fall back to a uniform which can produce very large values
-function custommappingfn(info::Dict)
+# SMP - converted the above to use these new features now avaiable:
+# (1) choicepointmapping parameter to SamplerChoiceModel to modify samplers used
+# (2) new MixtureSampler
+# (3) new NormalSampler
+# (note: does not currently constrain the parameter ranges of the NormalSampler)
+# BUT... currently large param ranges give rise to an error from BlackBoxOptim:
+#    ArgumentError("Invalid search range specification.") 
+function custommapping(info::Dict)
 	cptype = info[:type]
 	if cptype == GodelTest.RULE_CP
 	  sampler = GodelTest.CategoricalSampler(info[:max])
 	elseif cptype == GodelTest.SEQUENCE_CP
 	  minreps = haskey(info,:min) ? info[:min] : 0
-	  println("minreps: $(minreps)")
-	  sampler = GodelTest.MixtureSampler([
-		  	GodelTest.GeometricSampler(),
-		    # Actually we need to ensure positive results to get good optimization. Investigate.
-			GodelTest.TransformingFuncSampler(
-				GodelTest.ConstrainedParametersSampler(
-					GodelTest.GaussianSampler(),
-					[(0.0, 100.0), (0.0, 10.0)]
-				),
-				(x::Float64) -> minreps+floor(abs(x))
-			)
-		])
-	    #GodelTest.GaussianSampler(0.0, 1000.0, 10.0, true)])
+	  sampler = GodelTest.TransformSampler(
+					GodelTest.MixtureSampler(GodelTest.GeometricSampler(), GodelTest.NormalSampler([50.0, 5.0])),
+					x->floor(abs(x))+minreps,
+					x->x-minreps) 
 	elseif cptype == GodelTest.VALUE_CP
-	  datatype = info[:datatype]
-	  if datatype <: Bool
-	    sampler = GodelTest.BernoulliSampler()
-	  elseif datatype <: Integer # order of if clauses matters here since Bool <: Integer
-	    sampler = GodelTest.DiscreteUniformSampler()
-	  else # floating point, but may also be a rational type
-	    sampler = GodelTest.UniformSampler()
-	  end
+		datatype = info[:datatype]
+		if datatype <: Bool
+			sampler = GodelTest.BernoulliSampler()
+		elseif datatype <: Integer # order of if clauses matters here since Bool <: Integer
+			sampler = GodelTest.AdjustParametersToSupportSampler(GodelTest.DiscreteUniformSampler())
+		else
+			sampler = GodelTest.AdjustParametersToSupportSampler(GodelTest.UniformSampler())
+		end
 	else
-	  error("unrecognised choice point type when creating sampler choice model")
+	  error("unrecognised choice point type when creating custom sampler mapping")
 	end
 end
 
 # create a choice model using the sampler choice model with the customised mapping that uses a mixture model
-cm = SamplerChoiceModel(gn, custommappingfn)
+cm = SamplerChoiceModel(gn, choicepointmapping=custommapping)
 
 # Number of expressions sampled when comparing different choice models
 NumSamples = 10000
