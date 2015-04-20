@@ -55,11 +55,9 @@ gn = RecursiveExprGen()
 
 # SMP - converted the above to use these new features now avaiable:
 # (1) choicepointmapping parameter to SamplerChoiceModel to modify samplers used
-# (2) new MixtureSampler
-# (3) new NormalSampler
-# (note: does not currently constrain the parameter ranges of the NormalSampler)
-# BUT... currently large param ranges give rise to an error from BlackBoxOptim:
-#    ArgumentError("Invalid search range specification.") 
+# (2) MixtureSampler
+# (3) NormalSampler
+# (4) ConstrainParameterSampler
 function custommapping(info::Dict)
 	cptype = info[:type]
 	if cptype == GodelTest.RULE_CP
@@ -67,7 +65,7 @@ function custommapping(info::Dict)
 	elseif cptype == GodelTest.SEQUENCE_CP
 	  minreps = haskey(info,:min) ? info[:min] : 0
 	  sampler = GodelTest.TransformSampler(
-					GodelTest.MixtureSampler(GodelTest.GeometricSampler(), GodelTest.NormalSampler([50.0, 5.0])),
+					GodelTest.MixtureSampler(GodelTest.GeometricSampler(), GodelTest.ConstrainParametersSampler(GodelTest.NormalSampler(), [(0.0,100.0), (0.0,10.0)])),
 					x->floor(abs(x))+minreps,
 					x->x-minreps) 
 	elseif cptype == GodelTest.VALUE_CP

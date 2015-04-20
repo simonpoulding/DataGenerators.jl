@@ -10,7 +10,9 @@ describe("Mixture Sampler") do
 
 		test("numparams and paramranges") do
 			@check GodelTest.numparams(s) == 2 + GodelTest.numparams(s1) + GodelTest.numparams(s2)
-			@check GodelTest.paramranges(s) == [(0.0,1.0), (0.0,1.0), GodelTest.paramranges(s1), GodelTest.paramranges(s2)]
+			prs = GodelTest.paramranges(s)
+			@check typeof(prs) <: Vector{(Float64,Float64)} 
+			@check prs == [(0.0,1.0), (0.0,1.0), GodelTest.paramranges(s1), GodelTest.paramranges(s2)]
 		end
 	
 		test("default params") do

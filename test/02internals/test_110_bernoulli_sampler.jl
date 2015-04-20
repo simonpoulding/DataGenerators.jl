@@ -8,7 +8,9 @@ describe("Bernoulli Sampler") do
 
 		test("numparams and paramranges") do
 			@check GodelTest.numparams(s) == 1
-			@check GodelTest.paramranges(s) == [(0.0,1.0)]
+			prs = GodelTest.paramranges(s)
+			@check typeof(prs) <: Vector{(Float64,Float64)} 
+			@check prs == [(0.0,1.0)]
 		end
 	
 		test("default params") do

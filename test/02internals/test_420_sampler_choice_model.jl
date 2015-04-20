@@ -59,16 +59,14 @@ describe("sampler choice model - set/get parameters and ranges") do
 
 	test("paramranges") do
 		ranges = paramranges(cm)
-		@check typeof(ranges) <: Vector
+		@check typeof(ranges) <: Vector{(Float64,Float64)}
 		@check length(ranges) == 5
-		@check all([typeof(range) <: (Real,Real) for range in ranges])
 	end
 
 	test("getparams") do
 		params = getparams(cm)
-		@check typeof(params) <: Vector
+		@check typeof(params) <: Vector{Float64}
 		@check length(params) == 5
-		@check all([typeof(param) <: Real for param in params])
 	end
 
 	test("setparams") do

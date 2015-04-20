@@ -8,7 +8,9 @@ describe("Uniform Sampler") do
 
 		test("numparams and paramranges") do
 			@check GodelTest.numparams(s) == 2
-			@check GodelTest.paramranges(s) == [(-realmax(Float64), realmax(Float64)), (-realmax(Float64), realmax(Float64))]
+			prs = GodelTest.paramranges(s)
+			@check typeof(prs) <: Vector{(Float64,Float64)} 
+			@check prs == [(-realmax(Float64), realmax(Float64)), (-realmax(Float64), realmax(Float64))]
 		end
 	
 		test("default params") do

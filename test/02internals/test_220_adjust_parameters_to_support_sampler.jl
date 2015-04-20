@@ -9,11 +9,15 @@ describe("Adjust Parameters to Support Sampler") do
 
 		test("numparams and paramranges") do
 			@check GodelTest.numparams(s) == 0
-			@check GodelTest.paramranges(s) == (Float64,Float64)[]
+			prs = GodelTest.paramranges(s)
+			@check typeof(prs) <: Vector{(Float64,Float64)} 
+			@check prs == (Float64,Float64)[]
 		end
 	
 		test("default params") do
-			@check GodelTest.getparams(s) == Float64[]
+			ps = GodelTest.getparams(s)
+			@check typeof(ps) <: Vector{Float64}
+			@check ps == Float64[]
 		end
 
 		test("set params") do

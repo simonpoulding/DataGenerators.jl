@@ -8,7 +8,9 @@ describe("Categorical Sampler") do
 
 		test("numparams and paramranges") do
 			@check GodelTest.numparams(s) == 4
-			@check GodelTest.paramranges(s) == fill((0.0,1.0), GodelTest.numparams(s))
+			prs = GodelTest.paramranges(s)
+			@check typeof(prs) <: Vector{(Float64,Float64)} 
+			@check prs == fill((0.0,1.0), GodelTest.numparams(s))
 		end
 	
 		test("default params") do

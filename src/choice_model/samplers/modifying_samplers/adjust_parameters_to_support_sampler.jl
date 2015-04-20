@@ -15,7 +15,7 @@ end
 
 function paramranges(s::AdjustParametersToSupportSampler)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
-		return Float64[]
+		return (Float64,Float64)[]
 	else
 		@assert false
 	end
@@ -23,7 +23,7 @@ end
 
 function getparams(s::AdjustParametersToSupportSampler)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
-		return (Float64,Float64)[]
+		return (Float64)[]
 	else
 		@assert false
 	end
