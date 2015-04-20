@@ -13,7 +13,7 @@ function sample(s::DistributionSampler, support)
 end
 
 function estimateparams(s::DistributionSampler, traces)
-	samples = map(trace->trace[:val], traces)
+	samples = map(trace->trace[:rnd], traces)
 	samples = convert(typeof(s) <: DiscreteDistributionSampler ? Vector{Int} : Vector{Float64}, samples)
 	minsamples = typeof(s.distribution) in [Normal,] ? 2 : 1
 	if length(samples) >= minsamples

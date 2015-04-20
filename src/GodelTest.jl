@@ -10,7 +10,7 @@ export register, generatorfor
 export DefaultChoiceModel, SamplerChoiceModel, NMCSChoiceModel
 
 # exported Choice Model functions
-export paramranges, setparams, getparams
+export paramranges, setparams, getparams, estimateparams
 
 using Distributions
 

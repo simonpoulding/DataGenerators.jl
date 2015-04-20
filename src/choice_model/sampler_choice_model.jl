@@ -131,4 +131,21 @@ function getparams(cm::SamplerChoiceModel)
 	params
 end
 
+function estimateparams(cm::SamplerChoiceModel, cptraces)
+	tracesbycpid = (Uint=>Vector{Dict})[]
+	for cptrace in cptraces
+		for (cpid, trace) in cptrace
+			if !haskey(tracesbycpid, cpid)
+				tracesbycpid[cpid] = Dict[]
+			end
+			push!(tracesbycpid[cpid],trace)
+		end
+	end
+	for (cpid, sampler) in cm.samplers
+		if haskey(tracesbycpid, cpid)
+			estimateparams(sampler, tracesbycpid[cpid])
+		end
+	end
+end
+
 
