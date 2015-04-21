@@ -50,3 +50,16 @@ function sample(s::UniformSampler, support)
  # we return both the sampled value, and a dict as trace information
  x, {:rnd=>x}
 end
+
+function estimateparams(s::UniformSampler, traces)
+	samples = extractsamplesfromtraces(s, traces)
+	minnumsamples = 1
+	if length(samples) >= minnumsamples
+		if all(samples.==samples[1])
+			# distribution gives error if all samples are the same
+			s.distribution = samples[1]
+		else
+			s.distribution = fit(Uniform, samples)
+		end
+	end
+end

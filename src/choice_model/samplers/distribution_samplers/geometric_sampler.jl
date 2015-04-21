@@ -29,3 +29,16 @@ function setparams(s::GeometricSampler, params)
 end
 
 getparams(s::GeometricSampler) = [s.distribution.p]
+
+function estimateparams(s::GeometricSampler, traces)
+	samples = extractsamplesfromtraces(s, traces)
+	minnumsamples = 1
+	if length(samples) >= minnumsamples
+		if all(samples.==0)
+			# distribution gives error if all samples are 0
+			s.distribution = Geometric(0.99999)
+		else
+			s.distribution = fit(typeof(s.distribution), samples)
+		end
+	end
+end

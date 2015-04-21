@@ -122,4 +122,72 @@ describe("Uniform Sampler") do
 		
 	end
 	
+	describe("estimate parameters") do
+		
+		s = GodelTest.UniformSampler()
+		prs = GodelTest.paramranges(s)
+		otherparams = [-42.9, 42.2]
+		
+		test("non-equal bounds") do
+			params = [20.55, 29.12]
+			s1 = GodelTest.UniformSampler(params)
+			s2 = GodelTest.UniformSampler(otherparams)	
+			traces = map(1:100) do i
+				x, trace = GodelTest.sample(s1, (0,1))
+				trace
+			end
+			estimateparams(s2, traces)
+			@check isconsistentuniform(s2, params)
+		end
+
+		test("equal bounds") do
+			params = [50.22, 50.22]
+			s1 = GodelTest.UniformSampler(params)
+			s2 = GodelTest.UniformSampler(otherparams)	
+			traces = map(1:100) do i
+				x, trace = GodelTest.sample(s1, (0,1))
+				trace
+			end
+			estimateparams(s2, traces)
+			@check isconsistentuniform(s2, params)
+		end
+
+		test("random params") do
+			params = map(pr->robustmidpoint(pr[1],pr[2])+(2.0*rand()-1.0)*(pr[2]-robustmidpoint(pr[1],pr[2])), prs)
+			# convulated expression involving middle to avoid overflow to Inf
+			s1 = GodelTest.UniformSampler(params)
+			s2 = GodelTest.UniformSampler(otherparams)	
+			traces = map(1:100) do i
+				x, trace = GodelTest.sample(s1, (0,1))
+				trace
+			end
+			estimateparams(s2, traces)
+			@check isconsistentuniform(s2, params)
+		end
+
+		test("equal bounds param is estimated") do
+			# necessary because special handling of equal bound sets type of s.distribution to a number rather than an instance of Uniform
+			params = [-2.4, -2.4]
+			s1 = GodelTest.UniformSampler(otherparams)
+			s2 = GodelTest.UniformSampler(params)	
+			traces = map(1:100) do i
+				x, trace = GodelTest.sample(s1, (0,1))
+				trace
+			end
+			@check isconsistentuniform(s2, otherparams)
+		end
+		
+		test("too few traces") do
+			params = [1.1, 6.0]
+			s1 = GodelTest.UniformSampler(params)
+			s2 = GodelTest.UniformSampler(otherparams)	
+			traces = map(1:0) do i
+				x, trace = GodelTest.sample(s1, (0,1))
+				trace
+			end
+			@check isconsistentuniform(s2, otherparams)
+		end
+		
+	end
+	
 end

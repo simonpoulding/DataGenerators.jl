@@ -12,11 +12,15 @@ function sample(s::DistributionSampler, support)
  x, {:rnd=>x}
 end
 
-function estimateparams(s::DistributionSampler, traces)
+function extractsamplesfromtraces(s::DistributionSampler, traces)
 	samples = map(trace->trace[:rnd], traces)
-	samples = convert(typeof(s) <: DiscreteDistributionSampler ? Vector{Int} : Vector{Float64}, samples)
-	minsamples = typeof(s.distribution) in [Normal,] ? 2 : 1
-	if length(samples) >= minsamples
+	convert(typeof(s) <: DiscreteDistributionSampler ? Vector{Int} : Vector{Float64}, samples)
+end
+	
+function estimateparams(s::DistributionSampler, traces)
+	samples = extractsamplesfromtraces(s, traces)
+	minnumsamples = typeof(s.distribution) in [Normal,] ? 2 : 1
+	if length(samples) >= minnumsamples
 		s.distribution = fit(typeof(s.distribution), samples)
 	end
 end
