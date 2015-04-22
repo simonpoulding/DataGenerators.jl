@@ -4,21 +4,21 @@ describe("Truncate to Support Sampler") do
 
 	describe("construction") do
 		
-		s1 = GodelTest.NormalSampler([102.0, 45.81])
-		s = GodelTest.TruncateToSupportSampler(s1)
+		subsA = GodelTest.NormalSampler([102.0, 45.81])
+		s = GodelTest.TruncateToSupportSampler(subsA)
 
 		test("numparams and paramranges") do
-			@check GodelTest.numparams(s) == GodelTest.numparams(s1)
-			@check GodelTest.paramranges(s) == GodelTest.paramranges(s1)
+			@check GodelTest.numparams(s) == GodelTest.numparams(subsA)
+			@check GodelTest.paramranges(s) == GodelTest.paramranges(subsA)
 		end
 	
 		test("default params") do
-			@check GodelTest.getparams(s) == GodelTest.getparams(s1)
+			@check GodelTest.getparams(s) == GodelTest.getparams(subsA)
 		end
 
 		test("set params") do
 			GodelTest.setparams(s, [-9.8, 0.002])
-			@check GodelTest.getparams(s1) == [-9.8, 0.002]
+			@check GodelTest.getparams(subsA) == [-9.8, 0.002]
 			@check GodelTest.getparams(s) == [-9.8, 0.002]
 		end
 			
@@ -26,8 +26,8 @@ describe("Truncate to Support Sampler") do
 	
 	describe("sampling from continuous with infinite support") do
 
-		s1 = GodelTest.NormalSampler([42.8, 98.77])
-		s = GodelTest.TruncateToSupportSampler(s1)
+		subsA = GodelTest.NormalSampler([42.8, 98.77])
+		s = GodelTest.TruncateToSupportSampler(subsA)
 
 		@repeat test("random support") do
 			bounds = rand(2)*40.0-20.0
@@ -57,8 +57,8 @@ describe("Truncate to Support Sampler") do
 
 	describe("sampling from continuous with finite support") do
 
-		s1 = GodelTest.UniformSampler([42.5, 79.67])
-		s = GodelTest.TruncateToSupportSampler(s1)
+		subsA = GodelTest.UniformSampler([42.5, 79.67])
+		s = GodelTest.TruncateToSupportSampler(subsA)
 
 		@repeat test("random support") do
 			bounds = rand(2)*100.0
@@ -81,6 +81,34 @@ describe("Truncate to Support Sampler") do
 			@check typeof(x) <: Float64
 			@check isfinite(x)
 			@check 42.5 <= x <= 79.67
+		end
+		
+	end
+	
+	describe("estimate parameters") do
+		
+		test("estimates parameters of subsampler (when not too constrained)") do		
+
+			subs1A = GodelTest.NormalSampler()
+			s1 = GodelTest.TruncateToSupportSampler(subs1A)
+			params = [94.2, 34.1]
+			GodelTest.setparams(s1, params)
+
+			subs2A = GodelTest.NormalSampler()
+			s2 = GodelTest.TruncateToSupportSampler(subs2A)
+			otherparams = [-42.0, 50.1]
+			GodelTest.setparams(s2, otherparams)
+
+			traces = map(1:100) do i
+			 	# note: large support that rarely truncates, otherwise would not be able to estimate subsampler with same params
+				x, trace = GodelTest.sample(s1, (-500.0, 500.0))
+				trace
+			end
+
+			estimateparams(s2, traces)
+			
+			@check isconsistentnormal(subs2A, params[1:2])
+
 		end
 		
 	end

@@ -48,3 +48,13 @@ function sample(s::AdjustParametersToSupportSampler, support)
 	x, {:sub=>trace}
 end
 
+
+function estimateparams(s::AdjustParametersToSupportSampler, traces)
+	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
+		nothing
+	else
+		@assert false
+	end
+end
+
+
