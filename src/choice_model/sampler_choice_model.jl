@@ -92,9 +92,6 @@ end
 # Note: paramranges, setparams and getparams the following assumption: the iteration order of values from
 # the samplers dictionary remains consistent (it need not be the order in which entries are initially specified)
 
-# get total number of sampler parameters
-numparams(cm::SamplerChoiceModel) = sum(map((sampler)->numparams(sampler), values(cm.samplers)))
-
 # get parameter ranges for all samplers
 function paramranges(cm::SamplerChoiceModel)
 	ranges = (Float64,Float64)[]
@@ -131,21 +128,12 @@ function getparams(cm::SamplerChoiceModel)
 	params
 end
 
-function estimateparams(cm::SamplerChoiceModel, cptraces)
-	tracesbycpid = (Uint=>Vector{Dict})[]
-	for cptrace in cptraces
-		for (cpid, trace) in cptrace
-			if !haskey(tracesbycpid, cpid)
-				tracesbycpid[cpid] = Dict[]
-			end
-			push!(tracesbycpid[cpid],trace)
-		end
-	end
+# estimate the parameters of each sampler based on vector of traces from generation states
+function estimateparams(cm::SamplerChoiceModel, cmtraces)
+	tracesbycpid = extracttracesbycpid(cm, cmtraces)
 	for (cpid, sampler) in cm.samplers
 		if haskey(tracesbycpid, cpid)
 			estimateparams(sampler, tracesbycpid[cpid])
 		end
 	end
 end
-
-

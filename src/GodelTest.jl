@@ -26,8 +26,6 @@ include(joinpath("generator_macro","generator_macro_choose_string.jl"))
 include(joinpath("registry","registry.jl"))
 
 # choice models
-include(joinpath("choice_model","default_choice_model.jl"))
-include(joinpath("choice_model","sampler_choice_model.jl"))
-include(joinpath("choice_model","nmcs_choice_model.jl"))
+include(joinpath("choice_model","choice_model.jl"))
 
 end

@@ -66,7 +66,7 @@ end
 
 
 function log(s::DerivationState, cpid::Integer, godelnumber::Real, trace::Dict)
-	push!(s.cptrace, (cpid, trace))
+	push!(s.cmtrace, (cpid, trace))
 	push!(s.godelsequence, godelnumber)
 end
 
@@ -76,7 +76,7 @@ type DefaultDerivationState <: DerivationState
 	generator::Generator
 	choicemodel::ChoiceModel
 	godelsequence::Vector{Real} 		# Can be integers or floats
-	cptrace::Vector{(Integer,Dict)}	# choice point plus trace info returned from the choice model
+	cmtrace::Vector{(Integer,Dict)}	# choice point plus trace info returned from the choice model
 	maxchoices::Int # upper limit on the size of the Godel sequence
 	maxseqreps::Int # upper limit on the length of sequences from sequence choice points
 	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT)

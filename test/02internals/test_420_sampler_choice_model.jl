@@ -40,6 +40,11 @@ end
 	start() = choose(ASCIIString,"a(b|c)d+ef?")
 end
 
+@generator SCMEstimateParamsGen begin
+	start() = a()
+	a() = choose(Bool)
+	a() = mult("x")
+end
 
 describe("sampler choice model constructor") do
 
@@ -433,9 +438,46 @@ describe("sampler choice model - non-default mapping") do
 
 	cm = SamplerChoiceModel(gn, choicepointmapping=nondefaultmapping)
 	
-	@check length(cm.samplers) == 1
-	sampler = first(values(cm.samplers))
-	@check typeof(sampler) <: GodelTest.DiscreteUniformSampler
+	test("non-default mapping applied") do
+		@check length(cm.samplers) == 1
+		sampler = first(values(cm.samplers))
+		@check typeof(sampler) <: GodelTest.DiscreteUniformSampler
+	end
 		
 end
 
+describe("sampler choice model - estimate parameters") do
+	
+	test("estimate parameters") do
+
+		gn = SCMEstimateParamsGen()
+	
+		scm1 = SamplerChoiceModel(gn)
+		# parameters should be: 1:2 categorical for rule choice; 3: bernoulli for choose(Bool); 4: geometric for mult()
+		params = [0.3, 0.7, 0.33, 0.45]
+		setparams(scm1, params)
+	
+		scm2 = SamplerChoiceModel(gn)
+		otherparams = [0.6, 0.4, 0.58, 0.77]
+		setparams(scm2, otherparams)
+		
+		cmtraces = map(1:100) do i
+			result, state = generate(gn, choicemodel=scm1)
+			state.cmtrace
+		end
+	
+		estimateparams(scm2, cmtraces)
+		
+		# to check, we create samplers from the groups of parameters
+		# (could also simply 'look inside' the choice model, but this would be less robust to code changes)
+		scm2params = getparams(scm2)
+		cat2 = GodelTest.CategoricalSampler(2, scm2params[1:2])
+		@check isconsistentcategorical(cat2, params[1:2])
+		bern2 = GodelTest.BernoulliSampler(scm2params[3:3])
+		@check isconsistentbernoulli(bern2, params[3:3])
+		geom2 = GodelTest.GeometricSampler(scm2params[4:4])
+		@check isconsistentgeometric(geom2, params[4:4])
+
+	end
+	
+end
