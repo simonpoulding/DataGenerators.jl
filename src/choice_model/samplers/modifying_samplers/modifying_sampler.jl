@@ -9,7 +9,7 @@ setparams(s::ModifyingSampler, params) = setparams(s.subsampler, params)
 
 function sample(s::ModifyingSampler, support)
 	x, trace = sample(s.subsampler, support)
-	x, {:sub=>trace}
+	x, Dict{Symbol, Any}(:sub=>trace)
 end
 
 estimateparams(s::ModifyingSampler, traces) = estimateparams(s.subsampler, map(trace->trace[:sub], traces))

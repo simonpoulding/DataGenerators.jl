@@ -21,7 +21,7 @@ numparams(s::MixtureSampler) = numparams(s.selectionsampler) + sum(numparams, s.
 function paramranges(s::MixtureSampler)
 	pr = paramranges(s.selectionsampler)
 	for subsampler in s.subsamplers
-		pr = [pr, paramranges(subsampler)]
+		pr = [pr; paramranges(subsampler)]
 	end
 	pr
 end
@@ -42,7 +42,7 @@ end
 function getparams(s::MixtureSampler)
 	ps = getparams(s.selectionsampler)
 	for subsampler in s.subsamplers
-		ps = [ps, getparams(subsampler)]
+		ps = [ps; getparams(subsampler)]
 	end
 	ps
 end
@@ -50,12 +50,12 @@ end
 function sample(s::MixtureSampler, support)
 	selectionindex, selectiontrace = sample(s.selectionsampler, (1,length(s.subsamplers)))
 	x, trace = sample(s.subsamplers[selectionindex], support)
-	x, {:idx=>selectionindex, :sel=>selectiontrace, :sub=>trace}
+	x, Dict{Symbol, Any}(:idx=>selectionindex, :sel=>selectiontrace, :sub=>trace)
 end
 
 function estimateparams(s::MixtureSampler, traces)
 	estimateparams(s.selectionsampler, map(trace->trace[:sel], traces))
-	subsamplertraces = map(i->{}, 1:length(s.subsamplers))
+	subsamplertraces = map(i->[], 1:length(s.subsamplers))
 	for trace in traces
 		selectionindex = trace[:idx]
 		push!(subsamplertraces[selectionindex], trace[:sub])

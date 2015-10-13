@@ -7,7 +7,7 @@
 
 type CategoricalSampler <: DiscreteDistributionSampler
 	numcategories::Int
-	paramranges::Vector{(Float64,Float64)}
+	paramranges::Vector{Tuple{Float64,Float64}}
 	distribution::Categorical
 	function CategoricalSampler(numcategories::Int, params=Float64[])
 		numcategories >= 1 || error("number of categories must be at least one")

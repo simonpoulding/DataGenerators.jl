@@ -156,17 +156,17 @@ describe("choose(Int32)") do
 end
 
 
-@generator VCUintGen begin
-	start() = choose(Uint,4,420)
+@generator VCUIntGen begin
+	start() = choose(UInt,4,420)
 end
 
 describe("choose(UInt)") do
 
-	gn = VCUintGen()
+	gn = VCUIntGen()
 
   @repeat test("emits different UInt restricted to range") do
 		td = gen(gn)
-		@check typeof(td) == Uint
+		@check typeof(td) == UInt
 		@check 4 <= td <= 420
 		@mcheck_values_vary td
 	end

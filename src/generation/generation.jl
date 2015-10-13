@@ -48,8 +48,8 @@ choicemodel(s::DerivationState) = s.choicemodel
 
 # custom exception thrown when terminating generation
 type GenerationTerminatedException <: Exception
-	reason::String
-	GenerationTerminatedException(reason::String) = new(reason)
+	reason::AbstractString
+	GenerationTerminatedException(reason::AbstractString) = new(reason)
 end
 Base.showerror(io::IO, e::GenerationTerminatedException) = print(io, "generation was terminated because ", e.reason);
 
@@ -76,7 +76,7 @@ type DefaultDerivationState <: DerivationState
 	generator::Generator
 	choicemodel::ChoiceModel
 	godelsequence::Vector{Real} 		# Can be integers or floats
-	cmtrace::Vector{(Integer,Dict)}	# choice point plus trace info returned from the choice model
+	cmtrace::Vector{Tuple{Integer,Dict}}	# choice point plus trace info returned from the choice model
 	maxchoices::Int # upper limit on the size of the Godel sequence
 	maxseqreps::Int # upper limit on the length of sequences from sequence choice points
 	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT)
@@ -206,7 +206,7 @@ end
 type ChoiceContext
 	derivationstate::DerivationState
 	cptype::Symbol
-	cpid::Uint64
+	cpid::UInt64
 	datatype::DataType
 	lowerbound::Real
 	upperbound::Real

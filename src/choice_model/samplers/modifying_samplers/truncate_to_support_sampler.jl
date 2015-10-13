@@ -29,6 +29,6 @@ function sample(s::TruncateToSupportSampler, support)
 		truncateddistribution = Truncated(s.subsampler.distribution, support[1], support[2])
 		x = rand(truncateddistribution)
 	end
-	x, {:sub=>{:rnd=>x}}
+	x, Dict{Symbol, Any}(:sub=>Dict{Symbol, Any}(:rnd=>x))
 end
 

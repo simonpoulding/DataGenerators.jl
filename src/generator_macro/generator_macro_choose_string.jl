@@ -1,4 +1,4 @@
-# transforms choose(String, regex) into a block of statements using GödelTest constructs
+# transforms choose(<string type>, regex) into a block of statements using GödelTest constructs
 
 # TODO: currently PERL-style with XSD extensions
 # TODO: tokenspace (UTF-8) - currently assumes ASCII
@@ -22,7 +22,7 @@ function transformchoosestring(regex, datatype, rti::RuleTransformInfo)
 	# add method to call entry point to regex methods, and convert output to desired datatype
 	startmethodcall = Expr(:call, esc(ast.methodname), rti.genparam, rti.stateparam)
 	convertstmt = :( convert($datatype, $startmethodcall) )
-	stmts = [methods, convertstmt]
+	stmts = [methods; convertstmt]
 	
 	# join methods and convert statement into a single block
 	Expr(:block, stmts...)
@@ -32,23 +32,23 @@ end
 # node in AST formed by passing regex
 type RegexASTNode
   func::Symbol
-  children::Array{RegexASTNode}	
+  children::Vector{RegexASTNode}	
   args::Dict{Symbol,Any}
   methodname::Symbol
 end
 
 function RegexASTNode(func::Symbol)
-  RegexASTNode(func, (RegexASTNode)[], (Symbol=>Any)[], gensym(string(func)))
+  RegexASTNode(func, Vector{RegexASTNode}(), Dict{Symbol,Any}(), gensym(string(func)))
 end
 
 # parse regex into an AST
-function regexparse(regex::String)
+function regexparse(regex::AbstractString)
 		ast, pos = regexparseexpression(regex)
 		ast
 end
 
 # parse an expression within the regex
-function regexparseexpression(regex::String, pos=1)
+function regexparseexpression(regex::AbstractString, pos=1)
 
 	rootexpr = (pos==1)
 	ornode = RegexASTNode(:or)
@@ -114,14 +114,14 @@ function regexparseexpression(regex::String, pos=1)
 
 				if chr=='{'
 
-					quantifiernode.args[:lowerbound], pos = regexparseint(regex::String, pos)
+					quantifiernode.args[:lowerbound], pos = regexparseint(regex::AbstractString, pos)
 					if (pos<=sizeof(regex)) && (regex[pos]==',')
 						pos = nextind(regex,pos)
 						if pos<=sizeof(regex)
 							if regex[pos]=='}'
 								quantifiernode.args[:upperbound] = typemax(Int)
 							else
-								quantifiernode.args[:upperbound], pos = regexparseint(regex::String, pos)
+								quantifiernode.args[:upperbound], pos = regexparseint(regex::AbstractString, pos)
 							end
 						end
 					else
@@ -155,27 +155,27 @@ function regexparseexpression(regex::String, pos=1)
 				# TODO strictly whitespace can include vertical tab (11) and form feed (13), but XML definition excludes them
 				# TODO strictly wildcard (.) excludes just new line; but XML also excludes carriage return
 				if chr == 's'  # whitespace: space, tab, carriage return, new line
-					classspace = (Range1)[9:10,13:13,32:32]  	
+					classspace = (UnitRange)[9:10,13:13,32:32]  	
 	      elseif chr == 'S'  # non-whitespace
-	        classspace = (Range1)[33:126]							
+	        classspace = (UnitRange)[33:126]							
 				elseif chr == 'd'  # digits (currently just ASCII digits)
-		      classspace = (Range1)[48:57]								
+		      classspace = (UnitRange)[48:57]								
 		    elseif chr == 'D'  # non-digits
-					classspace = (Range1)[9:10,13:13,32:47,58:126]
+					classspace = (UnitRange)[9:10,13:13,32:47,58:126]
 				elseif chr == 'w'  # word characters: letters, digits, plus underscore
-		      classspace = (Range1)[48:57,65:90,95:95,97:122] 
+		      classspace = (UnitRange)[48:57,65:90,95:95,97:122] 
 		    elseif chr == 'W'  # non-word characters
-					classspace = (Range1)[9:10,13:13,32:47,58:64,91:94,96:96,123:126]
+					classspace = (UnitRange)[9:10,13:13,32:47,58:64,91:94,96:96,123:126]
 				elseif chr == 'i'  # XSD extension - initial name characters: letters, plus hyphen
-		      classspace = (Range1)[45:45,65:90,97:122] 
+		      classspace = (UnitRange)[45:45,65:90,97:122] 
 		    elseif chr == 'I'  # XSD extension - not initial name characters
-					classspace = (Range1)[9:10,13:13,32:44,46:64,91:96,123:126]
+					classspace = (UnitRange)[9:10,13:13,32:44,46:64,91:96,123:126]
 				elseif chr == 'c'  # XSD extension - name characters: letters, digits, plus hyphen, period, colon
-		      classspace = (Range1)[45:46,48:58,65:90,97:122] 
+		      classspace = (UnitRange)[45:46,48:58,65:90,97:122] 
 		    elseif chr == 'C'  # XSD extension - not name characters
-					classspace = (Range1)[9:10,13:13,32:44,47:47,59:64,91:96,123:126]
+					classspace = (UnitRange)[9:10,13:13,32:44,47:47,59:64,91:96,123:126]
 	      else
-	        classspace = (Range1)[9:9,32:126] # wildcard (.) - excludes new line and -- for XML -- carriage return
+	        classspace = (UnitRange)[9:9,32:126] # wildcard (.) - excludes new line and -- for XML -- carriage return
 					# (Note: see also handling below of the empty expression which allows strings of any characters, including LF/CR)
 					if chr != '.'
 						warn("cannot process character class $(node.args[:value]) - using wildcard instead")
@@ -251,7 +251,7 @@ function finishandnode(andnode::RegexASTNode)
 end
 
 # parse integer value in the regex starting at pos
-function regexparseint(regex::String, pos)
+function regexparseint(regex::AbstractString, pos)
 
 	startpos = pos
 	while (pos<=sizeof(regex)) && isdigit(regex[pos])
@@ -267,12 +267,12 @@ function regexparseint(regex::String, pos)
 			error("empty string when parsing integer in regex qualifier")
 	end
 
-	parseint(regex[startpos:endpos]), pos
+	parse(Int,regex[startpos:endpos]), pos
 
 end
 
 # parse a bracket expression in the regex
-function regexparsebracket(regex::String, pos)
+function regexparsebracket(regex::AbstractString, pos)
 
 	bracketnode = RegexASTNode(:bracket)
 
@@ -352,7 +352,7 @@ function regexconstructmethods(node::RegexASTNode, rti)
 					calli = Expr(:call, esc(node.children[i].methodname), rti.genparam, rti.stateparam)
 					res = :( ($(esc(cpidvar)) == $i) ? ($calli) : ($res) )
 				end
-				cpid = recordchoicepoint(rti, RULE_CP, {:rulename=>node.methodname, :min=>1, :max=>numdefs})
+				cpid = recordchoicepoint(rti, RULE_CP, Dict{Symbol, Any}(:rulename=>node.methodname, :min=>1, :max=>numdefs))
 				body = Expr(:block, :($(esc(cpidvar)) = chooserule($(rti.stateparam), $cpid, $numdefs)), res)
 			end
 		
@@ -372,7 +372,7 @@ function regexconstructmethods(node::RegexASTNode, rti)
 		elseif node.func in [:optional]
 
 			res = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
-			cpid = recordchoicepoint(rti, VALUE_CP, {:datatype=>Bool, :min=>false, :max=>true})
+			cpid = recordchoicepoint(rti, VALUE_CP, Dict{Symbol, Any}(:datatype=>Bool, :min=>false, :max=>true))
 			body = :( choosenumber($(rti.stateparam), $cpid, Bool, 0, 1, true) ? $res : "" )
 			
 		elseif node.func in [:quantifier]
@@ -387,7 +387,7 @@ function regexconstructmethods(node::RegexASTNode, rti)
 						cpmax = typemax(Int)
 					end
 					functocallexpr = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
-					cpid = recordchoicepoint(rti, SEQUENCE_CP, {:min=>min, :max=>cpmax})
+					cpid = recordchoicepoint(rti, SEQUENCE_CP, Dict{Symbol, Any}(:min=>min, :max=>cpmax))
 					upperboundexpr = Expr(:call, :choosereps, rti.stateparam, cpid, cpmin, cpmax, true)
 	    else
 					functocallexpr = :( $(esc(node.children[1].methodname))($(rti.genparam), $(rti.stateparam)) )
@@ -415,7 +415,7 @@ function regexconstructmethods(node::RegexASTNode, rti)
 			
 				idxvar = gensym("idx")
 
-				cpid = recordchoicepoint(rti, VALUE_CP, {:datatype=>Int, :min=>0, :max=>cardinality-1})
+				cpid = recordchoicepoint(rti, VALUE_CP, Dict{Symbol, Any}(:datatype=>Int, :min=>0, :max=>cardinality-1))
 				stmt = :( $(esc(idxvar)) = choosenumber($(rti.stateparam), $cpid, Int, 0, $(cardinality-1), true) )
 				push!(stmts, stmt)
 
@@ -447,7 +447,7 @@ function regexconstructmethods(node::RegexASTNode, rti)
 	end
 
 	for child in node.children
-	  methods = [methods, regexconstructmethods(child, rti)]
+	  methods = [methods; regexconstructmethods(child, rti)]
 	end
 	
 	methods

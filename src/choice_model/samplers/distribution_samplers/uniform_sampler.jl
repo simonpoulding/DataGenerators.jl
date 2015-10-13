@@ -7,8 +7,8 @@
 #
 
 type UniformSampler <: ContinuousDistributionSampler
-	paramranges::Vector{(Float64,Float64)}
-	distribution::Union(Uniform,Float64)
+	paramranges::Vector{Tuple{Float64,Float64}}
+	distribution::Union{Uniform,Float64}
 	# to handle case where a==b (which raises error in Uniform), we
 	# indicate this case by setting distribution to a fixed value
 	function UniformSampler(params=Float64[])
@@ -48,7 +48,7 @@ getparams(s::UniformSampler) = typeof(s.distribution) <: Uniform ? [s.distributi
 function sample(s::UniformSampler, support)
  x = typeof(s.distribution) <: Uniform ? rand(s.distribution) : s.distribution
  # we return both the sampled value, and a dict as trace information
- x, {:rnd=>x}
+ x, Dict{Symbol, Any}(:rnd=>x)
 end
 
 function estimateparams(s::UniformSampler, traces)

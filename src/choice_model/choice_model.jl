@@ -2,7 +2,7 @@
 # fallback choice model functions for parameter handling
 #
 
-paramranges(cm::ChoiceModel) = (Float64,Float64)[]
+paramranges(cm::ChoiceModel) = Tuple{Float64,Float64}[]
 
 numparams(cm::ChoiceModel) = length(paramranges(cm::ChoiceModel))
 
@@ -18,7 +18,7 @@ estimateparams(cm::ChoiceModel, cptraces) = nothing
 
 # extract dict of trace info indexed by cpid from a vector of cm traces
 function extracttracesbycpid(cm::ChoiceModel, cmtraces)
-	tracesbycpid = (Uint=>Vector{Dict})[]
+	tracesbycpid = Dict{Uint,Vector{Dict}}()
 	for cmtrace in cmtraces
 		for (cpid, trace) in cmtrace
 			if !haskey(tracesbycpid, cpid)

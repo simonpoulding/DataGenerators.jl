@@ -7,7 +7,7 @@
 #
 
 type NormalSampler <: ContinuousDistributionSampler
-	paramranges::Vector{(Float64,Float64)}
+	paramranges::Vector{Tuple{Float64,Float64}}
 	distribution::Normal
 	function NormalSampler(params=Float64[])
 		# We restrict the range of the real-values parameters to less than the entire float range

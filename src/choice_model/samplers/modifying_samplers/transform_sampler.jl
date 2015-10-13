@@ -15,7 +15,7 @@ end
 
 function sample(s::TransformSampler, support)
 	x, trace = sample(s.subsampler, map(s.invfn, support))
-	s.fn(x), {:sub=>trace}
+	s.fn(x), Dict{Symbol, Any}(:sub=>trace)
 end
 
 amendtrace(s::TransformSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], s.invfn(x))

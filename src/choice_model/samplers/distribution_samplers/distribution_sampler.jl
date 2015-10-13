@@ -9,7 +9,7 @@ paramranges(s::DistributionSampler) = copy(s.paramranges)
 function sample(s::DistributionSampler, support)
  x = rand(s.distribution)
  # we return both the sampled value, and a dict as trace information
- x, {:rnd=>x}
+ x, Dict{Symbol,Any}(:rnd=>x)
 end
 
 function extractsamplesfromtraces(s::DistributionSampler, traces)

@@ -17,7 +17,7 @@ end
 function sample(s::AlignMinimumSupportSampler, support)
 	delta = support[1] - minimum(s.subsampler.distribution)
 	x, trace = sample(s.subsampler, (support[1]-delta, support[2]-delta))
-	x + delta, {:sub=>trace, :delta=>delta}
+	x + delta, Dict{Symbol, Any}(:sub=>trace, :delta=>delta)
 end
 
 amendtrace(s::AlignMinimumSupportSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], x - trace[:delta])

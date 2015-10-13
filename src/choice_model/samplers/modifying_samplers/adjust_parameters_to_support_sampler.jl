@@ -15,7 +15,7 @@ end
 
 function paramranges(s::AdjustParametersToSupportSampler)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
-		return (Float64,Float64)[]
+		return Tuple{Float64,Float64}[]
 	else
 		@assert false
 	end
@@ -40,12 +40,12 @@ end
 
 function sample(s::AdjustParametersToSupportSampler, support)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
-		setparams(s.subsampler, [float64(support[1]), float64(support[2])])
+		setparams(s.subsampler, [Float64(support[1]), Float64(support[2])])
 	else
 		@assert false
 	end
 	x, trace = sample(s.subsampler, support)
-	x, {:sub=>trace}
+	x, Dict{Symbol, Any}(:sub=>trace)
 end
 
 

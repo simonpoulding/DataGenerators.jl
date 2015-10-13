@@ -11,7 +11,7 @@
 
 
 type GeometricSampler <: DiscreteDistributionSampler
-	paramranges::Vector{(Float64,Float64)}
+	paramranges::Vector{Tuple{Float64,Float64}}
 	distribution::Geometric
 	function GeometricSampler(params=Float64[])
 		s = new([(0.0, 1.0)])

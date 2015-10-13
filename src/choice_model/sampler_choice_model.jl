@@ -7,12 +7,12 @@ include(joinpath("samplers", "sampler.jl"))
 
 # The sampler choice model is a set of samplers, one assigned to each choice point (indexed by choice point id)
 type SamplerChoiceModel <: ChoiceModel
-	samplers::Dict{Uint, Sampler}
+	samplers::Dict{UInt, Sampler}
 	maxresamplings::Int
 end
 
 function SamplerChoiceModel(g::Generator; choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
-	samplers = (Uint=>Sampler)[]
+	samplers = Dict{UInt, Sampler}()
 	for (cpid, info) in choicepointinfo(g) # gets info from sub-generators also
 		samplers[cpid] = choicepointmapping(info)
 	end
@@ -94,7 +94,7 @@ end
 
 # get parameter ranges for all samplers
 function paramranges(cm::SamplerChoiceModel)
-	ranges = (Float64,Float64)[]
+	ranges = Tuple{Float64,Float64}[]
 	for sampler in values(cm.samplers)
 		ranges = [ranges, paramranges(sampler)]
 	end

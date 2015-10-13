@@ -22,7 +22,7 @@ function metataggenerates(g::Generator)
 	tags = meta(g)[:generates]
 	if typeof(tags) <: Array
 		tags
-	elseif typeof(tags) <: String
+	elseif typeof(tags) <: AbstractString
 		[tags]
 	else
 		error("Don't know how to return the tags from $(tags)")
@@ -36,13 +36,13 @@ function register(g::Generator, r::GeneratorRegistry = godelTestGeneratorRegistr
 end
 
 # Register a descriptor for a generator.
-function registerdescriptor(r::DocStringMatchingRegistry, descriptor::String, g::Generator)
+function registerdescriptor(r::DocStringMatchingRegistry, descriptor::AbstractString, g::Generator)
 	gens = get!(r.descriptorstogenerators, descriptor, Generator[])
 	push!(gens, g)
 	gens
 end
 
-function generatorfor(description::String, r::DocStringMatchingRegistry = godelTestGeneratorRegistry)
+function generatorfor(description::AbstractString, r::DocStringMatchingRegistry = godelTestGeneratorRegistry)
 	# Only use approximate matching if no exact matches found.
 	generators = findmatchinggenerators(r, description)
 	if length(generators) == 0
@@ -60,7 +60,7 @@ function generatorfor(description::String, r::DocStringMatchingRegistry = godelT
 end
 
 # A convenience version
-gen(desc::String; state = nothing) = first(generate(generator_for(desc); state = state))
+gen(desc::AbstractString; state = nothing) = first(generate(generator_for(desc); state = state))
 
 # Implements exact matching.
 function findmatchinggenerators(r::GeneratorRegistry, description)
@@ -80,7 +80,7 @@ skipstopwords(words) = filter((w) -> !in(w, StopWords), words)
 
 numcommonwords(ws1, ws2) = sum(map((w) -> in(w, ws2), ws1))
 
-numcommonwords(s1::String, s2::String) = numcommonwords(skipstopwords(wordsofstring(s1)), 
+numcommonwords(s1::AbstractString, s2::AbstractString) = numcommonwords(skipstopwords(wordsofstring(s1)), 
 	skipstopwords(wordsofstring(s2)))
 
 # This needs to be a much smarter heuristic over time. For example 

@@ -130,9 +130,9 @@ type RuleTransformInfo
 	# Random offset for all choice point numbers for this generator. A random offset is used
 	# to make it very unlikely that choice points from different generators would have the
 	# same number.
-	choicepointoffset::Uint
-	numchoicepoints::Uint
-	choicepointinfo::Dict{Uint, Dict{Symbol, Any}} # Map from choice point num to info dict
+	choicepointoffset::UInt
+	numchoicepoints::UInt
+	choicepointinfo::Dict{UInt, Dict{Symbol, Any}} # Map from choice point num to info dict
 	genname::Symbol
 	subgenargs::Vector{Symbol}
 	rules::Dict{Symbol, Vector{RuleMethod}}
@@ -188,7 +188,7 @@ function transformrules(genname, subgenargs, rules)
 			end
 						
 			# rewrite rule -- regardless of the original form -- as a short form function
-			rewrittenargs = [rti.genarg, rti.statearg, rulemethod.args]
+			rewrittenargs = [rti.genarg; rti.statearg; rulemethod.args]
 			push!(ruleexprs, Expr(:(=), Expr(:call, esc(rulemethod.functionname), rewrittenargs...), transformedbody))
 			
 		end
@@ -208,11 +208,11 @@ function constructrulechoice(rulename, rulemethods, rti::RuleTransformInfo)
 
 	# we use arguments from first method as arguments to new function implementing the rule choice
 	ruleargs = rulemethods[1].args
-	rewrittenargs = [rti.genarg, rti.statearg, ruleargs]
+	rewrittenargs = [rti.genarg; rti.statearg; ruleargs]
 
 	# extract parameters from these args for calls made within the new function to the rule methods
 	ruleparams = [extractparamfromarg(arg) for arg in ruleargs]
-	rewrittenparams = [rti.genparam, rti.stateparam, ruleparams]
+	rewrittenparams = [rti.genparam; rti.stateparam; ruleparams]
 	
 	# ensure unique name for chosenidx in case of other variable defined in context
 	chosenidxvar = gensym("chosenidx")
@@ -235,7 +235,7 @@ function constructrulechoice(rulename, rulemethods, rti::RuleTransformInfo)
 
 	end
 
-	cpinfo = {:rulename => rulename, :min => 1, :max => length(rulemethods)}
+	cpinfo = Dict{Symbol,Any}(:rulename => rulename, :min => 1, :max => length(rulemethods))
 	cpid = recordchoicepoint(rti, RULE_CP, cpinfo)
 
 	rulebody = Expr(:block, :( $(esc(chosenidxvar)) = chooserule($(rti.stateparam), $(cpid), $(length(rulemethods))) ), condexpr)
@@ -271,7 +271,7 @@ function transformconstructs(node, rti::RuleTransformInfo)
 	if typeof(node) == Expr
 		if node.head == :call
 			# esc'ing the function name ensures that it runs in the scope of the current module not the GodelTest module
-			node.args = [esc(node.args[1]), [transformconstructs(arg, rti) for arg in node.args[2:end]]]		
+			node.args = [esc(node.args[1]); [transformconstructs(arg, rti) for arg in node.args[2:end]]]		
 		else
 			node.args = [transformconstructs(arg, rti) for arg in node.args]
 		end
@@ -389,7 +389,7 @@ function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 		minval = false
 		maxval = true
 		rangeisliteral = true
-		cpinfo = {:datatype=>datatype, :min=>minval, :max=>maxval}
+		cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
 		cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
 		chooseexpr = :( choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
 		# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
@@ -424,7 +424,7 @@ function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 			maxval, maxisliteral = typemax(datatype), true
 		end
 
-		cpinfo = {:datatype=>datatype}
+		cpinfo = Dict{Symbol,Any}(:datatype=>datatype)
 
 		# record literal values in choice point info as an indicator to choice model that limit on range will not change
 		if minisliteral
@@ -441,7 +441,7 @@ function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 		chooseexpr = :( choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
 		# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
 
-	elseif datatype <: String
+	elseif datatype <: AbstractString
 		# TODO it may be a bit ambitious to allow all concrete string subtypes, but let's see ;-)
 
 		# string data types are handled differently from numeric ones: instead of a call to choosenumber,
@@ -454,7 +454,7 @@ function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 
 		regex = "" # interpreted as wildcard
 		if length(params) >= 2
-			if !(typeof(regex) <: String)
+			if !(typeof(regex) <: AbstractString)
 				error("regex in choose($(datatype),...) must be a literal string")
 			end
 			regex = params[2]
@@ -476,7 +476,7 @@ end
 # call to a rule becomes:
 #   rule(g, s, ...)
 function transformrulecall(rulename, ruleparams, rti::RuleTransformInfo)
-	rewrittenparams = [rti.genparam, rti.stateparam, ruleparams]
+	rewrittenparams = [rti.genparam; rti.stateparam; ruleparams]
 	Expr(:call, esc(rti.rulefunctionnames[rulename]), rewrittenparams...)
 	# rule is esc'ed so that it is interpreted in context of current module and not GodelTest
 end
@@ -508,7 +508,7 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 		type $(esc(genname)) <: Generator
 			meta::Dict{Symbol, Any}
 			statetype
-			choicepointinfo::Dict{Uint, Dict{Symbol, Any}}
+			choicepointinfo::Dict{UInt, Dict{Symbol, Any}}
 			rulefunctionnames::Dict{Symbol,Symbol}
 			subgens::Vector{Generator}
 
@@ -553,7 +553,7 @@ function extractfuncsig(node)
 			end
 		end
 	elseif typeof(node) == Symbol # GT-specific no args form
-		return (node, {})
+		return (node, [])
 	end
 	return (nothing,nothing)
 end
@@ -591,7 +591,7 @@ function extractfunccall(node)
 			end
 		end
 	elseif typeof(node) == Symbol
-		return(node, {})
+		return(node, [])
 	end
 	return (nothing,nothing)
 end
@@ -623,9 +623,9 @@ issubgencall(callname, callparams, rti) = (callname in rti.subgenargs)
 # We use 63 bit offset to ensure there is room to add choice points after the offset
 # value. If we used 64 bit we might get too close to the end of the range...
 function rand63bitint()
-	candidate = rand(Uint64)
+	candidate = rand(UInt64)
 	while candidate > (2^63-1)
-		candidate = rand(Uint64)
+		candidate = rand(UInt64)
 	end
 	candidate
 end
