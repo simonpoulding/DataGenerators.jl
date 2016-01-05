@@ -73,7 +73,7 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 	warn("falling back to a uniform distribution after too many resamplings in sampler choice model")
 	if cc.datatype <: Integer # includes Bool
 		fallbacksampler = DiscreteUniformSampler([lowerbound, upperbound])
-	elseif cc.datatype <: FloatingPoint
+	elseif cc.datatype <: AbstractFloat
 		fallbacksampler = UniformSampler([lowerbound, upperbound])
 	else
 		@assert false
