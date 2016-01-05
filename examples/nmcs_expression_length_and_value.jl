@@ -1,4 +1,4 @@
-require("../src/GodelTest.jl")
+include("../src/GodelTest.jl")
 using GodelTest
 
 # recursive generator for arithmetic expressions
@@ -42,6 +42,15 @@ scm = SamplerChoiceModel(gn)
 # Generate examples from unoptimized model
 sampler_examples = [robustgen(gn, choicemodel=scm, maxchoices=MaxChoices) for i in 1:NumSamples]
 
+# Print examples so they can be compared
+report(examples, desc) = begin
+  mean_length = mean(map(robustlength, examples))
+	mean_value = mean(map(robusteval, examples))
+  println("\n", desc, " examples (avg. length = $mean_length; avg. value = $mean_value):\n  ", 
+    examples[1:min(10, length(examples))])
+end
+report(sampler_examples, "Sampler Choice Model")
+
 # generate data using the optimised model
 nmcs_examples = [robustgen(gn, choicemodel=NMCSChoiceModel(scm,fitnessfn,4), maxchoices=MaxChoices) for i in 1:NumSamples]
 # TODO: for the moment we need to create a fresh NMCS choice model on each run since it's stateful model
@@ -52,12 +61,4 @@ nmcs_examples = [robustgen(gn, choicemodel=NMCSChoiceModel(scm,fitnessfn,4), max
 # choice model.  However, the generator may still raise this exception (or return nothing when using robustgen) if 
 # all simulations at a particular choice points are terminated by the exception
 
-# Print examples so they can be compared
-report(examples, desc) = begin
-  mean_length = mean(map(robustlength, examples))
-	mean_value = mean(map(robusteval, examples))
-  println("\n", desc, " examples (avg. length = $mean_length; avg. value = $mean_value):\n  ", 
-    examples[1:min(10, length(examples))])
-end
-report(sampler_examples, "Sampler Choice Model")
 report(nmcs_examples, "NMCS Choice Model (with Sampler Choice Model as policy)")
