@@ -7,7 +7,7 @@ export generate, gen, many, meta, choicepointinfo, robustgen, GenerationTerminat
 export register, generatorfor
 
 # exported Choice Models
-export DefaultChoiceModel, SamplerChoiceModel, NMCSChoiceModel
+export DefaultChoiceModel, SamplerChoiceModel, NMCSChoiceModel, MCTSChoiceModel
 
 # exported Choice Model functions
 export paramranges, setparams, getparams, estimateparams
