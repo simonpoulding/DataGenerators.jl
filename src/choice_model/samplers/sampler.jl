@@ -17,9 +17,12 @@ abstract Sampler
 #		- the number and range of the parameter are assumed to remain constant even if the params are changed
 # getparams(s::Sampler)
 #		- returns the current parameters (currently used only to default parameters of a modifying sampler)
-# sample(s::Sampler, cc::ChoiceContext)
+# sample(s::Sampler, support, cc::ChoiceContext)
 #		- sample a Gödel number from the sampler
 #		- samplers need not honour the support constraints; they are provided only to samplers that do take this into account 
+# estimateparams(s::Sampler, traces)
+#		- estiamte the parameters of the sampler from the passed traces
+#
 #
 # note also that for consistency, samplers allow parameters to be specified in their constructor, but if
 # the parameter array is empty, sensible defaults are set instead - however, this is not required

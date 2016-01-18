@@ -1,0 +1,70 @@
+TASKS
+
+(1) Conditional Sampler
+	- definition
+	- sampling
+	- re-estimation
+	- implement as single parent
+	
+(2) Model Building
+
+	- perhaps use parallel computation features of Julia, borrowing technique from my GPGPU implementation (and for other tasks such as model updating at each node)
+	- note: because of taking last value and allowing "nothing", we can permit cyclic network?  if so, we can easily parallelise
+	- should default sampler simply use given (default) parameters, or be estimated from entire set of traces?
+	- can skip nodes with 0 parameters
+	- single parent conditional, so can model building should look for nested
+	- this enable, in theory, each nested conditional to be have a different parent (i.e. for value of outer primary): let this be an option
+	- note: trace doesn't contain gn [check?] but need it for model building (inc. to change parents in Conditional sampler) - either need to pass godelsequence, or add to trace
+
+(3) Advanced
+	
+	- something decision tree-like for efficient storage of conditional probs?
+
+NOTES
+
+> "default" sampler model
+
+Rule:				Categorical
+Sequence:			AlignMinimumSupport(Geometric)
+Value	Bool		Bernoulli
+		Integer		AdjustParametersToSupport(DiscreteUniform)
+		Real		AdjustParametersToSupport(Uniform)
+
+> ChoiceContext and DerivationState
+
+type ChoiceContext
+	derivationstate::DerivationState
+	cptype::Symbol
+	cpid::UInt64
+	datatype::DataType
+	lowerbound::Real
+	upperbound::Real
+	# recursiondepth::Int # not currently implemented
+end
+type DefaultDerivationState <: DerivationState
+	generator::Generator
+	choicemodel::ChoiceModel
+	godelsequence::Vector{Real} 		# Can be integers or floats
+	cmtrace::Vector{Tuple{Integer,Dict}}	# choice point plus trace info returned from the choice model
+	maxchoices::Int # upper limit on the size of the Godel sequence
+	maxseqreps::Int # upper limit on the length of sequences from sequence choice points
+	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT)
+		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps)
+	end
+endic
+
+> sampler must implement:
+
+	* numparams
+	* setparams
+	* paramranges
+	* getparams
+	* sample (takes choice context)
+	* estimateparams (takes traces for this cpid) - NEED TO CHANGE THIS
+	* amendtrace (for when fallback is ued - needs to "fake" original value)
+	
+> relevant data
+
+	* cpid is UInt - COULD CHANGE THIS TO SYMBOL
+	* choicepointinfo(g) returns (cpid, info)
+	* sampler choice model is dictionary of samplers by cpid

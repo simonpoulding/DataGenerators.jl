@@ -1,12 +1,11 @@
 # a distribution sampler samples from a named univariate parameter distribution; it ignores any support constraints
 abstract DistributionSampler <: Sampler
-
 abstract DiscreteDistributionSampler <: DistributionSampler
 abstract ContinuousDistributionSampler <: DistributionSampler
 
 paramranges(s::DistributionSampler) = copy(s.paramranges)
 
-function sample(s::DistributionSampler, support)
+function sample(s::DistributionSampler, support, cc::ChoiceContext)
  x = rand(s.distribution)
  # we return both the sampled value, and a dict as trace information
  x, Dict{Symbol,Any}(:rnd=>x)

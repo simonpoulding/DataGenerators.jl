@@ -13,8 +13,8 @@ type TransformSampler <: ModifyingSampler
   end
 end
 
-function sample(s::TransformSampler, support)
-	x, trace = sample(s.subsampler, map(s.invfn, support))
+function sample(s::TransformSampler, support, cc::ChoiceContext)
+	x, trace = sample(s.subsampler, map(s.invfn, support), cc)
 	s.fn(x), Dict{Symbol, Any}(:sub=>trace)
 end
 

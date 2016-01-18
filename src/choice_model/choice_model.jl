@@ -18,7 +18,7 @@ estimateparams(cm::ChoiceModel, cptraces) = nothing
 
 # extract dict of trace info indexed by cpid from a vector of cm traces
 function extracttracesbycpid(cm::ChoiceModel, cmtraces)
-	tracesbycpid = Dict{Uint,Vector{Dict}}()
+	tracesbycpid = Dict{UInt,Vector{Dict}}()
 	for cmtrace in cmtraces
 		for (cpid, trace) in cmtrace
 			if !haskey(tracesbycpid, cpid)

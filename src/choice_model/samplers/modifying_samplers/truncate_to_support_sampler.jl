@@ -18,7 +18,7 @@ type TruncateToSupportSampler <: ModifyingSampler
 	end
 end
 
-function sample(s::TruncateToSupportSampler, support)
+function sample(s::TruncateToSupportSampler, support, cc::ChoiceContext)
 	# TODO: check whether it is better to store truncated distribution, and only
 	# recreate when support changes.  If so, will need to trap setparams call so
 	# as to clear any stored truncated distribution

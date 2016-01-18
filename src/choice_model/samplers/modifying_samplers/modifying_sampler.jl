@@ -1,4 +1,6 @@
 # a modifying sampler modifies one or more distribution samplers or other modifying samplers
+# TODO perhaps better name is "MetaSampler"?
+
 abstract ModifyingSampler <: Sampler
 
 paramranges(s::ModifyingSampler) = paramranges(s.subsampler)
@@ -7,8 +9,8 @@ getparams(s::ModifyingSampler) = getparams(s.subsampler)
 
 setparams(s::ModifyingSampler, params) = setparams(s.subsampler, params)
 
-function sample(s::ModifyingSampler, support)
-	x, trace = sample(s.subsampler, support)
+function sample(s::ModifyingSampler, support, cc::ChoiceContext)
+	x, trace = sample(s.subsampler, support, cc)
 	x, Dict{Symbol, Any}(:sub=>trace)
 end
 
@@ -22,3 +24,4 @@ include("align_minimum_support_sampler.jl")
 include("truncate_to_support_sampler.jl")
 include("transform_sampler.jl")
 include("constrain_parameters_sampler.jl")
+include("conditional_sampler.jl")

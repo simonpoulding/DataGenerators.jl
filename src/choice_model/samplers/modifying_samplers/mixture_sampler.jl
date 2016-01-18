@@ -16,7 +16,7 @@ type MixtureSampler <: ModifyingSampler
 	end
 end
 
-numparams(s::MixtureSampler) = numparams(s.selectionsampler) + sum(numparams, s.subsamplers)
+# numparams(s::MixtureSampler) = numparams(s.selectionsampler) + sum(numparams, s.subsamplers)
 
 function paramranges(s::MixtureSampler)
 	pr = paramranges(s.selectionsampler)
@@ -47,9 +47,9 @@ function getparams(s::MixtureSampler)
 	ps
 end
 
-function sample(s::MixtureSampler, support)
+function sample(s::MixtureSampler, support, cc::ChoiceContext)
 	selectionindex, selectiontrace = sample(s.selectionsampler, (1,length(s.subsamplers)))
-	x, trace = sample(s.subsamplers[selectionindex], support)
+	x, trace = sample(s.subsamplers[selectionindex], support, cc)
 	x, Dict{Symbol, Any}(:idx=>selectionindex, :sel=>selectiontrace, :sub=>trace)
 end
 

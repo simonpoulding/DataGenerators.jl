@@ -65,7 +65,7 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 	upperbound = isfinite(cc.upperbound) ? cc.upperbound : sign(cc.upperbound) * realmax(Float64)
 	sampler = cm.samplers[cc.cpid]
 	for samplecount in 0:cm.maxresamplings
-		x, trace = sample(sampler, (lowerbound, upperbound))
+		x, trace = sample(sampler, (lowerbound, upperbound), cc::ChoiceContext)
 		if lowerbound <= x <= upperbound
 			return x, trace
 		end
@@ -85,10 +85,6 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 end
 
 
-#
-# Methods applied to the model as a whole (in order to apply search)
-#
-
 # Note: paramranges, setparams and getparams the following assumption: the iteration order of values from
 # the samplers dictionary remains consistent (it need not be the order in which entries are initially specified)
 
@@ -96,7 +92,7 @@ end
 function paramranges(cm::SamplerChoiceModel)
 	ranges = Tuple{Float64,Float64}[]
 	for sampler in values(cm.samplers)
-		ranges = [ranges, paramranges(sampler)]
+		ranges = [ranges; paramranges(sampler)]
 	end
 	ranges
 end
@@ -123,7 +119,7 @@ end
 function getparams(cm::SamplerChoiceModel)
 	params = (Float64)[]
 	for sampler in values(cm.samplers)
-		params = [params, getparams(sampler)]
+		params = [params; getparams(sampler)]
 	end
 	params
 end

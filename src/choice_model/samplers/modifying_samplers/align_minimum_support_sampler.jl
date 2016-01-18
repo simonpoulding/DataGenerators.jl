@@ -14,9 +14,9 @@ type AlignMinimumSupportSampler <: ModifyingSampler
 	end
 end
 
-function sample(s::AlignMinimumSupportSampler, support)
+function sample(s::AlignMinimumSupportSampler, support, cc::ChoiceContext)
 	delta = support[1] - minimum(s.subsampler.distribution)
-	x, trace = sample(s.subsampler, (support[1]-delta, support[2]-delta))
+	x, trace = sample(s.subsampler, (support[1]-delta, support[2]-delta), cc)
 	x + delta, Dict{Symbol, Any}(:sub=>trace, :delta=>delta)
 end
 
