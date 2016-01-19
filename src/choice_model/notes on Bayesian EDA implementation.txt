@@ -15,10 +15,12 @@ TASKS
 	- single parent conditional, so can model building should look for nested
 	- this enable, in theory, each nested conditional to be have a different parent (i.e. for value of outer primary): let this be an option
 	- note: trace doesn't contain gn [check?] but need it for model building (inc. to change parents in Conditional sampler) - either need to pass godelsequence, or add to trace
+	- need to compare against "nothing" model
 
 (3) Advanced
 	
 	- something decision tree-like for efficient storage of conditional probs?
+	- Poisson
 
 NOTES
 
@@ -68,3 +70,25 @@ endic
 	* cpid is UInt - COULD CHANGE THIS TO SYMBOL
 	* choicepointinfo(g) returns (cpid, info)
 	* sampler choice model is dictionary of samplers by cpid
+	
+	
+	
+> notes from "Jiri Ocenasek Josef Schwarz THE DISTRIBUTED BAYESIAN OPTIMIZATION ALGORITHM FOR COMBINATORIAL OPTIMIZATION"
+
+	* note replacement of only SOME of the population
+	
+> notes from "Christian Borgelt and Rudolf Kruse: An Empirical Investigation of the K2 Metric"
+
+	* extend K2 with parameter to control simplicity of network
+	* mutual information
+	* assumption that the cases are complete?
+	
+	
+	K2(A|par(A)) = prod_j=1^q (r-1)! / (N_.j + r - 1)! \prod_i=1^j N_ij!
+	
+	A has r values; q is number of distinct instantions of parents; N = # A takes i^th value; parents take j^th value (N is sum over i)
+	
+	
+	log K2 = sum_j=1^q log [(r-1)! (N_.j + r -1)! ] + sum_j=1^q sum_i=1^j log [N_ij!]
+	
+]

@@ -76,13 +76,12 @@ function sample(s::ConditionalSampler, support, cc::ChoiceContext)
 	# extract Gödel number of parent choice point at its most recent invocation
 	parentgn = nothing
 	if s.parentcpid != nothing
-		@assert length(cc.derivationstate.cmtrace) == length(cc.derivationstate.godelsequence)
-		# TODO change code (and remove assert) if we add GN to trace
-		parentindex = indexin([s.parentcpid], map(t->first(t), cc.derivationstate.cmtrace))
+		parentindex = indexin([s.parentcpid], map(t->t[1], cc.derivationstate.cmtrace))
 		# first element in each cmtrace element is the cpid
 		# indexin returns the *highest* (i.e. most recent in godel sequence) for each parentcpid (or 0 otherwise)
 		if parentindex[1] > 0 
-			parentgn = cc.derivationstate.godelsequence[parentindex[1]]
+			parentgn = cc.derivationstate.cmtrace[parentindex[1]][2][:gdl] # in trace (second element in tuple), godelnumber is stored with key :gdl at top level
+			@assert parentgn == cc.derivationstate.godelsequence[parentindex[1]]
 		end
 	end
 	# if there is a sampler specified for the parent value, then use it, otherwise revert to default
@@ -130,4 +129,131 @@ function amendtrace(s::ConditionalSampler, trace, x)
 	else
 		amendtrace(s.defaultsampler, trace[:sub], x)
 	end
+end
+
+
+function determineparentusingK2(s::ConditionalSampler, cpids, gnhistories)
+	
+	numhistories = length(gnhistories)
+	# the history for the current cp (i.e. "node A") which is the last value in each history
+	ahistory = map(x->x[end], gnhistories)
+	# A_values are values that current cp takes
+	avalues = unique(ahistory)
+	# println("A takes values: $(avalues)")
+	r = length(avalues)
+	# println("Therefore r is: $(r)")
+	lfactrminus1 = lfact(r-1)
+
+	# calculate value for no parent (effectively a parent taking all the same value)
+	bestparindices = Any[nothing]
+	bestlogK2 = lfactrminus1 - lfact(numhistories + r - 1)
+	for i in 1:r
+		Ni = count(x->x==avalues[i], ahistory)
+		bestlogK2 += lfact(Ni)
+	end
+	# println("No parent gives a K2 value of: $(bestlogK2)")
+	
+	# consider each possible parent in turn
+	for parindex in 1:length(cpids)
+		# println("Considering potential parent #$(parindex) ...")
+		
+		# the history of the i^th possible parent is the i^th entry
+		parhistory = map(x->x[parindex], gnhistories)
+		parvalues = unique(parhistory)
+		# println("par(A) takes values: $(parvalues)")
+		q = length(parvalues)
+		# println("Therefore q is: $(q)")
+		
+		logK2 = 0.0
+		
+		for j in 1:q
+			Ndotj = count(x->x==parvalues[j], parhistory)
+			# println("For j=$(j), N_.j is: $(Ndotj)")
+			logK2 += lfactrminus1 - lfact(Ndotj + r - 1)
+			# lfact is log factorial approximation
+			# TODO: since current always integer, could do a lookup
+			
+			for i in 1:r
+				Nij = count(k->((ahistory[k]==avalues[i]) && (parhistory[k]==parvalues[j])), 1:numhistories)
+				# println("For j=$(j), i=$(i), N_ij is: $(Nij)")
+				logK2 += lfact(Nij)
+			end
+			
+		end
+		
+		# println("Potential parent $(parindex) has logK2 of: $(logK2)")
+		if logK2 > bestlogK2
+			# strictly greater than so simplicitly of network is encouraged
+			bestparindices = [parindex]
+			bestlogK2 = logK2
+		elseif logK2 == bestlogK2
+			push!(bestparindices, parindex)
+		end
+		
+	end
+	
+	(nothing in bestparindices) ? nothing : bestparindices[rand(1:length(bestparindices))]
+	
+end
+
+function estimatebayesianmodel(s::ConditionalSampler, cpids, gnhistories, traces)
+	
+	# assign new parent
+	parindex = determineparentusingK2(s, cpids, gnhistories)
+	s.parentcpid = (parindex == nothing) ? nothing : cpids[parindex]
+
+	# println("******* New parent cpid is index $(parindex) : $(s.parentcpid)")
+
+	# defaultsampler
+	# TODO, if there is a parent, since we will account for all values of the parents, there is nothing left
+	# to estimate the default: what to do? Currently we do this for all ...
+	
+	# we use the following to filter cpids and histories passed to any sub-sampler to remove the chosen cpid
+	cpmask = convert(Vector{Bool}, map(c->c!=parindex, 1:length(cpids)))
+	historymask = [cpmask; true]
+	# we add a true to the cpmask to retain final value which is the current cp Gödel number
+	
+	defaulttraces = map(t->t[:sub], traces)	
+	if method_exists(estimatebayesianmodel, (typeof(s.defaultsampler), Any, Any, Any))
+		# pass all histories and traces to default sampler
+		defaultgnhistories = map(h->h[historymask], gnhistories)
+		estimatebayesianmodel(s.defaultsampler, cpids[cpmask], defaultgnhistories, defaulttraces)
+	else
+		estimateparams(s.defaultsampler, defaulttraces)
+	end
+
+	if parindex != nothing
+		
+		# if parent identified, create and estimate a sampler for each parent values
+
+		s.conditionalsamplers = Dict{Any,Sampler}()
+
+		parhistory = map(x->x[parindex], gnhistories)
+		parvalues = unique(parhistory)
+		
+		for parvalue in parvalues
+			
+			conditionalsampler = deepcopy(s.defaultsampler)
+			s.conditionalsamplers[parvalue] = conditionalsampler
+						
+			parentvaluemask = convert(Vector{Bool}, map(v->v==parvalue, parhistory))
+			# we use the history to determine which histories are relevant
+			# note: we can't use the parent value stored with the trace since the parent may have changed
+		
+			conditionaltraces = map(x->x[:sub], traces[parentvaluemask])
+			if method_exists(estimatebayesianmodel, (typeof(conditionalsampler), Any, Any, Any))				
+				# pass histories and traces filtered by mask where parent value matches the condition on the sampler
+				# we also filter the histories to remove parent index just chosen
+				conditionalgnhistories = map(h->h[historymask], gnhistories[parentvaluemask])
+				# println("<<<<<<< START nested")
+				estimatebayesianmodel(conditionalsampler, cpids[cpmask], conditionalgnhistories, conditionaltraces)
+				# println("<<<<<<< END nested")
+			else
+				estimateparams(conditionalsampler, conditionaltraces)				
+			end
+			
+		end
+
+	end
+
 end

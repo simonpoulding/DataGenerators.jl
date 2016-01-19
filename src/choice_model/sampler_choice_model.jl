@@ -64,24 +64,30 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 	lowerbound = isfinite(cc.lowerbound) ? cc.lowerbound : sign(cc.lowerbound) * realmax(Float64)
 	upperbound = isfinite(cc.upperbound) ? cc.upperbound : sign(cc.upperbound) * realmax(Float64)
 	sampler = cm.samplers[cc.cpid]
-	for samplecount in 0:cm.maxresamplings
+	fallback = true
+	x, trace = nothing, nothing
+	samplecount = 0
+	while (samplecount <= cm.maxresamplings) && (fallback)
 		x, trace = sample(sampler, (lowerbound, upperbound), cc::ChoiceContext)
 		if lowerbound <= x <= upperbound
-			return x, trace
+			fallback = false
 		end
+		samplecount += 1
 	end
-	warn("falling back to a uniform distribution after too many resamplings in sampler choice model")
-	if cc.datatype <: Integer # includes Bool
-		fallbacksampler = DiscreteUniformSampler([lowerbound, upperbound])
-	elseif cc.datatype <: AbstractFloat
-		fallbacksampler = UniformSampler([lowerbound, upperbound])
-	else
-		@assert false
+	if fallback
+		warn("falling back to a uniform distribution after too many resamplings in sampler choice model")
+		if cc.datatype <: Integer # includes Bool
+			fallbacksampler = DiscreteUniformSampler([lowerbound, upperbound])
+		elseif cc.datatype <: AbstractFloat
+			fallbacksampler = UniformSampler([lowerbound, upperbound])
+		else
+			@assert false
+		end
+		x, trace = sample(fallbacksampler, (lowerbound, upperbound))
+		# we use the last trace form the 'proper' sampler but place in it this fallback sampled value
+		amendtrace(sampler, trace, x)
 	end
-	fallbackx, fallbacktrace = sample(fallbacksampler, (lowerbound, upperbound))
-	# we use the last trace form the 'proper' sampler but place in it this fallback sampled value
-	amendtrace(sampler, trace, fallbackx)
-	return fallbackx, trace
+	return x, Dict(:gdl=>x, :sam=>trace, :fbk=>fallback)
 end
 
 
@@ -124,12 +130,95 @@ function getparams(cm::SamplerChoiceModel)
 	params
 end
 
-# estimate the parameters of each sampler based on vector of traces from generation states
-function estimateparams(cm::SamplerChoiceModel, cmtraces)
-	tracesbycpid = extracttracesbycpid(cm, cmtraces)
-	for (cpid, sampler) in cm.samplers
-		if haskey(tracesbycpid, cpid)
-			estimateparams(sampler, tracesbycpid[cpid])
+# extract dict of trace info indexed by cpid from a vector of cm traces
+function extractsamplertracesbycp(cm::SamplerChoiceModel, cmtraces)
+	samplertracesbycp = Dict{UInt,Vector{Dict}}()
+	for cmtrace in cmtraces
+		for (cpid, trace) in cmtrace
+			if !haskey(samplertracesbycp, cpid)
+				samplertracesbycp[cpid] = Dict[]
+			end
+			push!(samplertracesbycp[cpid], trace[:sam])
 		end
 	end
+	samplertracesbycp
+end
+
+# estimate the parameters of each sampler based on vector of traces from generation states
+function estimateparams(cm::SamplerChoiceModel, cmtraces)
+	samplertracesbycp = extractsamplertracesbycp(cm, cmtraces)
+	for (cpid, sampler) in cm.samplers
+		if haskey(samplertracesbycp, cpid)
+			estimateparams(sampler, samplertracesbycp[cpid])
+		end
+	end
+end
+
+
+# at each cp in every trace, record the most recent gn emitted by every choice point (i.e. a "history")
+# store this by cpid
+# for ease of use in re-estimating sampler, we simultaneously extract sampler traces for each history
+function extractgnhistoriesbycp(cm::SamplerChoiceModel, cmtraces)
+	
+	cpids = collect(keys(cm.samplers))
+	# we use cpid vector this to define indices of gns in the histories in order to avoid costly associative arrays for the histories
+	numcps = length(cpids)
+	# provide quick lookup of index given cpid
+	cpindexlookup = Dict{UInt, UInt}()
+	for i in 1:numcps
+		cpindexlookup[cpids[i]] = i
+	end
+	# process each trace
+	gnhistoriesbycp = Dict{UInt, Vector{Vector{Any}}}()
+	samplertracesbycp = Dict{UInt, Vector{Dict}}()
+	for cmtrace in cmtraces
+		currenthistory =  convert(Vector{Any}, fill(nothing, numcps))
+		for cptrace in cmtrace
+			(cpid, trace) = cptrace
+			# store (copy of) current history by cpid and its Gödel number
+			if !haskey(gnhistoriesbycp, cpid)
+				gnhistoriesbycp[cpid] = Vector{Vector{Any}}()
+			end
+			gn = trace[:gdl]
+			# add Gödel number as *last* element
+			push!(gnhistoriesbycp[cpid], [currenthistory; gn]) # this also causes implicit copy
+			# now update history with this choice point's Gödel number
+			currenthistory[cpindexlookup[cpid]] = trace[:gdl]
+			# also store trace for this sampler (so in the same order as the history)
+			if !haskey(samplertracesbycp, cpid)
+				samplertracesbycp[cpid] = Vector{Dict}()
+			end
+			push!(samplertracesbycp[cpid], trace[:sam])
+		end
+	end
+	cpids, gnhistoriesbycp, samplertracesbycp
+end
+
+# 
+# 
+# consider node A which has r distinct values
+# par(A) are parents of A, which have q is distinct instantions of parents
+# N_ij is number of cases where A takes i^th value and parents take j^th value (N_.j is sum of this over i)
+# then:
+#   log K2[A|par(A)] = sum_j=1^q log[(r-1)! / (N_.j + r -1)!] + sum_j=1^q sum_i=1^r log[N_ij!]
+# 
+
+function estimatebayesianmodel(cm::SamplerChoiceModel, cmtraces)
+	
+	# extract the history (the most recent value of all choice points) at each choice point invocation in all traces
+	(cpids, gnhistoriesbycp, samplertracesbycp) = extractgnhistoriesbycp(cm, cmtraces)
+	
+	# process each cp
+	# TODO PARALLELISE!!!
+	for cpid in cpids
+
+		# TODO: numparams?
+		if method_exists(estimatebayesianmodel, (typeof(cm.samplers[cpid]), Any, Any, Any))
+			estimatebayesianmodel(cm.samplers[cpid], cpids, gnhistoriesbycp[cpid], samplertracesbycp[cpid])
+		else
+			estimateparams(cm.samplers[cpid], samplertracesbycp[cpid])
+		end
+		
+	end
+	
 end

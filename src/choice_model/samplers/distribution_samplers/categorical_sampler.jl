@@ -35,7 +35,7 @@ end
 
 getparams(s::CategoricalSampler) = copy(s.distribution.p)
 
-function estimateparams(s::DistributionSampler, traces)
+function estimateparams(s::CategoricalSampler, traces)
 	samples = extractsamplesfromtraces(s, traces)
 	if length(samples) >= 1
 		s.distribution = fit(typeof(s.distribution), samples)

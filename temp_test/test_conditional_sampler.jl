@@ -2,7 +2,7 @@
 #	- amendtrace
 #	- nested conditional samplers
 
-println("START  test_conditional_sampler")
+println("START test_conditional_sampler")
 
 using Base.Test
 using GodelTest
