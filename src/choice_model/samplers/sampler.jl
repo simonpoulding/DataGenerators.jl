@@ -44,22 +44,40 @@ function checkparamranges(s::Sampler, params::Vector{Float64})
 	end	
 end
 
+# identifies whether the sampler supports estimating the model, i.e. setting features other than the parameters, such
+# as conditionality on other choice points or on the recursion depth (either of which may change the number of parameters)
+supportsconditionalmodelestimation(s::Sampler) = method_exists(estimateconditionalmodel, (typeof(s), Any, Any, Any))
+
+
+
+# pretty print the sampler
+# for non-conditional sampler, just needs to print brief (on the same line without a CR) meaningful info about the sampler
+# TODO extend for modifying samplers to also print subsamplers
+function ppsampler(s::Sampler, cpnames, indentdepth::Int=1)
+	print(getsamplertypename(s) * " $(getparams(s))")
+end
+
+# supports pretty printing
+
+function getsamplertypename(s::Sampler)
+	samplertypename = "$(typeof(s))"
+	if startswith(samplertypename, "GodelTest.")
+		samplertypename = samplertypename[length("GodelTest.")+1:end]
+	end
+	if endswith(samplertypename,"Sampler")
+		samplertypename = samplertypename[1:(end-length("Sampler"))]
+	end
+	uppercase(samplertypename)
+end
+
+# supports pretty printing to distinguish nested conditional structures
+function getindentandcolor(indentdepth::Int)
+	colours = [:blue,:green,:cyan,:magenta]
+	"          "^indentdepth, colours[1+mod(indentdepth-1, length(colours))]
+end
+
+
 include(joinpath("distribution_samplers", "distribution_sampler.jl"))
 include(joinpath("modifying_samplers", "modifying_sampler.jl"))
 
-#
-#
-# # a transforming sampler allows a function to be applied to the value sampled from a subsampler
-# abstract TransformingSampler <: Sampler
-#
-# setparams(s::TransformingSampler, params::Vector) = setparams(s.subsampler, params)
-# paramranges(s::TransformingSampler) = paramranges(s.subsampler)
-# getparams(s::TransformingSampler) = getparams(s.subsampler)
-# sample(s::TransformingSampler, domain::Vector) = sample(s.subsampler, domain)
-#
-# include("transforming_func_sampler.jl")
-# include("constrained_params_sampler.jl")
-#
-# # a selecting sampler chooses between two or more samples
-# abstract CombiningSampler <: Sampler
-# include("mixture_sampler.jl")
+

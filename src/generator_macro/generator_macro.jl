@@ -169,12 +169,10 @@ function transformrules(genname, subgenargs, rules)
 	# TODO sort(collect(rules)) to ensure predictable order?
 	for (rulename, rulemethods) in rules
 
-		# construct a rule choice point if there are multiple rules with the same name
-		if length(rulemethods) > 1
-			push!(ruleexprs, constructrulechoice(rulename, rulemethods, rti) )
-		else
-			rulemethods[1].functionname = rti.rulefunctionnames[rulename]
-		end
+		# we create a "umbrella" method that can cleanly record entry and exit of this rule
+		# note: we use a "umbrella" method as this is more robust if rule code has an explicit return in it
+		# if there are multiple methods, then we also handle this implicit rule choice point in the umbrella
+		push!(ruleexprs, constructumbrellamethod(rulename, rulemethods, rti) )
 		
 		# rewrite rules as function definitions
 		for rulemethod in rulemethods
@@ -186,7 +184,7 @@ function transformrules(genname, subgenargs, rules)
 			if (typeof(transformedbody) != Expr) || (transformedbody.head != :block)
 				transformedbody = Expr(:block, transformedbody)
 			end
-						
+			
 			# rewrite rule -- regardless of the original form -- as a short form function
 			rewrittenargs = [rti.genarg; rti.statearg; rulemethod.args]
 			push!(ruleexprs, Expr(:(=), Expr(:call, esc(rulemethod.functionname), rewrittenargs...), transformedbody))
@@ -201,12 +199,15 @@ end
 
 
 #
-# if there are multiple methods with the same rulename, then name them uniquely
-# and create a function (with the original name) that calls one of the methods
+# create a "umbrella" method to record entry and exit from the rule
+# note: we use a "umbrella" method as this is more robust if rule code has an explicit return in it
 #
-function constructrulechoice(rulename, rulemethods, rti::RuleTransformInfo)
+# if there are multiple methods with the same rulename, then handle this implicit choice point
+# note: the new umbrella has the 'original' rule name while the one or more rule methods have unique names
+#
+function constructumbrellamethod(rulename, rulemethods, rti::RuleTransformInfo)
 
-	# we use arguments from first method as arguments to new function implementing the rule choice
+	# we use arguments from first method as arguments to umbrella method
 	ruleargs = rulemethods[1].args
 	rewrittenargs = [rti.genarg; rti.statearg; ruleargs]
 
@@ -214,33 +215,70 @@ function constructrulechoice(rulename, rulemethods, rti::RuleTransformInfo)
 	ruleparams = [extractparamfromarg(arg) for arg in ruleargs]
 	rewrittenparams = [rti.genparam; rti.stateparam; ruleparams]
 	
-	# ensure unique name for chosenidx in case of other variable defined in context
-	chosenidxvar = gensym("chosenidx")
+	if length(rulemethods) > 1
+		
+		# require an implicit choice point to call one of the methods
+		
+		# ensure unique name for chosenidx in case of other variable defined in context
+		chosenidxvar = gensym("chosenidx")
 	
-	condexpr = nothing
-	for idx in 1:length(rulemethods)
+		condexpr = nothing
+		for idx in 1:length(rulemethods)
 		
-		# create unique name for method
-		rulemethods[idx].functionname = uniquerulename(rulename)
+			# create unique name for method
+			rulemethods[idx].functionname = uniquerulename(rulename)
 
-		# call method with new name
-		callexpr = Expr(:call, esc(rulemethods[idx].functionname), rewrittenparams...)
+			# call method with new name
+			callexpr = Expr(:call, esc(rulemethods[idx].functionname), rewrittenparams...)
 		
-		# build conditional expr
-		if condexpr == nothing
-			condexpr = callexpr
-		else
-			condexpr = :( ($(esc(chosenidxvar)) == $(idx)) ? $(callexpr) : ($condexpr) )
+			# build conditional expr
+			if condexpr == nothing
+				condexpr = callexpr
+			else
+				condexpr = :( ($(esc(chosenidxvar)) == $(idx)) ? $(callexpr) : ($condexpr) )
+			end
+
 		end
 
+		cpinfo = Dict{Symbol,Any}(:rulename => rulename, :min => 1, :max => length(rulemethods))
+		cpid = recordchoicepoint(rti, RULE_CP, cpinfo)
+
+		rulebody = Expr(:block, :( $(esc(chosenidxvar)) = chooserule($(rti.stateparam), $(cpid), $(length(rulemethods))) ), condexpr)
+		
+	else
+		
+		# if only one method for this rule, simply call the method
+		
+		# create unique name for original rule method
+		rulemethods[1].functionname = uniquerulename(rulename)
+		
+		callexpr = Expr(:call, esc(rulemethods[1].functionname), rewrittenparams...)
+		
+		rulebody = Expr(:block, callexpr)
+		
 	end
 
-	cpinfo = Dict{Symbol,Any}(:rulename => rulename, :min => 1, :max => length(rulemethods))
-	cpid = recordchoicepoint(rti, RULE_CP, cpinfo)
-
-	rulebody = Expr(:block, :( $(esc(chosenidxvar)) = chooserule($(rti.stateparam), $(cpid), $(length(rulemethods))) ), condexpr)
+	# now 'wrap' rule body with calls to indicate the start and end of the rule, something like this:
+	#
+	# begin
+	#	recordstartofrule(state, rulefunctionname)
+	# 	result = <rulebody block created in code above>
+	#	recordendofrule(state, rulefunctionname)
+	#	result
+	# end
+	#
+	# note: we use the rulefunctionname (which might be somewhat obfuscated) rather than the rulename,
+	# since the rulename need not be unique across a generator and its subgenerators
 	
-	Expr(:(=), Expr(:call, esc(rti.rulefunctionnames[rulename]), rewrittenargs...), rulebody)
+	resultvar = gensym("result")
+	rulenameexpr = QuoteNode(rti.rulefunctionnames[rulename])
+	wrappedrulebody = Expr(:block,
+		:( recordstartofrule($(rti.stateparam), $(rulenameexpr)) ),
+		:( $(esc(resultvar)) = $(rulebody) ), 
+		:( recordendofrule($(rti.stateparam)) ),
+		:( $(esc(resultvar)) )
+	)
+	Expr(:(=), Expr(:call, esc(rti.rulefunctionnames[rulename]), rewrittenargs...), wrappedrulebody)
 	
 end
 

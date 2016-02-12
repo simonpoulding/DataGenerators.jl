@@ -1,5 +1,6 @@
 # TODO:
 #	- amendtrace
+#	- depths other than 1
 #	- nested conditional samplers
 
 println("START test_conditional_sampler")
@@ -54,7 +55,7 @@ scm = SamplerChoiceModel(gn)
 println("Testing constructor:")
 
 # now make X choice point conditional on S choice point
-scm.samplers[cpidX] = GodelTest.ConditionalSampler(scm.samplers[cpidX], cpidS, [1,3,nothing], Vector[[0.89, 0.11], [0.1, 0.9], [0.0, 1.0]])
+scm.samplers[cpidX] = GodelTest.ConditionalSampler(scm.samplers[cpidX], cpidS, 1, nothing, false, [1,3,nothing], Vector[[0.89, 0.11], [0.1, 0.9], [0.0, 1.0]])
 
 
 # TODO: may be better to test the following methods on sampler itself rather than at CM level?

@@ -1,8 +1,12 @@
 # TODO:
 #	- proper test of nested conditional samplers
 # 	- more explicitly test K2 calculation
+#	- depths > 1
+#	- test distinguish by recursion depth
+#	- test recursion depth model building (or do in test_recursion_depth_sampler)
+#	- test restrict to ancestors (or in test_restrict_ancestor)
 
-println("START test_build_bayesian_model")
+println("START test_build_conditional_model")
 
 using Base.Test
 using GodelTest
@@ -48,10 +52,10 @@ for s in 1:samplesize
 end
 println()
 
-println("Estimating Bayesian model...")
-GodelTest.estimatebayesianmodel(scm, selectedtraces)
+println("Estimating conditional model...")
+GodelTest.estimateconditionalmodel(scm, selectedtraces)
 
-print("Sampling from estimated Bayesian model:")
+print("Sampling from estimated conditional model:")
 
 newcounts = Dict("ax"=>0, "cy"=>0, "dx"=>0, "y"=>0)
 # only ax, cy, dx, and y should be returned from re-estimated model
@@ -68,3 +72,6 @@ println()
 @test newcounts["cy"] > 0
 @test newcounts["dx"] > 0
 @test newcounts["y"] > 0
+
+println("END test_build_conditional_model")
+

@@ -18,6 +18,12 @@ estimateparams(s::ModifyingSampler, traces) = estimateparams(s.subsampler, map(t
 
 amendtrace(s::ModifyingSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], x)
 
+# modifying samplers without a single subsampler, or with more info to display, will need to override
+function ppsampler(s::ModifyingSampler, cpnames, indentdepth::Int=1)
+	print(getsamplertypename(s) * " ")
+	ppsampler(s.subsampler, cpnames, indentdepth)
+end
+
 include("mixture_sampler.jl")
 include("adjust_parameters_to_support_sampler.jl")
 include("align_minimum_support_sampler.jl")
@@ -25,3 +31,5 @@ include("truncate_to_support_sampler.jl")
 include("transform_sampler.jl")
 include("constrain_parameters_sampler.jl")
 include("conditional_sampler.jl")
+include("recursion_depth_sampler.jl")
+

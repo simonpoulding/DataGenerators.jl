@@ -48,7 +48,7 @@ function getparams(s::MixtureSampler)
 end
 
 function sample(s::MixtureSampler, support, cc::ChoiceContext)
-	selectionindex, selectiontrace = sample(s.selectionsampler, (1,length(s.subsamplers)))
+	selectionindex, selectiontrace = sample(s.selectionsampler, (1,length(s.subsamplers)), cc)
 	x, trace = sample(s.subsamplers[selectionindex], support, cc)
 	x, Dict{Symbol, Any}(:idx=>selectionindex, :sel=>selectiontrace, :sub=>trace)
 end

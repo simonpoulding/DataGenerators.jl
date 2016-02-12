@@ -65,9 +65,12 @@ end
 
 
 
-function log(s::DerivationState, cpid::Integer, godelnumber::Real, trace::Dict)
+function logchoicepoint(s::DerivationState, cpid::Integer, godelnumber::Real, trace::Dict)
+	trace[:gdl] = godelnumber
+	trace[:rul] = getcurrentrulename(s)
 	push!(s.cmtrace, (cpid, trace))
 	push!(s.godelsequence, godelnumber)
+	pushcpseqnumber(s, length(s.godelsequence)) # sequence number is the new length of the godelsequence
 end
 
 # A default derivation state that generators can use unless they need
@@ -79,11 +82,94 @@ type DefaultDerivationState <: DerivationState
 	cmtrace::Vector{Tuple{Integer,Dict}}	# choice point plus trace info returned from the choice model
 	maxchoices::Int # upper limit on the size of the Godel sequence
 	maxseqreps::Int # upper limit on the length of sequences from sequence choice points
+	rulenamestack::Vector{Symbol} # stack of called rules - most recent at the end
+	cpseqnumberstack::Vector{Vector{Int}} # corresponding to the rule name stack, the seq numbers of the encountered choice points
+	# executiontreecoords::Vector{Int} # during the execution of a generator, this uniquely identifies the current rule in the execution tree
+	# nextchildcoord::Int
 	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT)
-		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps)
+		# new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, Vector{Symbol}(), Vector{Int}(), 1)
+		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, Vector{Symbol}(), Vector{Vector{Int}}())
 	end
 end
 
+#
+# Operations on derivation state related to record rule execution trees and stacks
+# 
+# recordstartofrulemethod and recordendofrulemethod are written into rule methods by generator macro
+# getcurrentrecursiondepth and getrecursiondepth can be called by, for example, a choice model (derivation state is accessible via the choice context)
+# 
+# Note this design permits record* methods to be reasonably fast, but get* methods are slower owing to need to count.  Could denormalise by  
+# maintaining, for example, a dict of counts during record operations, but this would make the record methods - called by all rules - slower, while
+# the get*depth methods - used only by SOME choice models - faster.
+#
+# "rule name stack" are the names (actually the unique method names assigned by the generator macro) of the ancestors of the current rule, including
+# the currently executing rule as the last entry
+# "cp seq number stack" for each rule in the stack, stores a vector of the seq nos of the choice points encountered in this rule
+# this enable the ancestors (in terms of the call stack, rather than chronologically) to be determined, without storing
+# large data structure 
+#
+# OBSOLETE - replaced with cpseqnumberstack which requires less momroy - but retaining these comments along with commented out code in case another use arises
+# for these coords
+# "execution tree coords" are a vector of numbers, e.g. [x, y, z] which identifies the current rule as the z^th 'child' rule executed by the y^th 
+# child of the x^th child of the (abstract) root (x will always be 1, in fact).  Thus the immediate parent (i.e. calling) rule of a rule with coords
+# [x, y, z] will have the coords [x, y]; siblings have [x, y, i!=z], descendants have [x, y, z, w, ...].
+# note: the execution tree coord is unique for each *instance* of a rule being executed; the same generator rule may be executed multiple times during
+# the execution of a generator, and each time it is executed, it will have different coords
+#
+
+# called at the start of generator method for each rule
+recordstartofrule(s::DerivationState, rulename::Symbol) = begin
+	push!(s.rulenamestack, rulename)
+	push!(s.cpseqnumberstack, Int[])
+	# push!(s.executiontreecoords, s.nextchildcoord)
+	# s.nextchildcoord = 1
+	# println("Starting rule: $(rulename); coords: $(s.executiontreecoords); stack: $(s.rulenamestack)")
+end
+
+# called at the end of generator method for each rule
+recordendofrule(s::DerivationState) = begin
+	pop!(s.rulenamestack)
+	# s.nextchildcoord = pop!(s.executiontreecoords) + 1
+	pop!(s.cpseqnumberstack)
+end
+
+# the rule name (actually the "internal" unique method name) of the currently executing rule
+# note: the unique method name is (ironically) the same for all rule with the same name (which occurs with an implicit rule choice
+# in the generator) - this is achieved by having a single "umbrella" method which decides which of the rules with the same name to call
+getcurrentrulename(s::DerivationState) = s.rulenamestack[end]
+
+# the recursion depth of a given rule (in terms of its immediate ancestor rules with the same name)
+getrecursiondepth(s::DerivationState, rulename::Symbol) = count(r->r==rulename, s.rulenamestack)
+
+# the recursion depth of the current rule (in terms of its immediate ancestor rules with the same name)
+getcurrentrecursiondepth(s::DerivationState) = getrecursiondepth(s, getcurrentrulename(s))
+
+# record new cp seq number
+pushcpseqnumber(s::DerivationState, seqnumber::Int) = push!(s.cpseqnumberstack[end], seqnumber)
+
+# get immediate ancestor cp seq number as the most recent seq number in the stack
+getimmediateancestorcpseqnumber(s::DerivationState) = begin
+	ancestorcpseqnumber = nothing
+	i = length(s.cpseqnumberstack)
+	while (ancestorcpseqnumber == nothing) && (i >= 1)
+		if !isempty(s.cpseqnumberstack[i])
+			ancestorcpseqnumber = s.cpseqnumberstack[i][end]
+		end
+		i -=  1
+	end
+	ancestorcpseqnumber
+end
+
+# # tests if execution tree coords indicate ancestry
+# isexecutiontreeancestor(ancestorcoords::Vector{Int}, descendantcoords::Vector{Int}) =
+# 	(length(ancestorcoords) < length(descendantcoords)) && (ancestorcoords == descendantcoords[1:length(ancestorcoords)])
+#
+# # tests if execution tree coords indicate ancestry or same
+# isexecutiontreeselforancestor(ancestorcoords::Vector{Int}, descendantcoords::Vector{Int}) =
+# 		(length(ancestorcoords) <= length(descendantcoords)) && (ancestorcoords == descendantcoords[1:length(ancestorcoords)])
+#
+# # tests if execution tree coords indicate parenthood
+# isexecutiontreeparent(parentcoords::Vector{Int}, childcoords::Vector{Int}) = parentcoords == childcoords[1:end-1]
 
 #
 # Core functions to use generators once they have been defined.
@@ -104,7 +190,8 @@ end
 # Derived helper/convenience functions based on the core...
 #
 
-gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = first(generate(g; state = state, choicemodel = choicemodel, maxchoices = maxchoices, maxseqreps = maxseqreps))
+gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
+		first(generate(g; state = state, choicemodel = choicemodel, maxchoices = maxchoices, maxseqreps = maxseqreps))
 
 many(g, num = int(floor(rand() * 10))) = [gen(g) for i in 1:num]
 
@@ -210,7 +297,6 @@ type ChoiceContext
 	datatype::DataType
 	lowerbound::Real
 	upperbound::Real
-	# recursiondepth::Int # not currently implemented
 end
 
 # All queries to choice model to retrieve Godel numbers made via this function
@@ -223,7 +309,7 @@ function querychoicemodel(s::DerivationState, cptype, cpid, datatype, lowerbound
 	# TODO recursiondepth
 	gn, trace = godelnumber(s.choicemodel, choicecontext)
 	@assert lowerbound <= gn <= upperbound
-	log(s, cpid, gn, trace)
+	logchoicepoint(s, cpid, gn, trace)
 	# convert the godel number to the specified type
 	# this is most useful for choose_number to ensure returned value is of specified type
 	# note that for Bool, convert treats 0 as false, and 1 as true
