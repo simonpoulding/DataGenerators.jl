@@ -304,17 +304,14 @@ function estimateconditionalmodel(s::ConditionalSampler, cplabels, gnhistories, 
 end
 
 # pretty print the model
-function ppsampler(s::ConditionalSampler, cpnames, indentdepth::Int=1)
-	indent, colour = getindentandcolor(indentdepth)
-	print_with_color(colour, getsamplertypename(s) * " Parent: " * ((s.parentcpid == nothing) ? "(none)" : (cpnames[s.parentcpid] * " Recency: $(s.parentrecency) Recursion Depth: " 
+function show(io::IO, s::ConditionalSampler, indentdepth::Int=1)
+	indent = " "^(10indentdepth)
+	println(io, getsamplertypename(s) * " Parent: " * ((s.parentcpid == nothing) ? "(none)" : ("$(hex(s.parentcpid)) Recency: $(s.parentrecency) Recursion Depth: " 
 		* ((s.parentrecursiondepth == nothing) ?  "(any)" : "$(s.parentrecursiondepth)") * " Restrict to Ancestors: " * (s.restricttoancestors ?  "yes" : "no"))))
-	pvisless = (x,y)->(x==nothing) ? false : (y==nothing) ? true : isless(x,y)
-	for parentvalue in sort(collect(keys(s.conditionalsamplers)),lt=pvisless)
-		println()
-		print_with_color(colour, indent * (parentvalue == nothing ? "(none)" : "$(parentvalue)") * ": ") 
-		ppsampler(s.conditionalsamplers[parentvalue], cpnames, indentdepth+1)
+	for parentvalue in sort(collect(keys(s.conditionalsamplers)),lt=(x,y)->(x==nothing) ? false : (y==nothing) ? true : isless(x,y))
+		print(io, indent * (parentvalue == nothing ? "(none)" : "$(parentvalue)") * ": ") 
+		show(io, s.conditionalsamplers[parentvalue], indentdepth+1)
 	end
-	println()		
-	print_with_color(colour, indent * "default: ")
-	ppsampler(s.defaultsampler, cpnames, indentdepth+1)
+	print(io, indent * "default: ")
+	show(io, s.defaultsampler, indentdepth+1)
 end

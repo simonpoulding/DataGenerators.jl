@@ -34,3 +34,9 @@ include("geometric_sampler.jl")
 include("normal_sampler.jl")
 include("uniform_sampler.jl")
 include("poisson_sampler.jl")
+
+# pretty print the sampler
+function show(io::IO, s::DistributionSampler, indentdepth::Int=1)
+	# since this sampler will be a 'leaf' in the sampler tree, can finish with a new line
+	println(io, getsamplertypename(s) * " $(getparams(s))")
+end

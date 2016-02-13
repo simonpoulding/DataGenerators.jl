@@ -19,9 +19,10 @@ estimateparams(s::ModifyingSampler, traces) = estimateparams(s.subsampler, map(t
 amendtrace(s::ModifyingSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], x)
 
 # modifying samplers without a single subsampler, or with more info to display, will need to override
-function ppsampler(s::ModifyingSampler, cpnames, indentdepth::Int=1)
-	print(getsamplertypename(s) * " ")
-	ppsampler(s.subsampler, cpnames, indentdepth)
+function show(io::IO, s::ModifyingSampler, indentdepth::Int=1)
+	print(io, getsamplertypename(s) * " ")
+	# note, no newline - keeping the entire output on one line if possible - the root subsampler(s) will handle the newline
+	show(io, s.subsampler, indentdepth)
 end
 
 include("mixture_sampler.jl")

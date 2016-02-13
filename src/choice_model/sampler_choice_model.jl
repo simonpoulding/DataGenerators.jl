@@ -1,6 +1,7 @@
 #
 # SamplerChoiceModel
 #
+import Base.show
 
 # define abstract sampler type, the type tree of which it is a root, and concrete implementations of these types
 include(joinpath("samplers", "sampler.jl"))
@@ -338,31 +339,32 @@ function estimateconditionalmodel(cm::SamplerChoiceModel, cmtraces; recencywindo
 end
 
 # pretty print the model
-function ppmodel(cm::SamplerChoiceModel, g::Generator)
-	
-	# first build slightly more informative names for choice points
-	cpnames = Dict{UInt, AbstractString}()
-	cpinfos = choicepointinfo(g)
-	orderedcpids = sort(collect(keys(cpinfos)))
-	for cpid in orderedcpids
-		cpinfo = cpinfos[cpid]
-		cpname = "($(cpid))"
-		cptype = cpinfo[:type]
-		if cptype == RULE_CP
-			cpname = "Rule $(cpinfo[:rulename]) " * cpname
-		elseif cptype == SEQUENCE_CP
-			cpname = "Sequence " * cpname
-		elseif cptype == VALUE_CP
-			cpname = "Value $(cpinfo[:datatype]) " * cpname
-		end		
-		cpnames[cpid] = cpname
-	end
+
+function show(io::IO, cm::SamplerChoiceModel)
+
+	# now changed this method to override show, can no longer pass generator (TODO: could include ref to generator in cm)
+	# # first build slightly more informative names for choice points
+	# cpnames = Dict{UInt, AbstractString}()
+	# cpinfos = choicepointinfo(g)
+	# orderedcpids = sort(collect(keys(cpinfos)))
+	# for cpid in orderedcpids
+	# 	cpinfo = cpinfos[cpid]
+	# 	cpname = "($(cpid))"
+	# 	cptype = cpinfo[:type]
+	# 	if cptype == RULE_CP
+	# 		cpname = "Rule $(cpinfo[:rulename]) " * cpname
+	# 	elseif cptype == SEQUENCE_CP
+	# 		cpname = "Sequence " * cpname
+	# 	elseif cptype == VALUE_CP
+	# 		cpname = "Value $(cpinfo[:datatype]) " * cpname
+	# 	end
+	# 	cpnames[cpid] = cpname
+	# end
 	
 	# now print samplers in id order (which should (roughly) be lexical order of choice points?)
-	for cpid in orderedcpids
-		print_with_color(:yellow, cpnames[cpid] * " ")
-		ppsampler(cm.samplers[cpid], cpnames)
-		println()
+	for cpid in sort(collect(keys(cm.samplers)))
+		print(io, "$(hex(cpid)): ")
+		show(io, cm.samplers[cpid])
 	end
 	
 end

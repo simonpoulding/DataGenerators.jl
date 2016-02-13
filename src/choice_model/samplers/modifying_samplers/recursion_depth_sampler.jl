@@ -125,12 +125,11 @@ function amendtrace(s::RecursionDepthSampler, trace, x)
 	amendtrace(s.depthsamplers[depth], trace[:sub], x)
 end
 
-function ppsampler(s::RecursionDepthSampler, cpnames, indentdepth::Int=1)
-	indent, colour = getindentandcolor(indentdepth)
-	print_with_color(colour, getsamplertypename(s))
+function show(io::IO, s::RecursionDepthSampler, indentdepth::Int=1)
+	indent = " "^(10indentdepth)
+	println(io, getsamplertypename(s))
 	for (depth, depthsampler) in enumerate(s.depthsamplers)
-		println()		
-		print_with_color(colour, indent * "$(depth): ") 
-		ppsampler(depthsampler, cpnames, indentdepth+1)
+		print(io, indent * "$(depth): ") 
+		show(io, depthsampler, indentdepth+1)
 	end
 end
