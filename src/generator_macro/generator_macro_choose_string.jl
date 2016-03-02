@@ -233,7 +233,7 @@ function finishandnode(andnode::RegexASTNode)
 		bracketnode = RegexASTNode(:bracket)
     bracketnode.func = :bracket
 
-    for range in [9:10,13:13,32:126] # currently just ASCII
+    for range in [9:10; 13:13; 32:126] # currently just ASCII
       rangenode = RegexASTNode(:range)
       rangenode.args[:value] = range
       push!(bracketnode.children, rangenode)
