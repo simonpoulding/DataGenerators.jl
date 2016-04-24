@@ -78,13 +78,13 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 	if fallback
 		warn("falling back to a uniform distribution after too many resamplings in sampler choice model")
 		if cc.datatype <: Integer # includes Bool
-			fallbacksampler = DiscreteUniformSampler([lowerbound, upperbound])
+			fallbacksampler = DiscreteUniformSampler([float(lowerbound), float(upperbound)])
 		elseif cc.datatype <: AbstractFloat
 			fallbacksampler = UniformSampler([lowerbound, upperbound])
 		else
 			@assert false
 		end
-		x, trace = sample(fallbacksampler, (lowerbound, upperbound))
+		x, fallbacktrace = sample(fallbacksampler, (lowerbound, upperbound), cc::ChoiceContext)
 		# we use the last trace form the 'proper' sampler but place in it this fallback sampled value
 		amendtrace(sampler, trace, x)
 	end
