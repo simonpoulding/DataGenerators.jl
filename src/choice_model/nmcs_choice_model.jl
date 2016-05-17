@@ -57,7 +57,6 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 	while (s < cm.samplesize) && ((s < cm.minimumsamplesize) || ((validruledepth) && (cm.totalsamplecount < cm.totalsamplelimit)))
 		s += 1
 		cm.totalsamplecount += 1
-		policychoicemodel = deepcopy(cm.policychoicemodel)
 		generator = deepcopy(cc.derivationstate.generator)
 		simulationcm = NMCSSimulationChoiceModel(deepcopy(cm.policychoicemodel), deepcopy(existinggodelsequence), deepcopy(existingtracesequence))
 		result, state = nothing, nothing
@@ -71,7 +70,7 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 			end
 		end
 		fitness = cm.fitnessfunction(result)
-		if fitness <= cm.bestfitness
+		if fitness <= cm.bestfitness # <= rather than < in order to improve diversity: if new sequence is just as good, prefer it to the stored best
 			cm.bestfitness = fitness
 			cm.bestgodelsequence = deepcopy(state.godelsequence)
 			cm.besttracesequence = map(t->t[2], state.cmtrace) # cmtrace is tuples of cpid and trace for that cp; need here just the trace

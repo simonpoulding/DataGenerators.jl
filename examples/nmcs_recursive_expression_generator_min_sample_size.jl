@@ -42,7 +42,7 @@ sampler_examples = [robustgen(gn, choicemodel=scm, maxchoices=MaxChoices) for i 
 
 # generate data using the optimised model
 # BUT here we specify (compared to nmcs_resursive_expression_generator) more samples per choice point, but a limit of 50 on the total number of samples taken by NMCS
-nmcs_examples = [robustgen(gn, choicemodel=NMCSChoiceModel(scm,fitnessfn,5, ruledepthlimit=1, minimumsamplesize=0), maxchoices=MaxChoices) for i in 1:NumSamples]
+nmcs_examples = [robustgen(gn, choicemodel=NMCSChoiceModel(scm,fitnessfn,5, ruledepthlimit=1, minimumsamplesize=2), maxchoices=MaxChoices) for i in 1:NumSamples]
 # TODO: for the moment we need to create a fresh NMCS choice model on each run since it's stateful model
 # NMCSChoiceModel(scm,fitnessfn,2) creates a choice model using the sampler choice model
 # single level, samplesize of 2.
