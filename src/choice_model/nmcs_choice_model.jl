@@ -36,17 +36,20 @@ type NMCSChoiceModel <: ChoiceModel
 	totalsamplecount::Int								# number of samples taken in total so far
 	bestfitness::Real 									# lower is better
 	bestgodelsequence::Vector{Real} 					# the best godel sequence found so far
+	besttracesequence::Vector{Dict}						# the traces for that sequence from the underlying choice model
 	function NMCSChoiceModel(policychoicemodel::ChoiceModel, fitnessfunction::Function, samplesize::Int=1; minimumsamplesize::Int=0, totalsamplelimit::Int=typemax(Int), ruledepthlimit::Int=typemax(Int))
 		(minimumsamplesize >= 0) || error("Minimum sample size must be 0 or more")
 		(minimumsamplesize <= samplesize) || error("Minimum sample size must be less or equal to the sample size")
 		(totalsamplelimit >= 0) || error("Total sample count must be 0 or more")
 		(ruledepthlimit >= 0) || error("Rule depth limit must be 0 or more")
-		new(deepcopy(policychoicemodel), fitnessfunction, samplesize, minimumsamplesize, totalsamplelimit, ruledepthlimit, 0, +Inf, [])
+		new(deepcopy(policychoicemodel), fitnessfunction, samplesize, minimumsamplesize, totalsamplelimit, ruledepthlimit, 0, +Inf, Real[], Dict[])
 	end
 end
 
 
 function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
+	existinggodelsequence = cc.derivationstate.godelsequence
+	existingtracesequence = map(t->t[2], cc.derivationstate.cmtrace) # cmtrace is tuples of cpid and trace for that cp; need here just the trace
 	s = 0 # local sample count (for this choice point)
 	# if total sample count is exceeded, no further samples are taken, and instead godel number
 	# is taken from the best godel sequence found so far
@@ -56,8 +59,7 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 		cm.totalsamplecount += 1
 		policychoicemodel = deepcopy(cm.policychoicemodel)
 		generator = deepcopy(cc.derivationstate.generator)
-		presetgodelsequence = deepcopy(cc.derivationstate.godelsequence)
-		simulationcm = NMCSSimulationChoiceModel(policychoicemodel, presetgodelsequence)
+		simulationcm = NMCSSimulationChoiceModel(deepcopy(cm.policychoicemodel), deepcopy(existinggodelsequence), deepcopy(existingtracesequence))
 		result, state = nothing, nothing
 		try
 			result, state = generate(generator; choicemodel=simulationcm, maxchoices=cc.derivationstate.maxchoices)
@@ -72,6 +74,7 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 		if fitness <= cm.bestfitness
 			cm.bestfitness = fitness
 			cm.bestgodelsequence = deepcopy(state.godelsequence)
+			cm.besttracesequence = map(t->t[2], state.cmtrace) # cmtrace is tuples of cpid and trace for that cp; need here just the trace
 		end
 	end
 	if isempty(cm.bestgodelsequence)
@@ -80,7 +83,8 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 		throw(GenerationTerminatedException("for all simulations run at the first choice point in NMCS, the number of the choices made exceeded $(cc.derivationstate.maxchoices): specify a larger value of maxchoices as a parameter to generate, or increase the NMCS sample size"))
 	end
 	gn = cm.bestgodelsequence[length(cc.derivationstate.godelsequence)+1]
-	gn, Dict()
+	trace = cm.besttracesequence[length(cc.derivationstate.cmtrace)+1]
+	gn, trace
 end
 
 setparams(cm::NMCSChoiceModel, params) = setparams(cm.policychoicemodel, params)
@@ -90,13 +94,14 @@ paramranges(cm::NMCSChoiceModel) = paramranges(cm.policychoicemodel)
 type NMCSSimulationChoiceModel <: ChoiceModel
 	policychoicemodel::ChoiceModel
 	presetgodelsequence::Vector{Real}
+	presettracesequence::Vector{Dict}
 end
 
 function godelnumber(cm::NMCSSimulationChoiceModel, cc::ChoiceContext)
 	if isempty(cm.presetgodelsequence)
 		gn, trace = godelnumber(cm.policychoicemodel, cc)
 	else
-		gn, trace = shift!(cm.presetgodelsequence), Dict()
+		gn, trace = shift!(cm.presetgodelsequence), shift!(cm.presettracesequence)
 	end
 	gn, trace
 end
