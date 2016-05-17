@@ -138,6 +138,9 @@ end
 # in the generator) - this is achieved by having a single "umbrella" method which decides which of the rules with the same name to call
 getcurrentrulename(s::DerivationState) = s.rulenamestack[end]
 
+# the "depth" at the current rule (including the rule itself)
+getruledepth(s::DerivationState) = length(s.rulenamestack)
+
 # the recursion depth of a given rule (in terms of its immediate ancestor rules with the same name)
 getrecursiondepth(s::DerivationState, rulename::Symbol) = count(r->r==rulename, s.rulenamestack)
 

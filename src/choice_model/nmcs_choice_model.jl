@@ -29,17 +29,31 @@
 type NMCSChoiceModel <: ChoiceModel
 	policychoicemodel::ChoiceModel
 	fitnessfunction::Function
-	samplesize::Int 									# the number of samples to take
-	bestfitness::Real 								# lower is better
-	bestgodelsequence::Vector{Real} 	# the best godel sequence found so far
-	function NMCSChoiceModel(policychoicemodel::ChoiceModel, fitnessfunction::Function, samplesize::Int=1)
-		new(deepcopy(policychoicemodel), fitnessfunction, samplesize, +Inf, [])
+	samplesize::Int 									# the (maximum) number of samples to take at each choice point
+	minimumsamplesize::Int								# the minimum sample size (comes into effect when totalsamplelimit or ruledepthlimit is reached)
+	totalsamplelimit::Int								# limit the total number of samples to take (does not include samples taken by nested samplers)
+	ruledepthlimit::Int									# limit on generator rule depth
+	totalsamplecount::Int								# number of samples taken in total so far
+	bestfitness::Real 									# lower is better
+	bestgodelsequence::Vector{Real} 					# the best godel sequence found so far
+	function NMCSChoiceModel(policychoicemodel::ChoiceModel, fitnessfunction::Function, samplesize::Int=1; minimumsamplesize::Int=0, totalsamplelimit::Int=typemax(Int), ruledepthlimit::Int=typemax(Int))
+		(minimumsamplesize >= 0) || error("Minimum sample size must be 0 or more")
+		(minimumsamplesize <= samplesize) || error("Minimum sample size must be less or equal to the sample size")
+		(totalsamplelimit >= 0) || error("Total sample count must be 0 or more")
+		(ruledepthlimit >= 0) || error("Rule depth limit must be 0 or more")
+		new(deepcopy(policychoicemodel), fitnessfunction, samplesize, minimumsamplesize, totalsamplelimit, ruledepthlimit, 0, +Inf, [])
 	end
 end
 
 
 function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
-	for i in 1:cm.samplesize
+	s = 0 # local sample count (for this choice point)
+	# if total sample count is exceeded, no further samples are taken, and instead godel number
+	# is taken from the best godel sequence found so far
+	validruledepth = (cm.ruledepthlimit == typemax(Int)) ? true : getruledepth(cc.derivationstate) <= cm.ruledepthlimit
+	while (s < cm.samplesize) && ((s < cm.minimumsamplesize) || ((validruledepth) && (cm.totalsamplecount < cm.totalsamplelimit)))
+		s += 1
+		cm.totalsamplecount += 1
 		policychoicemodel = deepcopy(cm.policychoicemodel)
 		generator = deepcopy(cc.derivationstate.generator)
 		presetgodelsequence = deepcopy(cc.derivationstate.godelsequence)
