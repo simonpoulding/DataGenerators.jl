@@ -387,7 +387,7 @@ function regexconstructmethods(node::RegexASTNode, rti)
 						cpmax = typemax(Int)
 					end
 					functocallexpr = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
-					cpid = recordchoicepoint(rti, SEQUENCE_CP, Dict{Symbol, Any}(:min=>min, :max=>cpmax))
+					cpid = recordchoicepoint(rti, SEQUENCE_CP, Dict{Symbol, Any}(:min=>cpmin, :max=>cpmax))
 					upperboundexpr = Expr(:call, :choosereps, rti.stateparam, cpid, cpmin, cpmax, true)
 	    else
 					functocallexpr = :( $(esc(node.children[1].methodname))($(rti.genparam), $(rti.stateparam)) )
