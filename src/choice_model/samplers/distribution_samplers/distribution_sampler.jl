@@ -40,3 +40,5 @@ function show(io::IO, s::DistributionSampler, indentdepth::Int=1)
 	# since this sampler will be a 'leaf' in the sampler tree, can finish with a new line
 	println(io, getsamplertypename(s) * " $(getparams(s))")
 end
+
+minimumsupport(s::DistributionSampler) = minimum(s.distribution)
