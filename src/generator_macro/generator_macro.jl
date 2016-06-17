@@ -305,17 +305,15 @@ function transformconstructs(node, rti::RuleTransformInfo)
 			return transformsubgencall(callname, callparams, rti)
 		end		
 	end
-	
+
 	if typeof(node) == Expr
-		if node.head == :call
-			# esc'ing the function name ensures that it runs in the scope of the current module not the GodelTest module
-			node.args = [esc(node.args[1]); [transformconstructs(arg, rti) for arg in node.args[2:end]]]		
-		else
-			node.args = [transformconstructs(arg, rti) for arg in node.args]
-		end
+		# if node is expression, then need to recursively check for nested constructs
+		node.args = [transformconstructs(arg, rti) for arg in node.args]
+		return node
 	end
 	
-	return node
+	# esc'ing the node ensures that it runs in the scope of the current module not the GodelTest module
+	return esc(node)
 
 end
 
@@ -542,6 +540,14 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 	# code for the generator type
 	# note that macro hygeine will ensure that variables/functions/types not explicitly esc'ed will be transformed 
 	# into the context of the GodelTest module, which is what we require here
+
+	# we store also the current module at the time of calling this macro as the owning module of this new type:
+	# this is so that rules are executed in the correct context when the generator is run since the same context
+	# as this type is where the method corresponding to generator rules will be created.
+	# it would be possible to derive the owning module from the fully specified type of the generator,
+	# but there is currently no built-in Julia function to do this cleanly; instead we would need to 
+	# perform some custom string-manipulation on the type name, and this wouldn't be very robust (e.g.
+	# may not survive type-aliasing etc.)	
 	quote
 		type $(esc(genname)) <: Generator
 			meta::Dict{Symbol, Any}
@@ -549,6 +555,7 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 			choicepointinfo::Dict{UInt, Dict{Symbol, Any}}
 			rulefunctionnames::Dict{Symbol,Symbol}
 			subgens::Vector{Generator}
+			owningmodule::Module
 
 			function $(esc(genname))(subgens::Vector = [])
 				if length(subgens) != $(length(rti.subgenargs))
@@ -558,8 +565,7 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 				if !all([typeof(sg) <: Generator for sg in subgens])
 					error("Not all subgenerators are of type GodelTest.Generator $(subgens)")
 				end
-
-				new($metaInfo, DefaultDerivationState, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens)
+				new($metaInfo, DefaultDerivationState, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens, $(current_module()))
 			end
 
 			$(esc(genname))(subgens...) = $(esc(genname))(collect(subgens))
