@@ -1,8 +1,5 @@
-module TestModule
 
 using GodelTest
-
-export samp
 
 function addbang(x)
 	x * "!"
@@ -24,13 +21,7 @@ end
 # ) )
 # println(ex)
 
-function samp()
-	gn = SimpleExprGen()
-	gen(gn)
-end
+gn = SimpleExprGen()
+x = gen(gn)
 
-end
-
-using TestModule
-
-println("Emitted: $(samp())")
+println("Emitted: $(x)")
