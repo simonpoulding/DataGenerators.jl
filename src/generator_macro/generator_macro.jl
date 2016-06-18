@@ -735,10 +735,10 @@ function extractparamfromarg(argexpr)
 	if typeof(argexpr) == Symbol
 		return argexpr
 	end
-	if (typeof(argexpr) == Expr)
+	if typeof(argexpr) == Expr
 		filteredargs = removelinenodes(argexpr.args)
 		if (argexpr.head == :(::)) && (length(filteredargs) == 2)
-			extractparamfromarg(filteredargs[1])
+			return extractparamfromarg(filteredargs[1])
 		end
 	end
 	if (argexpr.head == :kw) && (length(filteredargs) == 2) # :kw indicates parameter defaulting
