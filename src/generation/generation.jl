@@ -185,7 +185,8 @@ function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceMode
 	state = (state == nothing) ? newstate(g, choicemodel, maxchoices, maxseqreps) : state	
 	startfunc = functionforrulenamed(g, startrule)
 	# important: we evaluate in the module that owns the type and since this (rather than GodelTest) will be where rule functions are defined
-	result = eval(g.owningmodule, Expr(:call, startfunc, g, state))
+	# the correct eval function is set in the generator on creation
+	result = g.evalfn(Expr(:call, startfunc, g, state))
 	return (result, state)
 end
 
