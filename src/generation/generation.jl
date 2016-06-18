@@ -16,16 +16,6 @@ const MAX_CHOICES_DEFAULT = 10017
 const MAX_SEQ_REPS_DEFAULT = 4868
 
 
-#
-# Abstract interface to all Generator sub-types. Override for specific behavior.
-#
-statetype(g::Generator) = g.statetype
-
-subgenerator(g::Generator, index::Integer) = g.subgens[index]
-
-# Return the meta information associated with a generator.
-meta(g::Generator) = g.meta
-
 # Return the choice point info associated with a generator. This includes both the choicepointinfo for
 # the generator itself plus any subgenerators
 function choicepointinfo(g::Generator)
@@ -91,6 +81,16 @@ type DefaultDerivationState <: DerivationState
 		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, Vector{Symbol}(), Vector{Vector{Int}}())
 	end
 end
+
+#
+# Abstract interface to all Generator sub-types. Override for specific behavior.
+#
+statetype(g::Generator) = DefaultDerivationState
+
+subgenerator(g::Generator, index::Integer) = g.subgens[index]
+
+# Return the meta information associated with a generator.
+meta(g::Generator) = g.meta
 
 #
 # Operations on derivation state related to record rule execution trees and stacks

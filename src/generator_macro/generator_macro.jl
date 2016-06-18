@@ -568,7 +568,6 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 	quote
 		type $(genname) <: $(THIS_MODULE).Generator
 			meta::Dict{Symbol, Any}
-			statetype
 			choicepointinfo::Dict{UInt, Dict{Symbol, Any}}
 			rulefunctionnames::Dict{Symbol,Symbol}
 			subgens::Vector{$(THIS_MODULE).Generator}
@@ -582,7 +581,7 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 				if !all([typeof(sg) <: $(THIS_MODULE).Generator for sg in subgens])
 					error("Not all subgenerators are of type $(THIS_MODULE).Generator $(subgens)")
 				end
-				new($metaInfo, $(THIS_MODULE).DerivationState, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens,
+				new($metaInfo, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens,
 				 ex->eval($(current_module()),ex))
 			end
 
