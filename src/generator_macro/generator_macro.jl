@@ -539,8 +539,8 @@ function transformsubgencall(subgenname, subgenparams, rti::RuleTransformInfo)
 	if length(subgenparams) != 0
 		# TODO
 	end
-	Expr(:call, :subgen, rti.genparam, rti.stateparam, i)
-	# :subgen is not esc'ed so that it is interpreted in context of GodelTest and not current module
+	# Expr(:call, :subgen, rti.genparam, rti.stateparam, i)
+	:( GodelTest.subgen($(rti.genparam), $(rti.stateparam), $(i)) )
 end
 
 
