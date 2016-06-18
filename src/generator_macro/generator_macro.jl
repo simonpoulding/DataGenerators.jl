@@ -159,7 +159,7 @@ type RuleTransformInfo
 		genparam = gensym(:g)
 		stateparam = gensym(:s)
 		genarg = :( $(genparam)::$(genname) )
-		statearg = :( $(stateparam)::$(THIS_MODULE).DefaultDerivationState )
+		statearg = :( $(stateparam)::$(THIS_MODULE).DerivationState )
 		new(choicepointoffset, 0, Dict{Int, Dict{Symbol, Any}}(), genname, subgenargs, rules, rulefunctionnames, genparam, genarg, stateparam, statearg)
 	end
 end
@@ -582,7 +582,7 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 				if !all([typeof(sg) <: $(THIS_MODULE).Generator for sg in subgens])
 					error("Not all subgenerators are of type $(THIS_MODULE).Generator $(subgens)")
 				end
-				new($metaInfo, $(THIS_MODULE).DefaultDerivationState, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens,
+				new($metaInfo, $(THIS_MODULE).DerivationState, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens,
 				 ex->eval($(current_module()),ex))
 			end
 
