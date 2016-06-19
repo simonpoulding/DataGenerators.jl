@@ -51,6 +51,13 @@ type MCTSChoiceModel <: ChoiceModel
 	end
 end
 
+# reset any state 
+function resetstate!(cm::MCTSChoiceModel)
+	resetstate!(cm.policychoicemodel)
+	cm.rootgodelsequence = (Real)[]
+	cm.rootnode = MCTSNode(Dict())
+end
+
 #DEBUG function godelsequenceasstring(godelsequence::Vector{Real})
 #DEBUG 	s = ""
 #DEBUG 	for godelnumber in godelsequence
@@ -267,6 +274,7 @@ getparams(cm::MCTSChoiceModel) = getparams(cm.policychoicemodel)
 paramranges(cm::MCTSChoiceModel) = paramranges(cm.policychoicemodel)
 
 
+
 type MCTSSimulationChoiceModel <: ChoiceModel
 	policychoicemodel::ChoiceModel
 	presetgodelsequence::Vector{Real}
@@ -280,3 +288,6 @@ function godelnumber(cm::MCTSSimulationChoiceModel, cc::ChoiceContext)
 	end
 	gn, trace
 end
+
+# reset any state 
+resetstate!(cm::MCTSSimulationChoiceModel) = nothing

@@ -27,7 +27,7 @@ end
 #  (2) must be convertible without loss of precision to ChoiceContext.datatype (i.e. does not cause convert to raise an
 #      InexactError), but need not be of the specified datatype
 #
-function godelnumber(cm::ChoiceModel, cc::ChoiceContext)
+function godelnumber(cm::DefaultChoiceModel, cc::ChoiceContext)
 	# finitise infinities to maxintfloat()/10 (approx 9e14 for Float64)
 	# using a range that has a size that is less than maxintfloat ensures that the range is small enough that some of the Godel numbers
 	# are, after conversion back to the datatype, have a non-zero floating point part
@@ -58,10 +58,12 @@ end
 
 # valid ranges for each parameter, return as a vector; each range is a tuple (min,max) where (ironically, given the notation)
 # values are inclusive
-paramranges(cm::ChoiceModel) = (Real,Real)[]
+paramranges(cm::DefaultChoiceModel) = (Real,Real)[]
 
 # set parameters using the passed vector of values
-setparams(cm::ChoiceModel, params) = nothing
+setparams(cm::DefaultChoiceModel, params) = nothing
 
 # get parameters as a vector of values
-getparams(cm::ChoiceModel) = Real[]
+getparams(cm::DefaultChoiceModel) = Real[]
+
+resetstate!(cm::DefaultChoiceModel) = nothing

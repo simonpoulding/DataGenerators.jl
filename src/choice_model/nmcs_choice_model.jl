@@ -46,6 +46,15 @@ type NMCSChoiceModel <: ChoiceModel
 	end
 end
 
+# reset any state 
+function resetstate!(cm::NMCSChoiceModel)
+	resetstate!(cm.policychoicemodel)
+	cm.totalsamplecount = 0
+	cm.bestgodelsequence = (Real)[]
+	cm.besttracesequence =  Dict[]
+end
+
+
 
 function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 	existinggodelsequence = cc.derivationstate.godelsequence
@@ -90,6 +99,7 @@ setparams(cm::NMCSChoiceModel, params) = setparams(cm.policychoicemodel, params)
 getparams(cm::NMCSChoiceModel) = getparams(cm.policychoicemodel)
 paramranges(cm::NMCSChoiceModel) = paramranges(cm.policychoicemodel)
 
+
 type NMCSSimulationChoiceModel <: ChoiceModel
 	policychoicemodel::ChoiceModel
 	presetgodelsequence::Vector{Real}
@@ -104,3 +114,6 @@ function godelnumber(cm::NMCSSimulationChoiceModel, cc::ChoiceContext)
 	end
 	gn, trace
 end
+
+# reset any state 
+resetstate!(cm::NMCSSimulationChoiceModel) = nothing

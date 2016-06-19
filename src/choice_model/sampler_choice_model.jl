@@ -135,6 +135,10 @@ function getparams(cm::SamplerChoiceModel)
 	params
 end
 
+# reset any state 
+resetstate!(cm::SamplerChoiceModel) = nothing
+
+
 # extract dict of trace info indexed by cpid from a vector of cm traces
 function extractsamplertracesbycp(cm::SamplerChoiceModel, cmtraces)
 	samplertracesbycp = Dict{UInt,Vector{Dict}}()
