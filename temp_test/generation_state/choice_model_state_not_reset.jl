@@ -40,6 +40,6 @@ cm=NMCSChoiceModel(scm,fitnessfn,4)
 
 # generate data using NMCS
 for i in 1:NumSamples
-  datum = robustgen(gn, choicemodel=cm, maxchoices=MaxChoices)
+  datum = robustgen(gn, choicemodel=cm, maxchoices=MaxChoices, resetchoicemodelstate=false)
   println(datum)
 end

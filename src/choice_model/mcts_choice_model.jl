@@ -290,4 +290,7 @@ function godelnumber(cm::MCTSSimulationChoiceModel, cc::ChoiceContext)
 end
 
 # reset any state 
-resetstate!(cm::MCTSSimulationChoiceModel) = nothing
+function resetstate!(cm::MCTSSimulationChoiceModel)
+	resetstate!(cm.policychoicemodel)
+end
+

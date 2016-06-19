@@ -50,11 +50,10 @@ end
 function resetstate!(cm::NMCSChoiceModel)
 	resetstate!(cm.policychoicemodel)
 	cm.totalsamplecount = 0
+	cm.bestfitness = +Inf
 	cm.bestgodelsequence = (Real)[]
 	cm.besttracesequence =  Dict[]
 end
-
-
 
 function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 	existinggodelsequence = cc.derivationstate.godelsequence
@@ -116,4 +115,6 @@ function godelnumber(cm::NMCSSimulationChoiceModel, cc::ChoiceContext)
 end
 
 # reset any state 
-resetstate!(cm::NMCSSimulationChoiceModel) = nothing
+function resetstate!(cm::NMCSSimulationChoiceModel)
+	resetstate!(cm.policychoicemodel)
+end

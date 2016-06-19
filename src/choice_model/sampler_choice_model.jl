@@ -21,6 +21,9 @@ function SamplerChoiceModel(g::Generator; choicepointmapping::Function=defaultch
 	SamplerChoiceModel(samplers, maxresamplings)
 end
 
+# reset any state 
+resetstate!(cm::SamplerChoiceModel) = nothing
+
 
 function defaultchoicepointmapping(info::Dict)
 	cptype = info[:type]
@@ -134,10 +137,6 @@ function getparams(cm::SamplerChoiceModel)
 	end
 	params
 end
-
-# reset any state 
-resetstate!(cm::SamplerChoiceModel) = nothing
-
 
 # extract dict of trace info indexed by cpid from a vector of cm traces
 function extractsamplertracesbycp(cm::SamplerChoiceModel, cmtraces)
