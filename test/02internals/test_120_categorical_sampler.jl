@@ -143,6 +143,7 @@ end
         x, trace = GodelTest.sample(s1, (0,1), cc)
         trace
     end
+    estimateparams(s2, traces)
     @test isconsistentcategorical(s2, otherparams)
 end
 		
