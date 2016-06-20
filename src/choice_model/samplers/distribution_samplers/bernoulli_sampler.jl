@@ -9,7 +9,7 @@ type BernoulliSampler <: DiscreteDistributionSampler
 	paramranges::Vector{Tuple{Float64,Float64}}
 	distribution::Bernoulli
 	function BernoulliSampler(params=Float64[])
-		s = new([(0.0,1.0)])
+		s = new(Tuple{Float64,Float64}[(0.0,1.0)])
 		setparams(s, isempty(params) ? Float64[0.5] : params)
 		s
 	end

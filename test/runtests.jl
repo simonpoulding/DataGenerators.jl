@@ -45,7 +45,7 @@ end
     #include_all_files_matching(r"^test_.*jl$", "02internals")
     include(joinpath("02internals", "test_010_choice_point_info.jl"))
     include(joinpath("02internals", "test_080_using_generators_in_different_scopes.jl"))
-    #include(joinpath("02internals", "test_110_bernoulli_sampler.jl"))
+    include(joinpath("02internals", "test_110_bernoulli_sampler.jl"))
 
     #include_all_files_matching(r"^test_.*jl$", "03examples")
 end
