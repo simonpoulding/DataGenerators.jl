@@ -1,6 +1,7 @@
 # For now we use the single file, temp version of BaseTestAuto
 include("base_test_auto_singlefile_1605.jl")
 using BaseTestAuto
+include("mcheck_macros_temp.jl") # Temp and incomplete implementations of the mcheck macros
 
 Package = "GodelTest"
 

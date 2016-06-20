@@ -16,8 +16,7 @@ end
     gn = RCShortGen()
     @testset "returns 'a' or 'b' or 'c'" for i in 1:NumReps 
         td = gen(gn)
-        #@mcheck_values_are td ['a','b','c']
-        @test in(td, ['a','b','c'])
+        @mcheck_values_are td ['a','b','c']
     end
 end
 
@@ -40,8 +39,7 @@ end
 
     @testset "returns 'a' or 'b' or 'c'" for i in 1:NumReps 
         td = gen(gn)
-        #@mcheck_values_are td ['a','b','c']
-        @test in(td, ['a','b','c'])
+        @mcheck_values_are td ['a','b','c']
     end
 
 end
@@ -62,8 +60,7 @@ end
 
     @testset "returns 'a' or 'b' or 'c'" for i in 1:NumReps 
         td = gen(gn)
-        #@mcheck_values_are td ['a','b','c']
-        @test in(td, ['a','b','c'])
+        @mcheck_values_are td ['a','b','c']
     end
 	
 end

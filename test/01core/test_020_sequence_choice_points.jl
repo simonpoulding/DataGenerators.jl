@@ -21,8 +21,7 @@ gn = SCRepsGen()
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
     @test td[1] != td[2]
-    #@mcheck_values_include length(td) [2,3,4]
-    @test in(length(td), [2,3,4]) # Temp, not the same
+    @mcheck_values_include length(td) [2,3,4]
 end
 	
 end
@@ -42,8 +41,7 @@ gn = SCRepsNoMaxGen()
     @test typeof(td) <: Array
     @test 2 <= length(td)
     @test all(td .== 'a')
-    #@mcheck_values_include length(td) [2,3,4]
-    @test length(td) >= 2 # Temp, not the same
+    @mcheck_values_include length(td) [2,3,4]
 end
 	
 end
@@ -63,7 +61,7 @@ gn = SCRepsNoMinGen()
     @test typeof(td) <: Array
     @test 0 <= length(td)
     @test all(td .== 'a')
-    #@mcheck_values_include length(td) [0,1,2]
+    @mcheck_values_include length(td) [0,1,2]
 end
 	
 end
@@ -83,8 +81,7 @@ gn = SCRepsNonLiteralMinMaxGen()
     @test typeof(td) <: Array
     @test 4 <= length(td) <= 6
     @test all(td .== 'a')
-    #@mcheck_values_include length(td) [4,5,6]
-    @test in(length(td), [4,5,6]) # Temp, not the same
+    @mcheck_values_are length(td) [4,5,6]
 end
 
 end
@@ -105,8 +102,7 @@ gn = SCRepsRuleNonLiteralMinMaxGen()
     @test typeof(td) <: Array
     @test 4 <= length(td) <= 6
     @test all(td .== 'a')
-    #@mcheck_values_include length(td) [4,5,6]
-    @test in(length(td), [4,5,6]) # Temp, not the same
+    @mcheck_values_are length(td) [4,5,6]
 end
 
 end
@@ -126,8 +122,7 @@ gn = SCRepsShortFormParenGen()
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
     @test td[1] != td[2]
-    #@mcheck_values_include length(td) [2,3,4]
-    @test in(length(td), [2,3,4]) # Temp, not the same
+    @mcheck_values_are length(td) [2,3,4]
 end
 
 end
@@ -155,8 +150,7 @@ gn = SCRepsRuleParamGen()
     @test all(map(x->typeof(x),td1) .== Symbol)
     @test td1[1] != td1[2]
     @test all(td2 .== 72)
-    #@mcheck_values_include length(td) [2,3,4]
-    @test in(length(td), [2,3,4]) # Temp, not the same
+    @mcheck_values_are length(td) [2,3,4]
 end
 
 end
@@ -176,8 +170,7 @@ gn = SCRepsNonRuleGen()
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
     @test td[1] != td[2]
-    #@mcheck_values_include length(td) [2,3,4]
-    @test in(length(td), [2,3,4]) # Temp, not the same
+    @mcheck_values_are length(td) [2,3,4]
 end
 
 end
@@ -202,8 +195,7 @@ gn = SCRepsSubGenGen(sg)
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
     @test td[1] != td[2]
-    #@mcheck_values_include length(td) [2,3,4]
-    @test in(length(td), [2,3,4]) # Temp, not the same
+    @mcheck_values_are length(td) [2,3,4]
 end
 
 end
@@ -226,7 +218,7 @@ gn = SCMultGen()
     @test typeof(td) <: Array
     @test 0 <= length(td)
     @test all(td .== 'a')
-    #@mcheck_values_include length(td) [0,1,2]
+    @mcheck_values_include length(td) [0,1,2]
 end
 	
 end
@@ -252,7 +244,7 @@ gn = SCPlusGen()
     @test typeof(td) <: Array
     @test 1 <= length(td)
     @test all(td .== 'a')
-    #@mcheck_values_include length(td) [1,2,3]
+    @mcheck_values_include length(td) [1,2,3]
 end
 
 end

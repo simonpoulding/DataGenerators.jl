@@ -23,7 +23,7 @@ end
     @testset "emits different Boolean" for i in 1:NumReps 
     td = gen(gn)
     @test typeof(td) == Bool
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 	
 end
@@ -41,7 +41,7 @@ gn = VCIntGen()
     td = gen(gn)
     @test typeof(td) == Int
     @test -1000 <= td <= 2000
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -59,7 +59,7 @@ gn = VCIntNonLiteralGen()
     td = gen(gn)
     @test typeof(td) == Int
     @test -1000 <= td <= 2000
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -79,7 +79,7 @@ gn = VCIntVariableGen()
     td = gen(gn)
     @test typeof(td) == Int
     @test -1000 <= td <= 2000
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -97,7 +97,7 @@ gn = VCIntNoMaxGen()
     td = gen(gn)
     @test typeof(td) == Int
     @test -1000 <= td
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -114,7 +114,7 @@ gn = VCIntNoRangeGen()
 @testset "emits different Int without restriction" for i in 1:NumReps 
     td = gen(gn)
     @test typeof(td) == Int
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -132,7 +132,7 @@ gn = VCInt64Gen()
     td = gen(gn)
     @test typeof(td) == Int
     @test -1000 <= td <= 2000
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -150,7 +150,7 @@ gn = VCInt32Gen()
     td = gen(gn)
     @test typeof(td) == Int32
     @test -1000 <= td <= 2000
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -168,7 +168,7 @@ gn = VCUIntGen()
     td = gen(gn)
     @test typeof(td) == UInt
     @test 4 <= td <= 420
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -186,7 +186,7 @@ gn = VCFloat64Gen()
     td = gen(gn)
     @test typeof(td) == Float64
     @test -4.2 <= td <= 32.7
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -204,7 +204,7 @@ gn = VCFloat64NoMaxGen()
     td = gen(gn)
     @test typeof(td) == Float64
     @test -4.2 <= td
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 	
 end
@@ -221,7 +221,7 @@ gn = VCFloat64NoRangeGen()
 @testset "emits different Float64 with restriction" for i in 1:NumReps 
     td = gen(gn)
     @test typeof(td) == Float64
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -239,7 +239,7 @@ gn = VCFloat64NonLiteralGen()
     td = gen(gn)
     @test typeof(td) == Float64
     @test -4.2 <= td <= 32.7
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -258,7 +258,7 @@ gn = VCFloat64VariableGen()
     td = gen(gn)
     @test typeof(td) == Float64
     @test -4.2 <= td <= 32.7
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
@@ -276,7 +276,7 @@ gn = VCFloat32Gen()
     td = gen(gn)
     @test typeof(td) == Float32
     @test -4.2 <= td <= 32.7
-    #@mcheck_values_vary td
+    @mcheck_values_vary td
 end
 
 end
