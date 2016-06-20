@@ -35,7 +35,8 @@ else
 end
 
 function include_all_files_matching(re, testdir)
-    files = filter(fp -> ismatch(re, fp), readdir("test/$testdir"))
+    currdir = dirname(@__FILE__())
+    files = filter(fp -> ismatch(re, fp), readdir(joinpath(currdir, testdir)))
     [include(joinpath(testdir, fp)) for fp in files]
 end
 
@@ -47,6 +48,9 @@ end
     include(joinpath("02internals", "test_080_using_generators_in_different_scopes.jl"))
     include(joinpath("02internals", "test_110_bernoulli_sampler.jl"))
     include(joinpath("02internals", "test_120_categorical_sampler.jl"))
+    #include(joinpath("02internals", "test_130_discrete_uniform_sampler.jl"))
+    include(joinpath("02internals", "test_410_default_choice_model.jl"))
+    #include(joinpath("02internals", "test_420_sampler_choice_model.jl"))
 
-    #include_all_files_matching(r"^test_.*jl$", "03examples")
+    include_all_files_matching(r"^test_.*jl$", "03examples")
 end
