@@ -10,9 +10,6 @@ function DefaultChoiceModel(g::Generator)
 	DefaultChoiceModel()
 end
 
-resetstate!(cm::DefaultChoiceModel) = nothing
-
-
 #
 # The godelnumber function is the interface to all subtypes of ChoiceModel. Override to implement more specific
 # behavior.

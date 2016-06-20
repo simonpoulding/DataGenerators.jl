@@ -2,6 +2,8 @@ include("sampler_test_utils.jl")
 
 @testset "Categorical Sampler" begin
 
+cc = dummyChoiceContext()
+
 @testset "default construction" begin
 
 s = GodelTest.CategoricalSampler(4)
@@ -19,7 +21,7 @@ end
 end
 	
 @testset repeats=NumReps "default sampling" begin
-    x, trace = GodelTest.sample(s, (0,1))
+    x, trace = GodelTest.sample(s, (0,1), cc)
     @test typeof(x) <: Int
     @mcheck_values_are x [1,2,3,4]
 end
@@ -101,7 +103,7 @@ otherparams = [0.35, 0.15, 0.1, 0.25, 0.15]
     s1 = GodelTest.CategoricalSampler(5, params)
     s2 = GodelTest.CategoricalSampler(5, otherparams)	
     traces = map(1:100) do i
-        x, trace = GodelTest.sample(s1, (0,1))
+        x, trace = GodelTest.sample(s1, (0,1), cc)
         trace
     end
     estimateparams(s2, traces)
@@ -113,7 +115,7 @@ end
     s1 = GodelTest.CategoricalSampler(5, params)
     s2 = GodelTest.CategoricalSampler(5, otherparams)	
     traces = map(1:100) do i
-        x, trace = GodelTest.sample(s1, (0,1))
+        x, trace = GodelTest.sample(s1, (0,1), cc)
         trace
     end
     estimateparams(s2, traces)
@@ -126,7 +128,7 @@ end
     s1 = GodelTest.CategoricalSampler(5, params)
     s2 = GodelTest.CategoricalSampler(5, otherparams)	
     traces = map(1:100) do i
-        x, trace = GodelTest.sample(s1, (0,1))
+        x, trace = GodelTest.sample(s1, (0,1), cc)
         trace
     end
     estimateparams(s2, traces)
@@ -138,7 +140,7 @@ end
     s1 = GodelTest.CategoricalSampler(5, params)
     s2 = GodelTest.CategoricalSampler(5, otherparams)	
     traces = map(1:0) do i
-        x, trace = GodelTest.sample(s1, (0,1))
+        x, trace = GodelTest.sample(s1, (0,1), cc)
         trace
     end
     @test isconsistentcategorical(s2, otherparams)

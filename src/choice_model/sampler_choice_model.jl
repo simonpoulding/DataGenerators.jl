@@ -21,9 +21,6 @@ function SamplerChoiceModel(g::Generator; choicepointmapping::Function=defaultch
 	SamplerChoiceModel(samplers, maxresamplings)
 end
 
-# reset any state 
-resetstate!(cm::SamplerChoiceModel) = nothing
-
 
 function defaultchoicepointmapping(info::Dict)
 	cptype = info[:type]
