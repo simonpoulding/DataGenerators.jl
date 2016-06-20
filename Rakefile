@@ -13,7 +13,7 @@ TimedTestMinFactor = (ENV["timedminfactor"] || 10).to_i
 TimedTestMaxFactor = (ENV["timedmaxfactor"] || 1000).to_i
 
 MainFile = "src/#{Lib}.jl"
-BaseCommand = "#{Julia} --color=yes -L #{MainFile}"
+BaseCommand = "nice -9 #{Julia} -L #{MainFile}"
 
 def run_autotest(minReps = MinReps, maxReps = MaxReps, maxRepTime = MaxRepTime, 
   func = "test", timeToRun = -1.0, slowprogressMode = false)
@@ -33,7 +33,7 @@ def timed_test(numSeconds)
     "test", numSeconds, true)
 end
 
-desc "AutoTest testing"
+desc "Run test suite"
 task :atest do
   sh "#{BaseCommand} --color=yes test/runtests.jl"
 end
@@ -44,9 +44,9 @@ task :autotest do
   sh "#{BaseCommand} --color=yes test/runtests.jl continuous &"
 end
 
-desc "Run AutoTest tests"
+desc "Run test suite"
 task :test do
-  run_autotest(MinReps, MaxReps, 1.0 * 2.0 * Math.log10(MoreFactor))
+  sh "#{BaseCommand} --color=yes test/runtests.jl"
 end
 
 desc "Test more; Run more repetitions of AutoTest tests"

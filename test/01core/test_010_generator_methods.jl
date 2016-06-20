@@ -13,162 +13,162 @@ using GodelTest
 
 
 @generator GMShortGen begin # prefix GM (for Generator Methods) to avoid type name clashes
-	start() = (a(), a())
-	a() = gensym()
+    start() = (a(), a())
+    a() = gensym()
 end
 
-describe("method defined using function short form") do
+@testset "method defined using function short form" begin
 
-	gn = GMShortGen()
+gn = GMShortGen()
 	
-	test("emits pair of different symbols") do
-		td = gen(gn)
-		@check typeof(td) == (Symbol,Symbol)
-		@check td[1] != td[2]
-	end
+@testset "emits pair of different symbols" begin
+    td = gen(gn)
+    @test typeof(td) == Tuple{Symbol,Symbol}
+    @test td[1] != td[2]
+end
 	
 end
 
 
 @generator GMShortBlockGen begin
-	start() = (a(), a())
-	a() = begin
-		gensym()
-	end
+start() = (a(), a())
+a() = begin
+    gensym()
+end
 end
 
-describe("method defined using function short form including being block") do
+@testset "method defined using function short form including being block" begin
 
-	gn = GMShortBlockGen()
+gn = GMShortBlockGen()
 	
-	test("emits pair of different symbols") do
-		td = gen(gn)
-		@check typeof(td) == (Symbol,Symbol)
-		@check td[1] != td[2]
-	end
+@testset "emits pair of different symbols" begin
+    td = gen(gn)
+    @test typeof(td) == Tuple{Symbol,Symbol}
+    @test td[1] != td[2]
+end
 	
 end
 
 
 @generator GMLongGen begin
-	start() = (a(), a())
-	function a()
-		gensym()
-	end
+start() = (a(), a())
+function a()
+    gensym()
+end
 end
 
-describe("method defined using function long form") do
+@testset "method defined using function long form" begin
 
-	gn = GMLongGen()
+gn = GMLongGen()
 	
-	test("emits pair of different symbols") do
-		td = gen(gn)
-		@check typeof(td) == (Symbol,Symbol)
-		@check td[1] != td[2]
-	end
+@testset "emits pair of different symbols" begin
+    td = gen(gn)
+    @test typeof(td) == Tuple{Symbol,Symbol}
+    @test td[1] != td[2]
+end
 	
 end
 
 
 @generator GMShortNoParenGen begin
-	start() = (a(), a())
-	a = gensym()
+start() = (a(), a())
+a = gensym()
 end
 
-describe("method defined using function short form without parentheses") do
+@testset "method defined using function short form without parentheses" begin
 
-	gn = GMShortNoParenGen()
+gn = GMShortNoParenGen()
 	
-	test("emits pair of different symbols") do
-		td = gen(gn)
-		@check typeof(td) == (Symbol,Symbol)
-		@check td[1] != td[2]
-	end
+@testset "emits pair of different symbols" begin
+    td = gen(gn)
+    @test typeof(td) == Tuple{Symbol,Symbol}
+    @test td[1] != td[2]
+end
 	
 end
 
 
 @generator GMCallNoParenGen begin
-	start() = (a, b, c)
-	a = 'a'
-	b() = 'b'
-	function c()
-		'c'
-	end
+start() = (a, b, c)
+a = 'a'
+b() = 'b'
+function c()
+    'c'
+end
 end
 
-describe("method called using short no paren form") do
+@testset "method called using short no paren form" begin
 
-	gn = GMCallNoParenGen()
+gn = GMCallNoParenGen()
 	
-	test("all three rules are called") do
-		td = gen(gn)
-		@check td == ('a','b','c')
-	end
+@testset "all three rules are called" begin
+    td = gen(gn)
+    @test td == ('a','b','c')
+end
 	
 end
 
 @generator GMLiteralParamGen begin
-	start() = (add(4,2), sub(4,2))
-	add(x,y) = x+y
-	function sub(x,y)
-		x-y
-	end
+start() = (add(4,2), sub(4,2))
+add(x,y) = x+y
+function sub(x,y)
+    x-y
+end
 end
 
-describe("method called with literal parameters") do
+@testset "method called with literal parameters" begin
 
-	gn = GMLiteralParamGen()
+gn = GMLiteralParamGen()
 	
-	test("parameters are passed correctly") do
-		td = gen(gn)
-		@check td == (6,2)
-	end
+@testset "parameters are passed correctly" begin
+    td = gen(gn)
+    @test td == (6,2)
+end
 	
 end
 
 @generator GMNonLiteralParamGen begin
-	start() = begin
-		a = 7
-		b = 3
-		(add(a,b), sub(a,b))
-	end
-	add(x,y) = x+y
-	function sub(x,y)
-		x-y
-	end
+start() = begin
+    a = 7
+    b = 3
+    (add(a,b), sub(a,b))
+end
+add(x,y) = x+y
+function sub(x,y)
+    x-y
+end
 end
 
-describe("method called with non literal parameters") do
+@testset "method called with non literal parameters" begin
 
-	gn = GMNonLiteralParamGen()
+gn = GMNonLiteralParamGen()
 	
-	test("parameters are passed correctly") do
-		td = gen(gn)
-		@check td == (10,4)
-	end
+@testset "parameters are passed correctly" begin
+    td = gen(gn)
+    @test td == (10,4)
+end
 	
 end
 
 @generator GMBlockGen begin
-	begin
-		start() = a()
-	end
-	begin
-		a() = b()
-		begin
-			b() = 42
-		end
-	end
+begin
+    start() = a()
+end
+begin
+    a() = b()
+    begin
+    b() = 42
+    end
+end
 end
 
-describe("methods defined inside a block") do
+@testset "methods defined inside a block" begin
 
-	gn = GMBlockGen()
+gn = GMBlockGen()
 	
-	test("rules identified inside a block") do
-		td = gen(gn)
-		@check td == 42
-	end
+@testset "rules identified inside a block" begin
+    td = gen(gn)
+    @test td == 42
+end
 	
 end

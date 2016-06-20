@@ -1,8 +1,12 @@
-using AutoTest
+# For now we use the single file, temp version of BaseTestAuto
+include("base_test_auto_singlefile_1605.jl")
+using BaseTestAuto
 
 Package = "GodelTest"
 
 using GodelTest
+
+TestFileRE = r"^test_.*\.jl$"
 
 function run(packagename, srcdir = "src", testdir = "test"; 
   testfileregexp = r"^test_.*\.jl$", 
@@ -17,8 +21,17 @@ function run(packagename, srcdir = "src", testdir = "test";
 
 end
 
-if length(ARGS) > 0 && ARGS[1] == "continuous"
-  AutoTest.autorun(Package, "src", "test")
-else
-  run(Package, "src", "test")
+#if length(ARGS) > 0 && ARGS[1] == "continuous"
+#  AutoTest.autorun(Package, "src", "test")
+#else
+#  run(Package, "src", "test")
+#end
+
+NumReps = 30
+
+@testset "GodelTest test suite" begin
+    include(joinpath("01core", "test_010_generator_methods.jl"))
+    include(joinpath("01core", "test_020_sequence_choice_points.jl"))
+    include(joinpath("01core", "test_030_rule_choice_points.jl"))
+    include(joinpath("01core", "test_040_value_choice_points.jl"))
 end
