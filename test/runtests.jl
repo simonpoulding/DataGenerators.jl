@@ -40,4 +40,7 @@ end
     include(joinpath("01core", "test_030_rule_choice_points.jl"))
     include(joinpath("01core", "test_040_value_choice_points.jl"))
     include(joinpath("01core", "test_050_string_value_choice_points.jl"))
+    include(joinpath("01core", "test_060_subgenerators.jl"))
+    include(joinpath("01core", "test_070_metadata.jl"))
+    include(joinpath("01core", "test_080_generate.jl"))
 end
