@@ -1,4 +1,4 @@
-require("../src/GodelTest.jl")
+include("../src/GodelTest.jl")
 using GodelTest
 
 # recursive generator for arithmetic expressions

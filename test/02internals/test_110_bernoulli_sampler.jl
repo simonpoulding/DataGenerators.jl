@@ -1,133 +1,137 @@
 include("sampler_test_utils.jl")
 
-describe("Bernoulli Sampler") do
+@testset "Bernoulli Sampler" begin
 
-	describe("default construction") do
+@testset "default construction" begin
 		
-		s = GodelTest.BernoulliSampler()
+    s = GodelTest.BernoulliSampler()
 
-		test("numparams and paramranges") do
-			@check GodelTest.numparams(s) == 1
-			prs = GodelTest.paramranges(s)
-			@check typeof(prs) <: Vector{(Float64,Float64)} 
-			@check prs == [(0.0,1.0)]
-		end
+    @testset "numparams and paramranges" begin
+        @test GodelTest.numparams(s) == 1
+        prs = GodelTest.paramranges(s)
+        @test typeof(prs) <: Vector{Tuple{Float64,Float64}} 
+        @test prs == [(0.0,1.0)]
+    end
 	
-		test("default params") do
-			@check GodelTest.getparams(s) == [0.5]
-			@check isconsistentbernoulli(s, GodelTest.getparams(s))
-		end
-	
-		@repeat test("default sampling") do
-			x, trace = GodelTest.sample(s, (0,1))
-			@check typeof(x) <: Int
-			@mcheck_values_are x [0,1]
-		end
-		
-	end
-	
-	describe("non-default construction") do
+    @testset "default params" begin
+        @test GodelTest.getparams(s) == [0.5]
+        @test isconsistentbernoulli(s, GodelTest.getparams(s))
+    end
 
-		s = GodelTest.BernoulliSampler([0.3])
+    @testset repeats=NumReps "default sampling" begin
+        x, trace = GodelTest.sample(s, (0,1))
+        @test typeof(x) <: Int
+        @mcheck_values_are x [0,1]
+    end
+		
+end
 	
-		test("constructor with params") do
-			@check GodelTest.getparams(s) == [0.3]
-			@check isconsistentbernoulli(s, GodelTest.getparams(s))
-		end
-		
-	end
-	
-	describe("parameter setting") do
-	
-		s = GodelTest.BernoulliSampler()
-		prs = GodelTest.paramranges(s)
-		midparams = map(pr->robustmidpoint(pr[1],pr[2]), prs)
+@testset "non-default construction" begin
 
-		test("setparams with wrong number of parameters") do
-			@check_throws GodelTest.setparams(s, midparams[1:end-1])
-			@check_throws GodelTest.setparams(s, [midparams, 0.5])
-		end
+    s = GodelTest.BernoulliSampler([0.3])
 
-		test("setparams boundary values") do
-			for pidx = 1:length(prs)
-				pr = prs[pidx]
-				params = copy(midparams)
-				params[pidx] = pr[1] 
-				GodelTest.setparams(s, params)
-				@check isconsistentbernoulli(s, params)
-				params[pidx] = prevfloat(pr[1])
-				@check_throws GodelTest.setparams(s, params)
-				params[pidx] = pr[2] 
-				GodelTest.setparams(s, params)
-				@check isconsistentbernoulli(s, params)
-				params[pidx] = nextfloat(pr[2])
-				@check_throws GodelTest.setparams(s, params)
-			end
-		end
+    @testset "constructor with params" begin
+        @test GodelTest.getparams(s) == [0.3]
+        @test isconsistentbernoulli(s, GodelTest.getparams(s))
+    end
 
-		@repeat test("setparams with random parameters") do
-			params = map(pr->robustmidpoint(pr[1],pr[2])+(2.0*rand()-1.0)*(pr[2]-robustmidpoint(pr[1],pr[2])), prs)
-			# convulated expression involving middle to avoid overflow to Inf
-			GodelTest.setparams(s, params)
-			@check isconsistentbernoulli(s, params)
-		end
-		
-	end
-	
-	describe("estimate parameters") do
-		
-		s = GodelTest.BernoulliSampler()
-		prs = GodelTest.paramranges(s)
-		otherparams = [0.5]
-		
-		test("lower bound") do
-			params = [0.0]
-			s1 = GodelTest.BernoulliSampler(params)
-			s2 = GodelTest.BernoulliSampler(otherparams)	
-			traces = map(1:100) do i
-				x, trace = GodelTest.sample(s1, (0,1))
-				trace
-			end
-			estimateparams(s2, traces)
-			@check isconsistentbernoulli(s2, params)
-		end
+end
 
-		test("upper bound") do
-			params = [1.0]
-			s1 = GodelTest.BernoulliSampler(params)
-			s2 = GodelTest.BernoulliSampler(otherparams)	
-			traces = map(1:100) do i
-				x, trace = GodelTest.sample(s1, (0,1))
-				trace
-			end
-			estimateparams(s2, traces)
-			@check isconsistentbernoulli(s2, params)
-		end
+@testset "parameter setting" begin
 
-		test("random params") do
-			params = map(pr->robustmidpoint(pr[1],pr[2])+(2.0*rand()-1.0)*(pr[2]-robustmidpoint(pr[1],pr[2])), prs)
-			# convulated expression involving middle to avoid overflow to Inf
-			s1 = GodelTest.BernoulliSampler(params)
-			s2 = GodelTest.BernoulliSampler(otherparams)	
-			traces = map(1:100) do i
-				x, trace = GodelTest.sample(s1, (0,1))
-				trace
-			end
-			estimateparams(s2, traces)
-			@check isconsistentbernoulli(s2, params)
-		end
-		
-		test("too few traces") do
-			params = [0.2]
-			s1 = GodelTest.BernoulliSampler(params)
-			s2 = GodelTest.BernoulliSampler(otherparams)	
-			traces = map(1:0) do i
-				x, trace = GodelTest.sample(s1, (0,1))
-				trace
-			end
-			@check isconsistentbernoulli(s2, otherparams)
-		end
-		
-	end
-		
+    s = GodelTest.BernoulliSampler()
+    prs = GodelTest.paramranges(s)
+    midparams = map(pr->robustmidpoint(pr[1],pr[2]), prs)
+
+    @testset "setparams with wrong number of parameters" begin
+        #@test_throws ArgumentError GodelTest.setparams(s, midparams[1:end-1])
+        @test_throws ErrorException GodelTest.setparams(s, midparams[1:end-1])
+        #@test_throws ArgumentError GodelTest.setparams(s, [midparams, 0.5])
+        @test_throws ErrorException GodelTest.setparams(s, [midparams; 0.5])
+    end
+
+    @testset "setparams boundary values" begin
+        for pidx = 1:length(prs)
+            pr = prs[pidx]
+            params = copy(midparams)
+            params[pidx] = pr[1] 
+            GodelTest.setparams(s, params)
+            @test isconsistentbernoulli(s, params)
+            params[pidx] = prevfloat(pr[1])
+            #@test_throws ArgumentError GodelTest.setparams(s, params)
+            @test_throws ErrorException GodelTest.setparams(s, params)
+            params[pidx] = pr[2] 
+            GodelTest.setparams(s, params)
+            @test isconsistentbernoulli(s, params)
+            params[pidx] = nextfloat(pr[2])
+            #@test_throws ArgumentError GodelTest.setparams(s, params)
+            @test_throws ErrorException GodelTest.setparams(s, params)
+        end
+    end
+
+    @testset "setparams with random parameters" for i in 1:NumReps 
+        params = map(pr->robustmidpoint(pr[1],pr[2])+(2.0*rand()-1.0)*(pr[2]-robustmidpoint(pr[1],pr[2])), prs)
+        # convulated expression involving middle to avoid overflow to Inf
+        GodelTest.setparams(s, params)
+        @test isconsistentbernoulli(s, params)
+    end
+
+end
+
+@testset "estimate parameters" begin
+
+    s = GodelTest.BernoulliSampler()
+    prs = GodelTest.paramranges(s)
+    otherparams = [0.5]
+
+    @testset "lower bound" begin
+        params = [0.0]
+        s1 = GodelTest.BernoulliSampler(params)
+        s2 = GodelTest.BernoulliSampler(otherparams)	
+        traces = map(1:100) do i
+            x, trace = GodelTest.sample(s1, (0,1))
+            trace
+        end
+        estimateparams(s2, traces)
+        @test isconsistentbernoulli(s2, params)
+    end
+
+    @testset "upper bound" begin
+        params = [1.0]
+        s1 = GodelTest.BernoulliSampler(params)
+        s2 = GodelTest.BernoulliSampler(otherparams)	
+        traces = map(1:100) do i
+            x, trace = GodelTest.sample(s1, (0,1))
+            trace
+        end
+        estimateparams(s2, traces)
+        @test isconsistentbernoulli(s2, params)
+    end
+
+    @testset "random params" begin
+        params = map(pr->robustmidpoint(pr[1],pr[2])+(2.0*rand()-1.0)*(pr[2]-robustmidpoint(pr[1],pr[2])), prs)
+        # convulated expression involving middle to avoid overflow to Inf
+        s1 = GodelTest.BernoulliSampler(params)
+        s2 = GodelTest.BernoulliSampler(otherparams)	
+        traces = map(1:100) do i
+            x, trace = GodelTest.sample(s1, (0,1))
+            trace
+        end
+        estimateparams(s2, traces)
+        @test isconsistentbernoulli(s2, params)
+    end
+
+    @testset "too few traces" begin
+        params = [0.2]
+        s1 = GodelTest.BernoulliSampler(params)
+        s2 = GodelTest.BernoulliSampler(otherparams)	
+        traces = map(1:0) do i
+            x, trace = GodelTest.sample(s1, (0,1))
+            trace
+        end
+        @test isconsistentbernoulli(s2, otherparams)
+    end
+
+end
+
 end

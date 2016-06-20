@@ -7,196 +7,196 @@ using GodelTest
 #
 
 @generator SCRepsGen begin # prefix SC (for Sequence Choice points) to avoid type name clashes
-	start() = reps(a,2,4)
-	a() = gensym()
+start() = reps(a,2,4)
+a() = gensym()
 end
 
-describe("reps choice point") do
+@testset "reps choice point" begin
 
-	gn = SCRepsGen()
+gn = SCRepsGen()
 
-	@repeat test("returns array of different symbols with different lengths between minimum and maximum") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 2 <= length(td) <= 4
-		@check all(map(x->typeof(x),td) .== Symbol)
-		@check td[1] != td[2]
-		@mcheck_values_include length(td) [2,3,4]
-	end
+@testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 2 <= length(td) <= 4
+    @test all(map(x->typeof(x),td) .== Symbol)
+    @test td[1] != td[2]
+    @mcheck_values_include length(td) [2,3,4]
+end
 	
 end
 
 
 @generator SCRepsNoMaxGen begin
-	start() = reps(a,2)
-	a() = 'a'
+start() = reps(a,2)
+a() = 'a'
 end
 
-describe("reps choice point with no maximum") do
+@testset "reps choice point with no maximum" begin
 
-	gn = SCRepsNoMaxGen()
+gn = SCRepsNoMaxGen()
 
-	@repeat test("returns array of 'a's with different lengths of minimum or more") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 2 <= length(td)
-		@check all(td .== 'a')
-		@mcheck_values_include length(td) [2,3,4]
-	end
+@testset "returns array of 'a's with different lengths of minimum or more" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 2 <= length(td)
+    @test all(td .== 'a')
+    @mcheck_values_include length(td) [2,3,4]
+end
 	
 end
 
 
 @generator SCRepsNoMinGen begin
-	start() = reps(a)
-	a() = 'a'
+start() = reps(a)
+a() = 'a'
 end
 
-describe("reps choice point with no minimum nor maximum") do
+@testset "reps choice point with no minimum nor maximum" begin
 
-	gn = SCRepsNoMinGen()
+gn = SCRepsNoMinGen()
 
-	@repeat test("returns array of 'a's with different lengths of 0 or more") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 0 <= length(td)
-		@check all(td .== 'a')
-		@mcheck_values_include length(td) [0,1,2]
-	end
+@testset "returns array of 'a's with different lengths of 0 or more" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 0 <= length(td)
+    @test all(td .== 'a')
+    @mcheck_values_include length(td) [0,1,2]
+end
 	
 end
 
 
 @generator SCRepsNonLiteralMinMaxGen begin
-	start() = reps(a,2*2,5+1)
-	a() = 'a'	
+start() = reps(a,2*2,5+1)
+a() = 'a'	
 end
 
-describe("reps choice point with non-literal minimum and maximum") do
+@testset "reps choice point with non-literal minimum and maximum" begin
 
-	gn = SCRepsNonLiteralMinMaxGen()
+gn = SCRepsNonLiteralMinMaxGen()
 
-	@repeat test("returns array of 'a's with different lengths between minimum and maximum") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 4 <= length(td) <= 6
-		@check all(td .== 'a')
-		@mcheck_values_include length(td) [4,5,6]
-	end
+@testset "returns array of 'a's with different lengths between minimum and maximum" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 4 <= length(td) <= 6
+    @test all(td .== 'a')
+    @mcheck_values_are length(td) [4,5,6]
+end
 
 end
 
 @generator SCRepsRuleNonLiteralMinMaxGen begin
-	start() = reps(a,x(),y())
-  a() = 'a'
-	x() = 4
-	y() = 6
+start() = reps(a,x(),y())
+    a() = 'a'
+x() = 4
+y() = 6
 end
 
-describe("reps choice point with non-literal minimum and maximum defined by rules") do
+@testset "reps choice point with non-literal minimum and maximum defined by rules" begin
 
-	gn = SCRepsRuleNonLiteralMinMaxGen()
+gn = SCRepsRuleNonLiteralMinMaxGen()
 
-	@repeat test("returns array of 'a's with different lengths between minimum and maximum") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 4 <= length(td) <= 6
-		@check all(td .== 'a')
-		@mcheck_values_include length(td) [4,5,6]
-	end
+@testset "returns array of 'a's with different lengths between minimum and maximum" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 4 <= length(td) <= 6
+    @test all(td .== 'a')
+    @mcheck_values_are length(td) [4,5,6]
+end
 
 end
 
 @generator SCRepsShortFormParenGen begin
-	start() = reps(a(),2,4)
-  a() = gensym()
+start() = reps(a(),2,4)
+    a() = gensym()
 end
 
-describe("reps choice point where function called uses short form with parentheses") do
+@testset "reps choice point where function called uses short form with parentheses" begin
 
-	gn = SCRepsShortFormParenGen()
+gn = SCRepsShortFormParenGen()
 
-	@repeat test("returns array of different symbols with different lengths between minimum and maximum") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 2 <= length(td) <= 4
-		@check all(map(x->typeof(x),td) .== Symbol)
-		@check td[1] != td[2]
-		@mcheck_values_include length(td) [2,3,4]
-	end
+@testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 2 <= length(td) <= 4
+    @test all(map(x->typeof(x),td) .== Symbol)
+    @test td[1] != td[2]
+    @mcheck_values_are length(td) [2,3,4]
+end
 
 end
 
 
 @generator SCRepsRuleParamGen begin
-	start() = begin
-	  a = 12
-		b = 60
-		reps(add(a,b),2,4)
-	end
-  add(x,y) = (gensym(),x+y)
+start() = begin
+    a = 12
+    b = 60
+    reps(add(a,b),2,4)
+end
+    add(x,y) = (gensym(),x+y)
 end
 
-describe("reps choice point where function called with parameters") do
+@testset "reps choice point where function called with parameters" begin
 
-	gn = SCRepsRuleParamGen()
+gn = SCRepsRuleParamGen()
 
-	@repeat test("returns array of different tuples which use parameter values, with different lengths between minimum and maximum") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 2 <= length(td) <= 4
-		td1 = map(x->x[1],td)
-		td2 = map(x->x[2],td)
-		@check all(map(x->typeof(x),td1) .== Symbol)
-		@check td1[1] != td1[2]
-		@check all(td2 .== 72)
-		@mcheck_values_include length(td) [2,3,4]
-	end
+@testset "returns array of different tuples which use parameter values, with different lengths between minimum and maximum" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 2 <= length(td) <= 4
+    td1 = map(x->x[1],td)
+    td2 = map(x->x[2],td)
+    @test all(map(x->typeof(x),td1) .== Symbol)
+    @test td1[1] != td1[2]
+    @test all(td2 .== 72)
+    @mcheck_values_are length(td) [2,3,4]
+end
 
 end
 
 
 @generator SCRepsNonRuleGen begin
-	start() = reps(gensym(),2,4)
+start() = reps(gensym(),2,4)
 end
 
-describe("reps choice point where function called is not a rule") do
+@testset "reps choice point where function called is not a rule" begin
 
-	gn = SCRepsNonRuleGen()
+gn = SCRepsNonRuleGen()
 
-	@repeat test("returns array of different symbols with different lengths between minimum and maximum") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 2 <= length(td) <= 4
-		@check all(map(x->typeof(x),td) .== Symbol)
-		@check td[1] != td[2]
-		@mcheck_values_include length(td) [2,3,4]
-	end
+@testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 2 <= length(td) <= 4
+    @test all(map(x->typeof(x),td) .== Symbol)
+    @test td[1] != td[2]
+    @mcheck_values_are length(td) [2,3,4]
+end
 
 end
 
 
 @generator SCSubGen() begin
-	start() = gensym()
+start() = gensym()
 end
 
 @generator SCRepsSubGenGen(subgen) begin
-	start() = reps(subgen(),2,4)
+start() = reps(subgen(),2,4)
 end
 
-describe("reps choice point where function called is not a rule") do
+@testset "reps choice point where function called is not a rule" begin
 
-	sg = SCSubGen()
-	gn = SCRepsSubGenGen(sg)
+sg = SCSubGen()
+gn = SCRepsSubGenGen(sg)
 
-	@repeat test("returns array of different symbols with different lengths between minimum and maximum") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 2 <= length(td) <= 4
-		@check all(map(x->typeof(x),td) .== Symbol)
-		@check td[1] != td[2]
-		@mcheck_values_include length(td) [2,3,4]
-	end
+@testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 2 <= length(td) <= 4
+    @test all(map(x->typeof(x),td) .== Symbol)
+    @test td[1] != td[2]
+    @mcheck_values_are length(td) [2,3,4]
+end
 
 end
 
@@ -205,21 +205,21 @@ end
 #
 
 @generator SCMultGen begin
-	start() = mult(a)
-	a() = 'a'
+start() = mult(a)
+a() = 'a'
 end
 
-describe("mult choice point") do
+@testset "mult choice point" begin
 
-	gn = SCMultGen()
+gn = SCMultGen()
 
-	@repeat test("returns array of 'a's with different lengths of 0 or more") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 0 <= length(td)
-		@check all(td .== 'a')
-		@mcheck_values_include length(td) [0,1,2]
-	end
+@testset "returns array of 'a's with different lengths of 0 or more" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 0 <= length(td)
+    @test all(td .== 'a')
+    @mcheck_values_include length(td) [0,1,2]
+end
 	
 end
 
@@ -231,21 +231,21 @@ end
 
 
 @generator SCPlusGen begin
-	start() = plus(a)
-	a() = 'a'
+start() = plus(a)
+a() = 'a'
 end
 
-describe("plus choice point") do
+@testset "plus choice point" begin
 
-	gn = SCPlusGen()
+gn = SCPlusGen()
 
-	@repeat test("returns array of 'a's with different lengths of 1 or more") do
-		td = gen(gn)
-		@check typeof(td) <: Array
-		@check 1 <= length(td)
-		@check all(td .== 'a')
-		@mcheck_values_include length(td) [1,2,3]
-	end
+@testset "returns array of 'a's with different lengths of 1 or more" for i in 1:NumReps 
+    td = gen(gn)
+    @test typeof(td) <: Array
+    @test 1 <= length(td)
+    @test all(td .== 'a')
+    @mcheck_values_include length(td) [1,2,3]
+end
 
 end
 

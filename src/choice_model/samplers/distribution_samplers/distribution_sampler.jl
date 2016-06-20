@@ -6,9 +6,13 @@ abstract ContinuousDistributionSampler <: DistributionSampler
 paramranges(s::DistributionSampler) = copy(s.paramranges)
 
 function sample(s::DistributionSampler, support, cc::ChoiceContext)
- x = rand(s.distribution)
- # we return both the sampled value, and a dict as trace information
- x, Dict{Symbol,Any}(:rnd=>x)
+	sample(s, support) # Fallback when we do not care about context...
+end
+
+function sample(s::DistributionSampler, support)
+	x = rand(s.distribution)
+ 	# we return both the sampled value, and a dict as trace information
+	x, Dict{Symbol,Any}(:rnd=>x)
 end
 
 function extractsamplesfromtraces(s::DistributionSampler, traces)
