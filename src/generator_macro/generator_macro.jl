@@ -417,102 +417,117 @@ end
 function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 
 	if (length(params) < 1) || (typeof(params[1]) != Symbol)
-		error("first parameter to choose($(params[1]),...) must be a literal data type")
+		error("first parameter to choose($(params[1]),...) must be a literal data type or a sub-generator")
 	end
 
-	datatype = eval(params[1]) # TODO could eval perform side-effects here? should be OK since we know it is a symbol
-	if (typeof(datatype) != DataType) || !isleaftype(datatype)
-		error("first parameter to choose($(params[1]),...) must be a concrete data type")
-	end
-
-	if datatype <: Bool
-
-		# follows same pattern as other 'numeric' types, which is possible since 0~false 1~true
-		# we don't allow any possibility to restrict this range
+	if params[1] in rti.subgenargs
+		# choose of sub-generator
 
 		if length(params) > 1
-			error("choose($(datatype)) must have no further parameter")
+			error("choose($(params[1])) must have no further parameters")
 		end
 
-		minval = false
-		maxval = true
-		rangeisliteral = true
-		cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
-		cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
-		chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-		# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
+		i = findfirst(rti.subgenargs, params[1])
 
-	elseif datatype <: Char
-
-		# not currently supported
-		# one issue is that returning valid (Unicode) chars is not straightforward - the domain is not easily defined: for example typemin / typemax
-		# is not defined for the Char type
-		error("choose($(datatype),...) is not currently supported")
-
-	elseif datatype <: Real
-		# note Char <: Real, and so is excluded above
-
-		# here parameters can be used to define a range of possible values
-		# this can either be done via literals or expression - in the former case, the literal values are recorded and passed to the choice model
-		# since knowing the bound(s) of the valid range can enable a better model than one that must potentially varying ranges
-
-		if length(params) > 3
-			error("choose($(datatype),...) must have at most two further parameters")
-		end
-
-		if length(params) >= 2
-			minval, minisliteral = processpossiblyliteralparam(params[2], datatype, rti)
-		else
-			minval, minisliteral = typemin(datatype), true
-		end
-
-		if length(params) >= 3
-			maxval, maxisliteral = processpossiblyliteralparam(params[3], datatype, rti)
-		else
-			maxval, maxisliteral = typemax(datatype), true
-		end
-
-		cpinfo = Dict{Symbol,Any}(:datatype=>datatype)
-
-		# record literal values in choice point info as an indicator to choice model that limit on range will not change
-		if minisliteral
-			cpinfo[:min] = minval
-		end
-		if maxisliteral
-			cpinfo[:max] = maxval
-		end
-
-		# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
-		rangeisliteral = minisliteral && maxisliteral
-
-		cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
-		chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-		# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
-
-	elseif datatype <: AbstractString
-		# TODO it may be a bit ambitious to allow all concrete string subtypes, but let's see ;-)
-
-		# string data types are handled differently from numeric ones: instead of a call to choosenumber,
-		# a block of statementsis constructed to build strings that comply with the reguler expression
-		# within the block, multiple choice points are likely to be used
-
-		if length(params) > 2
-			error("choose($(datatype),...) must have at most one further parameter")
-		end
-
-		regex = "" # interpreted as wildcard
-		if length(params) >= 2
-			if !(typeof(regex) <: AbstractString)
-				error("regex in choose($(datatype),...) must be a literal string")
-			end
-			regex = params[2]
-		end
-
-		chooseexpr = transformchoosestring(regex, datatype, rti)
+		chooseexpr = :( $(THIS_MODULE).subgen($(rti.genparam), $(rti.stateparam), $(i)) )
 
 	else
 
-		error("choose($(datatype),...) is not supported")
+		datatype = eval(params[1]) # TODO could eval perform side-effects here? should be OK since we know it is a symbol
+		if (typeof(datatype) != DataType) || !isleaftype(datatype)
+			error("first parameter to choose($(params[1]),...) must be a concrete data type or a sub-generator")
+		end
+
+		if datatype <: Bool
+
+			# follows same pattern as other 'numeric' types, which is possible since 0~false 1~true
+			# we don't allow any possibility to restrict this range
+
+			if length(params) > 1
+				error("choose($(datatype)) must have no further parameters")
+			end
+
+			minval = false
+			maxval = true
+			rangeisliteral = true
+			cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
+			cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
+			chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
+			# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
+
+		elseif datatype <: Char
+
+			# not currently supported
+			# one issue is that returning valid (Unicode) chars is not straightforward - the domain is not easily defined: for example typemin / typemax
+			# is not defined for the Char type
+			error("choose($(datatype),...) is not currently supported")
+
+		elseif datatype <: Real
+			# note Char <: Real, and so is excluded above
+
+			# here parameters can be used to define a range of possible values
+			# this can either be done via literals or expression - in the former case, the literal values are recorded and passed to the choice model
+			# since knowing the bound(s) of the valid range can enable a better model than one that must potentially varying ranges
+
+			if length(params) > 3
+				error("choose($(datatype),...) must have at most two further parameters")
+			end
+
+			if length(params) >= 2
+				minval, minisliteral = processpossiblyliteralparam(params[2], datatype, rti)
+			else
+				minval, minisliteral = typemin(datatype), true
+			end
+
+			if length(params) >= 3
+				maxval, maxisliteral = processpossiblyliteralparam(params[3], datatype, rti)
+			else
+				maxval, maxisliteral = typemax(datatype), true
+			end
+
+			cpinfo = Dict{Symbol,Any}(:datatype=>datatype)
+
+			# record literal values in choice point info as an indicator to choice model that limit on range will not change
+			if minisliteral
+				cpinfo[:min] = minval
+			end
+			if maxisliteral
+				cpinfo[:max] = maxval
+			end
+
+			# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
+			rangeisliteral = minisliteral && maxisliteral
+
+			cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
+			chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
+			# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
+
+		elseif datatype <: AbstractString
+			# TODO it may be a bit ambitious to allow all concrete string subtypes, but let's see ;-)
+
+			# string data types are handled differently from numeric ones: instead of a call to choosenumber,
+			# a block of statementsis constructed to build strings that comply with the reguler expression
+			# within the block, multiple choice points are likely to be used
+
+			if length(params) > 2
+				error("choose($(datatype),...) must have at most one further parameter")
+			end
+
+			regex = "" # interpreted as wildcard
+			if length(params) >= 2
+				if !(typeof(regex) <: AbstractString)
+					error("regex in choose($(datatype),...) must be a literal string")
+				end
+				regex = params[2]
+			end
+
+			chooseexpr = transformchoosestring(regex, datatype, rti)
+
+		else
+
+			error("choose($(datatype),...) is not supported")
+
+		end
 
 	end
 
@@ -535,12 +550,16 @@ end
 # where i it the index of the sub-generators in the arguments
 #   
 function transformsubgencall(subgenname, subgenparams, rti::RuleTransformInfo)
+
+	# Now deprecated
+	warn("Direct calls to sub-generators are deprecated; please use: choose(<subgenname>)")
 	i = findfirst(rti.subgenargs, subgenname)
 	if length(subgenparams) != 0
 		# TODO
 	end
 	# Expr(:call, :subgen, rti.genparam, rti.stateparam, i)
-	:( GodelTest.subgen($(rti.genparam), $(rti.stateparam), $(i)) )
+	:( $(THIS_MODULE)..subgen($(rti.genparam), $(rti.stateparam), $(i)) )
+
 end
 
 
