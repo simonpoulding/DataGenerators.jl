@@ -28,11 +28,16 @@ end
 #  run(Package, "src", "test")
 #end
 
-NumReps = 30
+if length(ARGS) >= 1
+    NumReps = parse(Int, ARGS[1])
+else
+    NumReps = 30
+end
 
 @testset "GodelTest test suite" begin
     include(joinpath("01core", "test_010_generator_methods.jl"))
     include(joinpath("01core", "test_020_sequence_choice_points.jl"))
     include(joinpath("01core", "test_030_rule_choice_points.jl"))
     include(joinpath("01core", "test_040_value_choice_points.jl"))
+    include(joinpath("01core", "test_050_string_value_choice_points.jl"))
 end
