@@ -34,13 +34,16 @@ else
     NumReps = 30
 end
 
+function include_all_files_matching(re, testdir)
+    files = filter(fp -> ismatch(re, fp), readdir("test/$testdir"))
+    [include(joinpath(testdir, fp)) for fp in files]
+end
+
 @testset "GodelTest test suite" begin
-    include(joinpath("01core", "test_010_generator_methods.jl"))
-    include(joinpath("01core", "test_020_sequence_choice_points.jl"))
-    include(joinpath("01core", "test_030_rule_choice_points.jl"))
-    include(joinpath("01core", "test_040_value_choice_points.jl"))
-    include(joinpath("01core", "test_050_string_value_choice_points.jl"))
-    include(joinpath("01core", "test_060_subgenerators.jl"))
-    include(joinpath("01core", "test_070_metadata.jl"))
-    include(joinpath("01core", "test_080_generate.jl"))
+    include_all_files_matching(r"^test_.*jl$", "01core")
+
+    #include_all_files_matching(r"^test_.*jl$", "02internals")
+#    include(joinpath("01core", "test_010_choice_point_info.jl"))
+
+    #include_all_files_matching(r"^test_.*jl$", "03examples")
 end
