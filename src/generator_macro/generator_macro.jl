@@ -558,7 +558,7 @@ function transformsubgencall(subgenname, subgenparams, rti::RuleTransformInfo)
 		# TODO
 	end
 	# Expr(:call, :subgen, rti.genparam, rti.stateparam, i)
-	:( $(THIS_MODULE)..subgen($(rti.genparam), $(rti.stateparam), $(i)) )
+	:( $(THIS_MODULE).subgen($(rti.genparam), $(rti.stateparam), $(i)) )
 
 end
 
