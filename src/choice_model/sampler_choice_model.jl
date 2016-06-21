@@ -55,7 +55,7 @@ end
 
 
 #
-# GodelTest interface
+# DataGenerators interface
 #
 
 # retrieve the sampler for this choice point and then ask it to return a godel number

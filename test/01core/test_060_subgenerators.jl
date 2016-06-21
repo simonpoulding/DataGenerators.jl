@@ -1,8 +1,5 @@
 # tests sub-generators
 
-using GodelTest
-
-
 # generator and sub-generators
 
 @generator SGBoolGen begin # prefix SG (for Sub-Generators) to avoid type name clashes
@@ -14,7 +11,7 @@ end
 end
 
 @generator SGMain1SGGen(intGen) begin
-    start() = intGen()
+    start() = choose(intGen)
 end
 
 # important to have test for only one sub-generator in order to ensure correct handling of constructors
@@ -33,7 +30,7 @@ end
 end
 
 @generator SGMain2SGGen(boolGen, intGen) begin
-    start() = map(i->boolGen(), 1:intGen())
+    start() = map(i->choose(boolGen), 1:choose(intGen))
 end
 
 @testset "generator with two sub-generators" begin
@@ -54,7 +51,7 @@ end
 
 
 @generator SGNoParamFormGen(intGen) begin
-    start() = intGen
+    start() = choose(intGen)
 end
 
 @testset "sub-generator called using no-params short form" begin
@@ -72,7 +69,7 @@ end
 end
 
 @generator SGRepsGen(intGen) begin
-    start() = mult(intGen)
+    start() = mult(choose(intGen))
 end
 
 @testset "sub-generator as a sequence choice point" begin

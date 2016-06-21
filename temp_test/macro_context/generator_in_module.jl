@@ -1,6 +1,6 @@
 module TestModule
 
-using GodelTest
+using DataGenerators
 
 export samp
 

@@ -1,4 +1,4 @@
-using GodelTest
+using DataGenerators
 
 @generator BoolGen begin
 	start() = choose(Bool)

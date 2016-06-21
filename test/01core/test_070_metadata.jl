@@ -1,7 +1,5 @@
 # tests metadata
 
-using GodelTest
-
 @generator MDGeneratesGen() begin # prefix MD (for Meta Data) to avoid type name clashes
     generates: ["a roll of a die", "a roll of a dice"]
     start() = choose(Int, 1, 6)

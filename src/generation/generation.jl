@@ -187,7 +187,7 @@ function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceMode
 		resetstate!(choicemodel)
 	end
 	startfunc = functionforrulenamed(g, startrule)
-	# important: we evaluate in the module that owns the type and since this (rather than GodelTest) will be where rule functions are defined
+	# important: we evaluate in the module that owns the type and since this (rather than DataGenerators) will be where rule functions are defined
 	# the correct eval function is set in the generator on creation
 	result = g.evalfn(Expr(:call, startfunc, g, state))
 	return (result, state)
@@ -234,7 +234,7 @@ const SEQUENCE_CP = :sequence
 
 
 # choose a number (used by value choice points with numeric types: choose(Bool|Int|Float64|...))
-function choosenumber(s::GodelTest.DerivationState, cpid, datatype, minval, maxval, paramsliteral)
+function choosenumber(s::DerivationState, cpid, datatype, minval, maxval, paramsliteral)
 	if !paramsliteral
 		try
 			minval = convert(datatype, minval)
@@ -255,7 +255,7 @@ end
 
 
 # choose a number of repetitions (used by sequence choice points from constructs reps,mult,plus)
-function choosereps(s::GodelTest.DerivationState, cpid, minreps, maxreps, paramsliteral)
+function choosereps(s::DerivationState, cpid, minreps, maxreps, paramsliteral)
 	if !paramsliteral
 		try
 			minreps = convert(Int, minreps)

@@ -9,7 +9,7 @@
 println("START test_build_conditional_model")
 
 using Base.Test
-using GodelTest
+using DataGenerators
 
 # generator for arithmetic expressions
 @generator ABCDGen begin
@@ -35,8 +35,8 @@ scm = SamplerChoiceModel(gn)
 # make all choice points conditional, but don't specify which parent
 for cpid in keys(scm.samplers)
 	if numparams(scm.samplers[cpid]) > 0 # no point making samplers without parameters conditional
-		# scm.samplers[cpid] = GodelTest.ConditionalSampler(GodelTest.ConditionalSampler(scm.samplers[cpid]))
-		scm.samplers[cpid] = GodelTest.ConditionalSampler(scm.samplers[cpid])
+		# scm.samplers[cpid] = DataGenerators.ConditionalSampler(DataGenerators.ConditionalSampler(scm.samplers[cpid]))
+		scm.samplers[cpid] = DataGenerators.ConditionalSampler(scm.samplers[cpid])
 	end
 end
 
@@ -53,7 +53,7 @@ end
 println()
 
 println("Estimating conditional model...")
-GodelTest.estimateconditionalmodel(scm, selectedtraces)
+DataGenerators.estimateconditionalmodel(scm, selectedtraces)
 
 print("Sampling from estimated conditional model:")
 

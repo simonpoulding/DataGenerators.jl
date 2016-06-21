@@ -5,7 +5,7 @@
 println("START test_recursion_depth_sampler")
 
 using Base.Test
-using GodelTest
+using DataGenerators
 
 # generator for arithmetic expressions
 @generator RecursiveGen begin
@@ -34,17 +34,17 @@ println("Testing constructor:")
 
 # now make choice point a recursion depth sampler
 
-scm.samplers[cpidmultA] = GodelTest.RecursionDepthSampler(deepcopy(originalsampler), 10)
+scm.samplers[cpidmultA] = DataGenerators.RecursionDepthSampler(deepcopy(originalsampler), 10)
 @test numparams(scm) == 10 # 10 samplers each with one parameter which duplicates parameter of base sampler
 @test getparams(scm) == fill(0.5, 10)
 @test paramranges(scm) == fill((0.0,1.0), 10)
 
-scm.samplers[cpidmultA] = GodelTest.RecursionDepthSampler(deepcopy(originalsampler), 4, Vector[[0.5,], [0.4], [0.3], [0.2]])
+scm.samplers[cpidmultA] = DataGenerators.RecursionDepthSampler(deepcopy(originalsampler), 4, Vector[[0.5,], [0.4], [0.3], [0.2]])
 @test numparams(scm) == 4 # 4 samplers each with one parameter as specified in constructor
 @test getparams(scm) == [0.5, 0.4, 0.3, 0.2]
 @test paramranges(scm) == fill((0.0,1.0), 4)
 
-scm.samplers[cpidmultA] = GodelTest.RecursionDepthSampler(deepcopy(originalsampler), 4, Vector[[0.9], [0.8], [0.7]])
+scm.samplers[cpidmultA] = DataGenerators.RecursionDepthSampler(deepcopy(originalsampler), 4, Vector[[0.9], [0.8], [0.7]])
 @test numparams(scm) == 4 # 4 samplers each with one parameter; last one is not specified and so should be that of the base sampler
 @test getparams(scm) == [0.9, 0.8, 0.7, 0.5]
 @test paramranges(scm) == fill((0.0,1.0), 4)
@@ -55,7 +55,7 @@ scm.samplers[cpidmultA] = GodelTest.RecursionDepthSampler(deepcopy(originalsampl
 #
 println("Testing setparams:")
 
-scm.samplers[cpidmultA] = GodelTest.RecursionDepthSampler(deepcopy(originalsampler), 4)
+scm.samplers[cpidmultA] = DataGenerators.RecursionDepthSampler(deepcopy(originalsampler), 4)
 newparams = [0.27, 0.84, 0.88, 0.49,]
 setparams(scm, newparams)
 @test getparams(scm) == newparams
@@ -69,7 +69,7 @@ println("Testing sample:")
 treeheight(tree) = isempty(tree[2]) ? 0 : 1 + maximum(map(child->treeheight(child), tree[2])) # height of a single node subtree is 0
 treesize(tree) = isempty(tree[2]) ? 1 : 1 + sum(map(child->treesize(child), tree[2])) # size of a single node subtree is 0
 
-scm.samplers[cpidmultA] = GodelTest.RecursionDepthSampler(deepcopy(originalsampler), 3, Vector[[0.5], [0.5], [1.0]])
+scm.samplers[cpidmultA] = DataGenerators.RecursionDepthSampler(deepcopy(originalsampler), 3, Vector[[0.5], [0.5], [1.0]])
 # the parameters means that the root and first level child can produce children, but second level always has no children
 # so height should never be more than two
 

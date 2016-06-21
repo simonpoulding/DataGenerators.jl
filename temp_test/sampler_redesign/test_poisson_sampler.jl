@@ -1,11 +1,11 @@
 using Base.Test
-using GodelTest
+using DataGenerators
 
 println("START test_poisson_sampler")
 
 # some setup for calling sampler method
 
-type DummyDerivationState <: GodelTest.DerivationState
+type DummyDerivationState <: DataGenerators.DerivationState
 end
 
 # type ChoiceContext
@@ -16,12 +16,12 @@ end
 # 	lowerbound::Real
 # 	upperbound::Real
 # end
-cc = GodelTest.ChoiceContext(DummyDerivationState(), GodelTest.SEQUENCE_CP, convert(UInt64,0), Int, typemin(Int), typemax(Int)) 
+cc = DataGenerators.ChoiceContext(DummyDerivationState(), DataGenerators.SEQUENCE_CP, convert(UInt64,0), Int, typemin(Int), typemax(Int)) 
 
 
 println("Testing default constructor")
 
-s = GodelTest.PoissonSampler()
+s = DataGenerators.PoissonSampler()
 @test numparams(s) == 1
 @test paramranges(s) == [(0.0, maxintfloat(Float64))] # really just need to check for "large" upper limit
 @test getparams(s) == [1.0] # default of 1.0
@@ -29,7 +29,7 @@ s = GodelTest.PoissonSampler()
 gntotal = 0.0
 samplesize = 1000
 for i in 1:samplesize
-	gn, trace = GodelTest.sample(s,(typemin(Int),typemax(Int)), cc)
+	gn, trace = DataGenerators.sample(s,(typemin(Int),typemax(Int)), cc)
 	@test typeof(gn) <: Integer
 	@test 0 <= gn
 	@test trace[:rnd] == gn
@@ -40,7 +40,7 @@ end
 
 println("Testing constructor")
 
-s = GodelTest.PoissonSampler([4.1])
+s = DataGenerators.PoissonSampler([4.1])
 @test numparams(s) == 1
 @test paramranges(s) == [(0.0, maxintfloat(Float64))] # really just need to check for "large" upper limit
 @test getparams(s) == [4.1]
@@ -48,7 +48,7 @@ s = GodelTest.PoissonSampler([4.1])
 gntotal = 0.0
 samplesize = 1000
 for i in 1:samplesize
-	gn, trace = GodelTest.sample(s,(typemin(Int),typemax(Int)), cc)
+	gn, trace = DataGenerators.sample(s,(typemin(Int),typemax(Int)), cc)
 	@test typeof(gn) <: Integer
 	@test 0 <= gn
 	@test trace[:rnd] == gn
@@ -59,7 +59,7 @@ end
 
 println("Testing setparams")
 
-s = GodelTest.PoissonSampler()
+s = DataGenerators.PoissonSampler()
 setparams(s, [17.5])
 @test numparams(s) == 1
 @test paramranges(s) == [(0.0, maxintfloat(Float64))] # really just need to check for "large" upper limit
@@ -68,7 +68,7 @@ setparams(s, [17.5])
 gntotal = 0.0
 samplesize = 1000
 for i in 1:samplesize
-	gn, trace = GodelTest.sample(s,(typemin(Int),typemax(Int)), cc)
+	gn, trace = DataGenerators.sample(s,(typemin(Int),typemax(Int)), cc)
 	@test typeof(gn) <: Integer
 	@test 0 <= gn
 	@test trace[:rnd] == gn
@@ -78,14 +78,14 @@ end
 
 println("Testing estimateparams")
 
-s = GodelTest.PoissonSampler([8.5])
+s = DataGenerators.PoissonSampler([8.5])
 
 traces = Any[]
 gntotal = 0.0
 samplecount = 0
 samplesize = 1000
 for i in 1:samplesize
-	gn, trace = GodelTest.sample(s,(typemin(Int),typemax(Int)), cc)
+	gn, trace = DataGenerators.sample(s,(typemin(Int),typemax(Int)), cc)
 	if gn < 8.5
 		gntotal += gn
 		samplecount += 1
@@ -101,13 +101,13 @@ ps = getparams(s)
 
 println("Testing sampling and estimating at min parameter value:")
 
-s = GodelTest.PoissonSampler([0.0])
+s = DataGenerators.PoissonSampler([0.0])
 
 traces = Any[]
 gntotal = 0.0
 samplesize = 1000
 for i in 1:samplesize
-	gn, trace = GodelTest.sample(s,(typemin(Int),typemax(Int)), cc)
+	gn, trace = DataGenerators.sample(s,(typemin(Int),typemax(Int)), cc)
 	gntotal += gn
 	push!(traces, trace)
 end
@@ -119,13 +119,13 @@ ps = getparams(s)
 
 println("Testing sampling and estimating at max parameter value:")
 
-s = GodelTest.PoissonSampler([maxintfloat(Float64)])
+s = DataGenerators.PoissonSampler([maxintfloat(Float64)])
 
 traces = Any[]
 gntotal = 0.0
 samplesize = 1000
 for i in 1:samplesize
-	gn, trace = GodelTest.sample(s,(typemin(Int),typemax(Int)), cc)
+	gn, trace = DataGenerators.sample(s,(typemin(Int),typemax(Int)), cc)
 	gntotal += gn
 	push!(traces, trace)
 end

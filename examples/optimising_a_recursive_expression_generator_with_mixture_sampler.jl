@@ -1,5 +1,5 @@
-require("../src/GodelTest.jl")
-using GodelTest
+require("../src/DataGenerators.jl")
+using DataGenerators
 using BlackBoxOptim
 
 # recursive generator for arithmetic expressions
@@ -22,25 +22,25 @@ gn = RecursiveExprGen()
 # Create alternative SamplerChoiceModel that uses a
 # mixture of a gaussian and a geometric for the sequence choice points.
 # This is a kludge for now...
-# function SamplerChoiceModelRF(g::GodelTest.Generator, subgencms=[])
-#   samplers = (Uint=>GodelTest.Sampler)[]
+# function SamplerChoiceModelRF(g::DataGenerators.Generator, subgencms=[])
+#   samplers = (Uint=>DataGenerators.Sampler)[]
 #   for (cpid, info) in choicepointinfo(g) # gets info from sub-generators also
 #     cptype = info[:type]
-#     if cptype == GodelTest.RULE_CP
-#       sampler = GodelTest.CategoricalSampler(info[:max])
-#     elseif cptype == GodelTest.SEQUENCE_CP
-#       sampler = GodelTest.MixtureSampler([GodelTest.GeometricSampler(),
+#     if cptype == DataGenerators.RULE_CP
+#       sampler = DataGenerators.CategoricalSampler(info[:max])
+#     elseif cptype == DataGenerators.SEQUENCE_CP
+#       sampler = DataGenerators.MixtureSampler([DataGenerators.GeometricSampler(),
 #         # Actually we need to ensure positive results to get good optimization. Investigate.
-#         GodelTest.EnsurePositiveSampler(GodelTest.GaussianSampler(0.0, 100.0, 10.0, true))])
-#         #GodelTest.GaussianSampler(0.0, 1000.0, 10.0, true)])
-#     elseif cptype == GodelTest.VALUE_CP
+#         DataGenerators.EnsurePositiveSampler(DataGenerators.GaussianSampler(0.0, 100.0, 10.0, true))])
+#         #DataGenerators.GaussianSampler(0.0, 1000.0, 10.0, true)])
+#     elseif cptype == DataGenerators.VALUE_CP
 #       datatype = info[:datatype]
 #       if datatype <: Bool
-#         sampler = GodelTest.BernoulliSampler()
+#         sampler = DataGenerators.BernoulliSampler()
 #       elseif datatype <: Integer # order of if clauses matters here since Bool <: Integer
-#         sampler = GodelTest.DiscreteUniformSampler()
+#         sampler = DataGenerators.DiscreteUniformSampler()
 #       else # floating point, but may also be a rational type
-#         sampler = GodelTest.UniformSampler()
+#         sampler = DataGenerators.UniformSampler()
 #       end
 #     else
 #       error("unrecognised choice point type when creating sampler choice model")
@@ -50,7 +50,7 @@ gn = RecursiveExprGen()
 #   for subgencm in subgencms
 #     merge!(samplers, subgencm.samplers)
 #   end
-#   GodelTest.SamplerChoiceModel(samplers)
+#   DataGenerators.SamplerChoiceModel(samplers)
 # end
 
 # SMP - converted the above to use these new features now avaiable:
@@ -60,22 +60,22 @@ gn = RecursiveExprGen()
 # (4) ConstrainParameterSampler
 function custommapping(info::Dict)
 	cptype = info[:type]
-	if cptype == GodelTest.RULE_CP
-	  sampler = GodelTest.CategoricalSampler(info[:max])
-	elseif cptype == GodelTest.SEQUENCE_CP
+	if cptype == DataGenerators.RULE_CP
+	  sampler = DataGenerators.CategoricalSampler(info[:max])
+	elseif cptype == DataGenerators.SEQUENCE_CP
 	  minreps = haskey(info,:min) ? info[:min] : 0
-	  sampler = GodelTest.TransformSampler(
-					GodelTest.MixtureSampler(GodelTest.GeometricSampler(), GodelTest.ConstrainParametersSampler(GodelTest.NormalSampler(), [(0.0,100.0), (0.0,10.0)])),
+	  sampler = DataGenerators.TransformSampler(
+					DataGenerators.MixtureSampler(DataGenerators.GeometricSampler(), DataGenerators.ConstrainParametersSampler(DataGenerators.NormalSampler(), [(0.0,100.0), (0.0,10.0)])),
 					x->floor(abs(x))+minreps,
 					x->x-minreps) 
-	elseif cptype == GodelTest.VALUE_CP
+	elseif cptype == DataGenerators.VALUE_CP
 		datatype = info[:datatype]
 		if datatype <: Bool
-			sampler = GodelTest.BernoulliSampler()
+			sampler = DataGenerators.BernoulliSampler()
 		elseif datatype <: Integer # order of if clauses matters here since Bool <: Integer
-			sampler = GodelTest.AdjustParametersToSupportSampler(GodelTest.DiscreteUniformSampler())
+			sampler = DataGenerators.AdjustParametersToSupportSampler(DataGenerators.DiscreteUniformSampler())
 		else
-			sampler = GodelTest.AdjustParametersToSupportSampler(GodelTest.UniformSampler())
+			sampler = DataGenerators.AdjustParametersToSupportSampler(DataGenerators.UniformSampler())
 		end
 	else
 	  error("unrecognised choice point type when creating custom sampler mapping")

@@ -1,11 +1,11 @@
-GodelTest.jl
+DataGenerators.jl
 ============
 
-GodelTest is a (work-in-progress) test generation package for Julia (http://julialang.org/). It can use techniques for search and optimization to find test inputs that improve your testing.
+DataGenerators is a (work-in-progress) test generation package for Julia (http://julialang.org/). It can use techniques for search and optimization to find test inputs that improve your testing.
 
-Even though GodelTest can be used as a stand-alone package it supports automated testing with the [AutoTest.jl package](http://www.github.com/robertfeldt/AutoTest.jl).
+Even though DataGenerators can be used as a stand-alone package it supports automated testing with the [AutoTest.jl package](http://www.github.com/robertfeldt/AutoTest.jl).
 
-GodelTest is based in a number of research articles:
+DataGenerators is based in a number of research articles:
 
 * R. Feldt and S. Poulding, "[Finding Test Data with Specific Properties via Metaheuristic Search](http://www.robertfeldt.net/publications/feldt_2013_godeltest.html)", ISSRE 2013 (Best paper award!).
 
@@ -13,7 +13,7 @@ GodelTest is based in a number of research articles:
 
 * S. Poulding and R. Feldt, "Re-using Generators of Complex Test Data", ICST 2015.
 
-[![Build Status](https://travis-ci.org/robertfeldt/GodelTest.jl.svg?branch=master)](https://travis-ci.org/robertfeldt/GodelTest.jl)
+[![Build Status](https://travis-ci.org/robertfeldt/DataGenerators.jl.svg?branch=master)](https://travis-ci.org/robertfeldt/DataGenerators.jl)
 
 [![Coverage Status](https://coveralls.io/repos/robertfeldt/Godeltest.jl/badge.png?branch=master)](https://coveralls.io/r/robertfeldt/Godeltest.jl?branch=master)
 
@@ -22,7 +22,7 @@ GodelTest is based in a number of research articles:
 
 Just install by cloning directly from bitbucket:
 
-    Pkg.clone("https://bitbucket.org/robertfeldt/GodelTest.jl")
+    Pkg.clone("https://bitbucket.org/robertfeldt/DataGenerators.jl")
 
 from a Julia repl.
 

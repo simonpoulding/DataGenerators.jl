@@ -14,13 +14,13 @@ end
 # The godelnumber function is the interface to all subtypes of ChoiceModel. Override to implement more specific
 # behavior.
 #
-# Guarentees made by GodelTest to the choice model:
+# Guarentees made by DataGenerators to the choice model:
 #
 #	 (1) ChoiceContext.lowerbound <= ChoiceContext.upperbound
 #	 (2) ChoiceContext.lowerbound and upperbound have the type ChoiceContext.datatype (for integer datatypes this means
 #      that full range is indicated by bounds of typemin and typemax rather than -Inf and Inf)
 #
-# Assumptions made by GodelTest on value return by the choice model:
+# Assumptions made by DataGenerators on value return by the choice model:
 #
 #  (1) must be between ChoiceContext.lowerbound and ChoiceContext.upperbound (inclusive)
 #  (2) must be convertible without loss of precision to ChoiceContext.datatype (i.e. does not cause convert to raise an

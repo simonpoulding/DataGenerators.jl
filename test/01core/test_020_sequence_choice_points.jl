@@ -1,7 +1,5 @@
 # tests sequence choice points arising from reps, mult, and plus
 
-using GodelTest
-
 #
 # reps(function_as_symbol, [min[, max]])
 #
@@ -181,7 +179,7 @@ start() = gensym()
 end
 
 @generator SCRepsSubGenGen(subgen) begin
-start() = reps(subgen(),2,4)
+start() = reps(choose(subgen),2,4)
 end
 
 @testset "reps choice point where function called is not a rule" begin

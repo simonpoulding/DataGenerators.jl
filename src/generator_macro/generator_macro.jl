@@ -16,10 +16,10 @@ export @generator
 #
 # note: we generally want to avoid the standard hygiene changes performed by the macro expander
 # as the rule code should execute in the context in which the macro is called.  However, code added
-# to handle the constructs (such as choice points) should operate in the context of the GodelTest
+# to handle the constructs (such as choice points) should operate in the context of the DataGenerators
 # module.
-# The ideal approach would be to apply hygiene to GodelTest code, and then escape any user-defined rule code.  However
-# since GodelTest code is mixed very closely in AST with user code (for instance when a GT construct appears in 
+# The ideal approach would be to apply hygiene to DataGenerators code, and then escape any user-defined rule code.  However
+# since DataGenerators code is mixed very closely in AST with user code (for instance when a GT construct appears in 
 # argument values passed to a function), this difficult to achieve correctly. For example, escaping all nodes
 # apart from those that are GT construct will work in most cases, but fails if the user defines an anonymous
 # function such i->... (e.g. in a call to map(..., )) as the escaped variable gives rise to an error (invalid
@@ -324,7 +324,7 @@ function transformconstructs(node, rti::RuleTransformInfo)
 		return node
 	end
 	
-	# esc'ing the node ensures that it runs in the scope of the current module not the GodelTest module
+	# esc'ing the node ensures that it runs in the scope of the current module not the DataGenerators module
 	return node
 
 end
@@ -335,7 +335,7 @@ end
 #		mult(:rule)
 #		plus(:rule)
 #	to:
-#		GodelTest.choosereps(s, cpid, ()->rule(g,s), minreps, maxreps, rangeisliteral)
+#		DataGenerators.choosereps(s, cpid, ()->rule(g,s), minreps, maxreps, rangeisliteral)
 #
 function transformsequencechoicepoint(construct, params, rti::RuleTransformInfo)
 
@@ -411,7 +411,7 @@ end
 #		choose(type,...)
 # (where parameters after the datatype constrain the range of the type)
 # to:
-#		GodelTest.choosenumber(s, cpid, datatype, minval, maxval, rangeisliteral)
+#		DataGenerators.choosenumber(s, cpid, datatype, minval, maxval, rangeisliteral)
 # except for string datatypes that construct their own rules to emit strings satisfying a regular expression
 #
 function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
@@ -453,7 +453,7 @@ function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 			cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
 			cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
 			chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-			# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
+			# choosenumber is not esc'ed so will be transformed to DataGenerators.choosenumber by macro hygiene
 
 		elseif datatype <: Char
 
@@ -500,7 +500,7 @@ function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 
 			cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
 			chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-			# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
+			# choosenumber is not esc'ed so will be transformed to DataGenerators.choosenumber by macro hygiene
 
 		elseif datatype <: AbstractString
 			# TODO it may be a bit ambitious to allow all concrete string subtypes, but let's see ;-)
@@ -541,12 +541,12 @@ end
 function transformrulecall(rulename, ruleparams, rti::RuleTransformInfo)
 	rewrittenparams = [rti.genparam; rti.stateparam; ruleparams]
 	Expr(:call, rti.rulefunctionnames[rulename], rewrittenparams...)
-	# rule is esc'ed so that it is interpreted in context of current module and not GodelTest
+	# rule is esc'ed so that it is interpreted in context of current module and not DataGenerators
 end
 
 
 # call to a sub-generator becomes:
-#		GodelTest.subgen(g, s, i)
+#		DataGenerators.subgen(g, s, i)
 # where i it the index of the sub-generators in the arguments
 #   
 function transformsubgencall(subgenname, subgenparams, rti::RuleTransformInfo)
@@ -570,7 +570,7 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 
 	# code for the generator type
 	# note that macro hygeine will ensure that variables/functions/types not explicitly esc'ed will be transformed 
-	# into the context of the GodelTest module, which is what we require here
+	# into the context of the DataGenerators module, which is what we require here
 
 	# we store also the current module at the time of calling this macro as the owning module of this new type:
 	# this is so that rules are executed in the correct context when the generator is run since the same context

@@ -1,5 +1,5 @@
-include("../src/GodelTest.jl")
-using GodelTest
+include("../src/DataGenerators.jl")
+using DataGenerators
 
 # recursive generator for arithmetic expressions
 @generator RecursiveExprGen begin

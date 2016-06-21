@@ -3,9 +3,9 @@ include("base_test_auto_singlefile_1605.jl")
 using BaseTestAuto
 include("mcheck_macros_temp.jl") # Temp and incomplete implementations of the mcheck macros
 
-Package = "GodelTest"
+Package = "DataGenerators"
 
-using GodelTest
+using DataGenerators
 
 TestFileRE = r"^test_.*\.jl$"
 
@@ -40,7 +40,7 @@ function include_all_files_matching(re, testdir)
     [include(joinpath(testdir, fp)) for fp in files]
 end
 
-@testset "GodelTest test suite" begin
+@testset "DataGenerators test suite" begin
     include_all_files_matching(r"^test_.*jl$", "01core")
 
     #include_all_files_matching(r"^test_.*jl$", "02internals")

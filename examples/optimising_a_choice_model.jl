@@ -1,5 +1,5 @@
-require("../src/GodelTest.jl")
-using GodelTest
+require("../src/DataGenerators.jl")
+using DataGenerators
 using BlackBoxOptim
 
 # generator for simple arithmetic expressions

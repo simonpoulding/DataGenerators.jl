@@ -1,4 +1,4 @@
-Lib = "GodelTest"
+Lib = "DataGenerators"
 TestDir = "test"
 
 # General parameters that the user can set from the command line.

@@ -1,7 +1,5 @@
 # tests generate function
 
-using GodelTest
-
 @generator GNStartFuncGen() begin # prefix GN (for GeNerate) to avoid type name clashes
     start() = 'a'
     other() = 'b'
@@ -30,9 +28,9 @@ end
 end
 
 # choice model that only returns the lower bound Godel number
-type GNMinimumValueChoiceModel <: GodelTest.ChoiceModel; end
-import GodelTest.godelnumber
-function godelnumber(cm::GNMinimumValueChoiceModel, cc::GodelTest.ChoiceContext)
+type GNMinimumValueChoiceModel <: DataGenerators.ChoiceModel; end
+import DataGenerators.godelnumber
+function godelnumber(cm::GNMinimumValueChoiceModel, cc::DataGenerators.ChoiceContext)
 return cc.lowerbound, Dict()
 end
 
@@ -58,7 +56,7 @@ end
 end
 
 @generator GNMainGen(intGen) begin
-    start() = plus(intGen())
+    start() = plus(choose(intGen))
 end
 
 @testset "generate a generator with sub-generators using default and non-default choice models" begin
@@ -110,7 +108,7 @@ infgn = GNInfRecursionGen()
     # check for sensible reason that specifies the limit
     @test match(r"choices", exc.reason) != nothing
     @test match(r"exceeded", exc.reason) != nothing
-    @test match(Regex("$(GodelTest.MAX_CHOICES_DEFAULT)"), exc.reason) != nothing 
+    @test match(Regex("$(DataGenerators.MAX_CHOICES_DEFAULT)"), exc.reason) != nothing 
 end
 	
 c100gn = GN100ChoicesGen()
@@ -186,12 +184,12 @@ setparams(scm, [0.000001])
             throw(e)
         end
     end
-    @test (exc != nothing) || (length(td) <= GodelTest.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
     @mcheck_that_sometimes typeof(exc) == GenerationTerminatedException
     if (exc != nothing)
         @test match(r"repetitions", exc.reason) != nothing
         @test match(r"exceeded", exc.reason) != nothing
-        @test match(Regex("$(GodelTest.MAX_SEQ_REPS_DEFAULT)"), exc.reason) != nothing
+        @test match(Regex("$(DataGenerators.MAX_SEQ_REPS_DEFAULT)"), exc.reason) != nothing
     end
 end
 
@@ -207,7 +205,7 @@ end
             throw(e)
         end
     end
-    @test (exc != nothing) || (length(td) <= GodelTest.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
     @mcheck_that_sometimes typeof(exc) == GenerationTerminatedException
     if (exc != nothing)
         @test match(r"repetitions", exc.reason) != nothing

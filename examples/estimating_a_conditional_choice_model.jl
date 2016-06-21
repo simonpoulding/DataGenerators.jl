@@ -4,7 +4,7 @@
 # the unconditional model -- an iterative EDA-like may be appropriate: at each iteration the traces of the results 
 # "closest" to the target are used to restimate the model.
 
-using GodelTest
+using DataGenerators
 
 # "toy" generator for building strings consisting of symbols a, b, c, d, x, and/or y
 @generator CondExampleGen begin
@@ -31,7 +31,7 @@ scm = SamplerChoiceModel(gn)
 # applies the underlying sampler, i.e. as if there were no conditionality
 for cpid in keys(scm.samplers)
 	if numparams(scm.samplers[cpid]) > 0 # no point making samplers without parameters conditional
-		scm.samplers[cpid] = GodelTest.ConditionalSampler(scm.samplers[cpid])
+		scm.samplers[cpid] = DataGenerators.ConditionalSampler(scm.samplers[cpid])
 	end
 end
 

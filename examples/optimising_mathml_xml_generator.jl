@@ -1,9 +1,9 @@
-require("../src/GodelTest.jl")
-using GodelTest
+require("../src/DataGenerators.jl")
+using DataGenerators
 using BlackBoxOptim
 
 #
-# Generator automatically created by GodelTestAutoTest.jl from W3C XSD for MathML v2 (presentation only) with some minor corrections to the definition by Simon Poulding
+# Generator automatically created by DataGeneratorsAutoTest.jl from W3C XSD for MathML v2 (presentation only) with some minor corrections to the definition by Simon Poulding
 # Manual changes: commented out warnings; changed choose(UTF8,...) to choose(ASCIIString,...) also to avoid warnings 
 #
 using LightXML

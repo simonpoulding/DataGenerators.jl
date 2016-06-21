@@ -4,33 +4,33 @@ describe("Transform Sampler") do
 
 	describe("construction") do
 		
-		subsA = GodelTest.UniformSampler([2.6, 3.1])
-		s = GodelTest.TransformSampler(subsA, x->2.0*x, x->0.5*x)
+		subsA = DataGenerators.UniformSampler([2.6, 3.1])
+		s = DataGenerators.TransformSampler(subsA, x->2.0*x, x->0.5*x)
 
 		test("numparams and paramranges") do
-			@check GodelTest.numparams(s) == GodelTest.numparams(subsA)
-			@check GodelTest.paramranges(s) == GodelTest.paramranges(subsA)
+			@check DataGenerators.numparams(s) == DataGenerators.numparams(subsA)
+			@check DataGenerators.paramranges(s) == DataGenerators.paramranges(subsA)
 		end
 	
 		test("default params") do
-			@check GodelTest.getparams(s) == GodelTest.getparams(subsA)
+			@check DataGenerators.getparams(s) == DataGenerators.getparams(subsA)
 		end
 
 		test("set params") do
-			GodelTest.setparams(s, [-5.11, -3.22])
-			@check GodelTest.getparams(subsA) == [-5.11, -3.22]
-			@check GodelTest.getparams(s) == [-5.11, -3.22]
+			DataGenerators.setparams(s, [-5.11, -3.22])
+			@check DataGenerators.getparams(subsA) == [-5.11, -3.22]
+			@check DataGenerators.getparams(s) == [-5.11, -3.22]
 		end
 					
 	end
 	
 	describe("sampling") do
 
-		subsA = GodelTest.UniformSampler([2.6, 3.1])
-		s = GodelTest.TransformSampler(subsA, x->2.0*x, x->0.5*x)
+		subsA = DataGenerators.UniformSampler([2.6, 3.1])
+		s = DataGenerators.TransformSampler(subsA, x->2.0*x, x->0.5*x)
 
 		@repeat test("sampling within transformed range") do
-			x, trace = GodelTest.sample(s, (0,1))
+			x, trace = DataGenerators.sample(s, (0,1))
 			@check typeof(x) <: Float64
 			@check 5.2 <= x <= 6.2
 		end
@@ -39,11 +39,11 @@ describe("Transform Sampler") do
 
 	describe("sampling where support affects outcome") do
 
-		subsA = GodelTest.AdjustParametersToSupportSampler(GodelTest.UniformSampler())
-		s = GodelTest.TransformSampler(subsA, x->2.0*x, x->0.5*x)
+		subsA = DataGenerators.AdjustParametersToSupportSampler(DataGenerators.UniformSampler())
+		s = DataGenerators.TransformSampler(subsA, x->2.0*x, x->0.5*x)
 
 		@repeat test("sampling within support") do
-			x, trace = GodelTest.sample(s, (110.7,190.4))
+			x, trace = DataGenerators.sample(s, (110.7,190.4))
 			@check typeof(x) <: Float64
 			@check 110.7 <= x <= 190.4
 		end
@@ -54,18 +54,18 @@ describe("Transform Sampler") do
 		
 		test("estimates parameters of subsampler") do		
 
-			subs1A = GodelTest.GeometricSampler()
-			s1 = GodelTest.TransformSampler(subs1A, x->x+10.0, x->x-10.0)
+			subs1A = DataGenerators.GeometricSampler()
+			s1 = DataGenerators.TransformSampler(subs1A, x->x+10.0, x->x-10.0)
 			params = [0.7]
-			GodelTest.setparams(s1, params)
+			DataGenerators.setparams(s1, params)
 			
-			subs2A = GodelTest.GeometricSampler()
-			s2 = GodelTest.TransformSampler(subs2A, x->x+10.0, x->x-10.0)
+			subs2A = DataGenerators.GeometricSampler()
+			s2 = DataGenerators.TransformSampler(subs2A, x->x+10.0, x->x-10.0)
 			otherparams = [0.3]
-			GodelTest.setparams(s2, otherparams)
+			DataGenerators.setparams(s2, otherparams)
 
 			traces = map(1:100) do i
-				x, trace = GodelTest.sample(s1, (0, 1))
+				x, trace = DataGenerators.sample(s1, (0, 1))
 				trace
 			end
 

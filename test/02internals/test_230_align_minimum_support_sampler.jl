@@ -4,34 +4,34 @@ describe("Align Minimum Support Sampler") do
 
 	describe("construction") do
 		
-		subsA = GodelTest.GeometricSampler()
-		s = GodelTest.AlignMinimumSupportSampler(subsA)
+		subsA = DataGenerators.GeometricSampler()
+		s = DataGenerators.AlignMinimumSupportSampler(subsA)
 
 		test("numparams and paramranges") do
-			@check GodelTest.numparams(s) == GodelTest.numparams(subsA)
-			@check GodelTest.paramranges(s) == GodelTest.paramranges(subsA)
+			@check DataGenerators.numparams(s) == DataGenerators.numparams(subsA)
+			@check DataGenerators.paramranges(s) == DataGenerators.paramranges(subsA)
 		end
 	
 		test("default params") do
-			@check GodelTest.getparams(s) == GodelTest.getparams(subsA)
+			@check DataGenerators.getparams(s) == DataGenerators.getparams(subsA)
 		end
 
 		test("set params") do
-			GodelTest.setparams(s, [0.4])
-			@check GodelTest.getparams(subsA) == [0.4]
-			@check GodelTest.getparams(s) == [0.4]
+			DataGenerators.setparams(s, [0.4])
+			@check DataGenerators.getparams(subsA) == [0.4]
+			@check DataGenerators.getparams(s) == [0.4]
 		end
 					
 	end
 	
 	describe("sampling") do
 
-		subsA = GodelTest.GeometricSampler([0.3])
-		s = GodelTest.AlignMinimumSupportSampler(subsA)
+		subsA = DataGenerators.GeometricSampler([0.3])
+		s = DataGenerators.AlignMinimumSupportSampler(subsA)
 
 		support = (17, typemax(Int))
 		@repeat test("aligns support") do
-			x, trace = GodelTest.sample(s, support)
+			x, trace = DataGenerators.sample(s, support)
 			@check 17 <= x
 		end
 
@@ -41,20 +41,20 @@ describe("Align Minimum Support Sampler") do
 		
 		test("estimates parameters of subsampler") do		
 
-			subs1A = GodelTest.GeometricSampler()
-			s1 = GodelTest.AlignMinimumSupportSampler(subs1A)
+			subs1A = DataGenerators.GeometricSampler()
+			s1 = DataGenerators.AlignMinimumSupportSampler(subs1A)
 			params = [0.6]
-			GodelTest.setparams(s1, params)
+			DataGenerators.setparams(s1, params)
 
-			subs2A = GodelTest.GeometricSampler()
-			s2 = GodelTest.AlignMinimumSupportSampler(subs2A)
+			subs2A = DataGenerators.GeometricSampler()
+			s2 = DataGenerators.AlignMinimumSupportSampler(subs2A)
 			otherparams = [0.3]
-			GodelTest.setparams(s2, otherparams)
+			DataGenerators.setparams(s2, otherparams)
 
 			traces = map(1:100) do i
 			 	# note: varying support
 				bounds = [rand(-100:100) for j in 1:2]
-				x, trace = GodelTest.sample(s1, (minimum(bounds),maximum(bounds)))
+				x, trace = DataGenerators.sample(s1, (minimum(bounds),maximum(bounds)))
 				trace
 			end
 

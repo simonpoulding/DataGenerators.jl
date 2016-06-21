@@ -1,7 +1,5 @@
 # tests information stored as choice point info
 
-using GodelTest
-
 #
 # sequence choice points
 #
@@ -50,7 +48,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.SEQUENCE_CP
+    @test cp1[:type] == DataGenerators.SEQUENCE_CP
     @test cp1[:min] == 2
     @test cp1[:max] == 4
 end
@@ -61,7 +59,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.SEQUENCE_CP
+    @test cp1[:type] == DataGenerators.SEQUENCE_CP
     @test !haskey(cp1,:min)
     @test cp1[:max] == 4
 end
@@ -72,7 +70,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.SEQUENCE_CP
+    @test cp1[:type] == DataGenerators.SEQUENCE_CP
     @test cp1[:min] == 2
     @test !haskey(cp1,:max)
 end
@@ -83,7 +81,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.SEQUENCE_CP
+    @test cp1[:type] == DataGenerators.SEQUENCE_CP
     @test !haskey(cp1,:min)
     @test !haskey(cp1,:max)
 end
@@ -94,7 +92,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.SEQUENCE_CP
+    @test cp1[:type] == DataGenerators.SEQUENCE_CP
     @test cp1[:min] == 2
     @test cp1[:max] == typemax(Int)
 end
@@ -105,7 +103,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.SEQUENCE_CP
+    @test cp1[:type] == DataGenerators.SEQUENCE_CP
     @test cp1[:min] == 0
     @test cp1[:max] == typemax(Int)
 end
@@ -116,7 +114,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.SEQUENCE_CP
+    @test cp1[:type] == DataGenerators.SEQUENCE_CP
     @test cp1[:min] == 1
     @test cp1[:max] == typemax(Int)
 end
@@ -138,7 +136,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.RULE_CP
+    @test cp1[:type] == DataGenerators.RULE_CP
     @test cp1[:min] == 1
     @test cp1[:max] == 3
     @test cp1[:rulename] == :x
@@ -186,7 +184,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Int
     @test cp1[:min] == 2
     @test cp1[:max] == 4
@@ -198,7 +196,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Int
     @test !haskey(cp1,:min)
     @test cp1[:max] == 4
@@ -210,7 +208,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Int
     @test cp1[:min] == 2
     @test !haskey(cp1,:max)
@@ -222,7 +220,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Int
     @test !haskey(cp1,:min)
     @test !haskey(cp1,:max)
@@ -234,7 +232,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Int
     @test cp1[:min] == 2
     @test cp1[:max] == typemax(Int)
@@ -246,7 +244,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Int
     @test cp1[:min] == typemin(Int)
     @test cp1[:max] == typemax(Int)
@@ -258,7 +256,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Float64
     @test cp1[:min] == 2.1
     @test cp1[:max] == 4.2
@@ -270,7 +268,7 @@ end
     cpids = collect(keys(cpi))
     @test length(cpi) == 1
     cp1 = cpi[cpids[1]]
-    @test cp1[:type] == GodelTest.VALUE_CP
+    @test cp1[:type] == DataGenerators.VALUE_CP
     @test cp1[:datatype] == Bool
     @test cp1[:min] == false
     @test cp1[:max] == true
@@ -291,9 +289,9 @@ end
     cpi = gn.choicepointinfo
     @test length(cpi) == 3
     cptypes = [cpdict[:type] for cpdict in values(cpi)]
-    @test GodelTest.SEQUENCE_CP in cptypes
-    @test GodelTest.RULE_CP in cptypes
-    @test GodelTest.VALUE_CP in cptypes
+    @test DataGenerators.SEQUENCE_CP in cptypes
+    @test DataGenerators.RULE_CP in cptypes
+    @test DataGenerators.VALUE_CP in cptypes
 end
 	
 end
@@ -307,7 +305,7 @@ end
 end
 
 @generator CPMainGen(boolGen, intGen) begin
-    start() = map(i->boolGen(), 1:intGen())
+    start() = map(i->choose(boolGen), 1:choose(intGen))
 end
 
 @testset "choicepointinfo function" begin

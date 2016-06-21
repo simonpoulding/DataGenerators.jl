@@ -1,7 +1,5 @@
 # tests handling of generator methods by macro
 
-using GodelTest
-
 #
 # short form: a() = ...
 # long form: function a() ... end

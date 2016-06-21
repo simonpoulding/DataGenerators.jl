@@ -52,8 +52,8 @@ supportsconditionalmodelestimation(s::Sampler) = method_exists(estimatecondition
 # supports pretty printing
 function getsamplertypename(s::Sampler)
 	samplertypename = "$(typeof(s))"
-	if startswith(samplertypename, "GodelTest.")
-		samplertypename = samplertypename[length("GodelTest.")+1:end]
+	if startswith(samplertypename, "DataGenerators.")
+		samplertypename = samplertypename[length("DataGenerators.")+1:end]
 	end
 	samplertypename
 end

@@ -1,4 +1,4 @@
-using GodelTest
+using DataGenerators
 
 @generator SimpleExprGen begin 
   start() = expression()
@@ -12,9 +12,9 @@ using GodelTest
 end
 
 
-type MyDerivationState <: GodelTest.DerivationState
-	generator::GodelTest.Generator
-	choicemodel::GodelTest.ChoiceModel
+type MyDerivationState <: DataGenerators.DerivationState
+	generator::DataGenerators.Generator
+	choicemodel::DataGenerators.ChoiceModel
 	godelsequence::Vector{Real} 		# Can be integers or floats
 	cmtrace::Vector{Tuple{Integer,Dict}}	# choice point plus trace info returned from the choice model
 	maxchoices::Int # upper limit on the size of the Godel sequence
@@ -23,13 +23,13 @@ type MyDerivationState <: GodelTest.DerivationState
 	cpseqnumberstack::Vector{Vector{Int}} # corresponding to the rule name stack, the seq numbers of the encountered choice points
 	# executiontreecoords::Vector{Int} # during the execution of a generator, this uniquely identifies the current rule in the execution tree
 	# nextchildcoord::Int
-	function MyDerivationState(g::GodelTest.Generator, cm::GodelTest.ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT)
+	function MyDerivationState(g::DataGenerators.Generator, cm::DataGenerators.ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT)
 		# new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, Vector{Symbol}(), Vector{Int}(), 1)
 		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, Vector{Symbol}(), Vector{Vector{Int}}())
 	end
 end
 
-import GodelTest.statetype
+import DataGenerators.statetype
 statetype(g::SimpleExprGen) = MyDerivationState
 
 gn = SimpleExprGen()

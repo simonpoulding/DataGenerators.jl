@@ -1,4 +1,4 @@
-using GodelTest
+using DataGenerators
 
 # recursive generator for arithmetic expressions
 @generator RecursiveExprGen begin

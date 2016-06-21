@@ -3,7 +3,7 @@
 #
 
 
-using GodelTest
+using DataGenerators
 
 # recursive generator for arithmetic expressions
 @generator RecursiveExprGen begin
@@ -46,7 +46,7 @@ scm = SamplerChoiceModel(gn)
 # applies the underlying sampler, i.e. as if there were no conditionality
 for cpid in keys(scm.samplers)
 	if numparams(scm.samplers[cpid]) > 0 # no point making samplers without parameters conditional
-		scm.samplers[cpid] = GodelTest.ConditionalSampler(scm.samplers[cpid])
+		scm.samplers[cpid] = DataGenerators.ConditionalSampler(scm.samplers[cpid])
 	end
 end
 

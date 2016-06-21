@@ -1,4 +1,4 @@
-using GodelTest
+using DataGenerators
 
 @generator MainGen() begin
 	start() = map(i->7, 1:10)

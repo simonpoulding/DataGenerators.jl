@@ -1,7 +1,5 @@
 # simple arithmetic expression generator
 
-using GodelTest
-
 # note: no recursion so as to avoid issue of infinite strings
 @generator EXSimpleExprGen begin 
     start() = expression()

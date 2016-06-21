@@ -1,8 +1,5 @@
 # tests String value choice points, i.e. using choose(StringDataType, regex) construct
 
-using GodelTest
-
-
 @generator SCWildcardGen begin # prefix SC (for String value Choice points) to avoid type name clashes
     start() = choose(ASCIIString, ".")
 end

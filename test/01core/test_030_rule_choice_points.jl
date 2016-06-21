@@ -1,8 +1,5 @@
 # tests rule choice points
 
-using GodelTest
-
-
 # basic reps choice point
 
 @generator RCShortGen begin # prefix RC (for Rule Choice points) to avoid type name clashes

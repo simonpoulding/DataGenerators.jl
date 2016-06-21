@@ -1,12 +1,10 @@
 # tests value choice points, i.e. using choose(DataType) construct
 
-using GodelTest
-
 # TODO to avoid repetition, would like to construct tests for types using metaprogramming
 # HOWEVER, this works with Expressions constructed without interpolation, but as soon as
 # interpolation is performed:
 # (a) an explicit macroexpand is required before the eval
-# (b) even then, either (GodelTest.)choose is not recognised or, if instead Autotest.eval is explicitly using, then (GodelTest.)gen is not recognised - a scoping issue/bug?
+# (b) even then, either (DataGenerators.)choose is not recognised or, if instead Autotest.eval is explicitly using, then (DataGenerators.)gen is not recognised - a scoping issue/bug?
 # And it does not appear to be possible to manipulate code as a string as an alternative (using parse, then eval)
 #
 # NOTE: For this reason, currently only the most common types are tested, and even within these, not all

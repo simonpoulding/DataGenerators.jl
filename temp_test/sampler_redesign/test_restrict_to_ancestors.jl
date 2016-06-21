@@ -10,7 +10,7 @@
 println("START test_restrict_to_ancestors")
 
 using Base.Test
-using GodelTest
+using DataGenerators
 
 # generator for arithmetic expressions
 @generator AncestorGen begin
@@ -54,7 +54,7 @@ scm = SamplerChoiceModel(gn)
 println("Testing constructor:")
 
 # now make U choice point conditional on X choice point and restrict to ancestors
-scm.samplers[cpidU] = GodelTest.ConditionalSampler(scm.samplers[cpidU], cpidX, 1, nothing, true, [1,2], Vector[[1.0, 0.0], [0.0, 1.0]])
+scm.samplers[cpidU] = DataGenerators.ConditionalSampler(scm.samplers[cpidU], cpidX, 1, nothing, true, [1,2], Vector[[1.0, 0.0], [0.0, 1.0]])
 
 
 # TODO: may be better to test the following methods on sampler itself rather than at CM level?
