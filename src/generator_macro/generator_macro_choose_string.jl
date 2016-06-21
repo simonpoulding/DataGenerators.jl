@@ -20,7 +20,7 @@ function transformchoosestring(regex, datatype, rti::RuleTransformInfo)
 	methods = regexconstructmethods(ast, rti)
 	
 	# add method to call entry point to regex methods, and convert output to desired datatype
-	startmethodcall = Expr(:call, esc(ast.methodname), rti.genparam, rti.stateparam)
+	startmethodcall = Expr(:call, ast.methodname, rti.genparam, rti.stateparam)
 	convertstmt = :( convert($datatype, $startmethodcall) )
 	stmts = [methods; convertstmt]
 	
@@ -343,25 +343,25 @@ function regexconstructmethods(node::RegexASTNode, rti)
 		if node.func in [:or]
 		
 			if length(node.children) == 1
-				body = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
+				body = Expr(:call, node.children[1].methodname, rti.genparam, rti.stateparam)
 			else
 				cpidvar = gensym("cpid")
-				res = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
+				res = Expr(:call, node.children[1].methodname, rti.genparam, rti.stateparam)
 				numdefs = length(node.children)
 				for i in 2:numdefs
-					calli = Expr(:call, esc(node.children[i].methodname), rti.genparam, rti.stateparam)
-					res = :( ($(esc(cpidvar)) == $i) ? ($calli) : ($res) )
+					calli = Expr(:call, node.children[i].methodname, rti.genparam, rti.stateparam)
+					res = :( ($(cpidvar) == $i) ? ($calli) : ($res) )
 				end
 				cpid = recordchoicepoint(rti, RULE_CP, Dict{Symbol, Any}(:rulename=>node.methodname, :min=>1, :max=>numdefs))
-				body = Expr(:block, :($(esc(cpidvar)) = chooserule($(rti.stateparam), $cpid, $numdefs)), res)
+				body = Expr(:block, :($(cpidvar) = $(THIS_MODULE).chooserule($(rti.stateparam), $cpid, $numdefs)), res)
 			end
 		
 	 	elseif node.func in [:and]
 	 
 			if length(node.children) == 1
-				body = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
+				body = Expr(:call, node.children[1].methodname, rti.genparam, rti.stateparam)
 			else
-				calls = map(child -> Expr(:call, esc(child.methodname), rti.genparam, rti.stateparam), node.children)
+				calls = map(child -> Expr(:call, child.methodname, rti.genparam, rti.stateparam), node.children)
 				body = Expr(:call, :(*), calls...)
 			end
 		
@@ -371,9 +371,9 @@ function regexconstructmethods(node::RegexASTNode, rti)
 
 		elseif node.func in [:optional]
 
-			res = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
+			res = Expr(:call, node.children[1].methodname, rti.genparam, rti.stateparam)
 			cpid = recordchoicepoint(rti, VALUE_CP, Dict{Symbol, Any}(:datatype=>Bool, :min=>false, :max=>true))
-			body = :( choosenumber($(rti.stateparam), $cpid, Bool, 0, 1, true) ? $res : "" )
+			body = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $cpid, Bool, 0, 1, true) ? $res : "" )
 			
 		elseif node.func in [:quantifier]
 		
@@ -386,11 +386,12 @@ function regexconstructmethods(node::RegexASTNode, rti)
 					if (cpmax == Inf)
 						cpmax = typemax(Int)
 					end
-					functocallexpr = Expr(:call, esc(node.children[1].methodname), rti.genparam, rti.stateparam)
-					cpid = recordchoicepoint(rti, SEQUENCE_CP, Dict{Symbol, Any}(:min=>min, :max=>cpmax))
-					upperboundexpr = Expr(:call, :choosereps, rti.stateparam, cpid, cpmin, cpmax, true)
+					functocallexpr = Expr(:call, node.children[1].methodname, rti.genparam, rti.stateparam)
+					cpid = recordchoicepoint(rti, SEQUENCE_CP, Dict{Symbol, Any}(:min=>cpmin, :max=>cpmax))
+					# upperboundexpr = Expr(:call, :choosereps, rti.stateparam, cpid, cpmin, cpmax, true)
+					upperboundexpr = :( $(THIS_MODULE).choosereps($(rti.stateparam), $(cpid), $(cpmin), $(cpmax), true) )
 	    else
-					functocallexpr = :( $(esc(node.children[1].methodname))($(rti.genparam), $(rti.stateparam)) )
+					functocallexpr = :( $(node.children[1].methodname)($(rti.genparam), $(rti.stateparam)) )
 					upperboundexpr = :( $(cpmax) )
 	    end
 
@@ -416,16 +417,16 @@ function regexconstructmethods(node::RegexASTNode, rti)
 				idxvar = gensym("idx")
 
 				cpid = recordchoicepoint(rti, VALUE_CP, Dict{Symbol, Any}(:datatype=>Int, :min=>0, :max=>cardinality-1))
-				stmt = :( $(esc(idxvar)) = choosenumber($(rti.stateparam), $cpid, Int, 0, $(cardinality-1), true) )
+				stmt = :( $(idxvar) = $(THIS_MODULE).choosenumber($(rti.stateparam), $cpid, Int, 0, $(cardinality-1), true) )
 				push!(stmts, stmt)
 
 				range = node.children[1].args[:value]
-				res = :( $(range[1]) + $(esc(idxvar)) )
+				res = :( $(range[1]) + $(idxvar) )
 				offset = length(range)
 				for i in 2:length(node.children)
 					range = node.children[i].args[:value]
-					resi = :( $(range[1]) + $(esc(idxvar)) - $offset )
-					res = :( ($(esc(idxvar)) >= $offset) ? ($resi) : ($res) )
+					resi = :( $(range[1]) + $(idxvar) - $offset )
+					res = :( ($(idxvar) >= $offset) ? ($resi) : ($res) )
 					offset += length(range)
 				end
 				stmt = :( string(convert(Char,$res)) )
@@ -441,7 +442,7 @@ function regexconstructmethods(node::RegexASTNode, rti)
 		
 		end
 		
-		method = Expr(:(=), Expr(:call, esc(node.methodname), rti.genarg, rti.statearg), body)			
+		method = Expr(:(=), Expr(:call, node.methodname, rti.genarg, rti.statearg), body)			
 		push!(methods, method)
 			
 	end

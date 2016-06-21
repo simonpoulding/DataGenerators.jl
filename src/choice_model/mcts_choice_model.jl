@@ -19,13 +19,14 @@
 #
 
 type MCTSNode
+	trace::Dict
 	totalreward::Real
 	maxreward::Real
 	visitcount::Int
 	samplecount::Int
 	childnodes::Dict{Real, MCTSNode}
-	function MCTSNode()
-		new(0.0, -Inf, 0, 0, Dict{Real,MCTSNode}())
+	function MCTSNode(trace::Dict)
+		new(trace, 0.0, -Inf, 0, 0, Dict{Real,MCTSNode}())
 	end
 end
 
@@ -46,8 +47,15 @@ type MCTSChoiceModel <: ChoiceModel
 	rootgodelsequence::Vector{Real} 				# defines the state of the current "root" node
 	rootnode::MCTSNode 								# current root node
 	function MCTSChoiceModel(policychoicemodel::ChoiceModel, rewardfunction::Function, visitbudget::Int=1, samplesize::Int=1, cp::Real=1/sqrt(2.0))
-		new(deepcopy(policychoicemodel), rewardfunction, visitbudget, samplesize, cp, (Real)[], MCTSNode())
+		new(deepcopy(policychoicemodel), rewardfunction, visitbudget, samplesize, cp, (Real)[], MCTSNode(Dict()))
 	end
+end
+
+# reset any state 
+function resetstate!(cm::MCTSChoiceModel)
+	resetstate!(cm.policychoicemodel)
+	cm.rootgodelsequence = (Real)[]
+	cm.rootnode = MCTSNode(Dict())
 end
 
 #DEBUG function godelsequenceasstring(godelsequence::Vector{Real})
@@ -191,7 +199,10 @@ function godelnumber(cm::MCTSChoiceModel, cc::ChoiceContext)
 					childnode = currentnode.childnodes[childgodelnumber]
 				else
 					#DEBUG println("first godel number is for new child node")
-					childnode = MCTSNode()
+					# get choice point trace info for the child godel number: this will be the trace
+					# info returned should this godel number be selected
+					cptrace = state.cmtrace[length(currentgodelsequence)+1] 
+					childnode = MCTSNode(cptrace[2]) # cptrace is tuple of cp id and trace info for the returned gn, so need the second element of the tuple
 					currentnode.childnodes[childgodelnumber] = childnode
 				end
 
@@ -245,6 +256,7 @@ function godelnumber(cm::MCTSChoiceModel, cc::ChoiceContext)
 	# return one of the 'best' godelnumbers
 	@assert length(bestgodelnumbers) >= 1
 	gn = bestgodelnumbers[rand(1:length(bestgodelnumbers))]
+	trace = cm.rootnode.childnodes[gn].trace
 
 	# the child with this godelnumber now becomes the root
 	cm.rootnode = cm.rootnode.childnodes[gn]
@@ -253,13 +265,14 @@ function godelnumber(cm::MCTSChoiceModel, cc::ChoiceContext)
 	#DEBUG println("bounds: $(cc.lowerbound) $(cc.upperbound)")
 	#DEBUG println("returning godelnumber: $(gn)")
 
-	gn, Dict()
+	gn, trace
 
 end
 
 setparams(cm::MCTSChoiceModel, params) = setparams(cm.policychoicemodel, params)
 getparams(cm::MCTSChoiceModel) = getparams(cm.policychoicemodel)
 paramranges(cm::MCTSChoiceModel) = paramranges(cm.policychoicemodel)
+
 
 
 type MCTSSimulationChoiceModel <: ChoiceModel
@@ -275,3 +288,9 @@ function godelnumber(cm::MCTSSimulationChoiceModel, cc::ChoiceContext)
 	end
 	gn, trace
 end
+
+# reset any state 
+function resetstate!(cm::MCTSSimulationChoiceModel)
+	resetstate!(cm.policychoicemodel)
+end
+

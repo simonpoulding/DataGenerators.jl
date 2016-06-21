@@ -14,6 +14,7 @@ export paramranges, setparams, getparams, numparams, estimateparams, estimatecon
 
 using Distributions
 
+const THIS_MODULE = current_module() # used when creating calls to this module in the macro
 
 # generation and associated functions
 include(joinpath("generation","generation.jl"))

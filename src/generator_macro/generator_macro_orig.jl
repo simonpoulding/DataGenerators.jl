@@ -14,19 +14,6 @@ export @generator
 #		end
 # end
 #
-# note: we generally want to avoid the standard hygiene changes performed by the macro expander
-# as the rule code should execute in the context in which the macro is called.  However, code added
-# to handle the constructs (such as choice points) should operate in the context of the GodelTest
-# module.
-# The ideal approach would be to apply hygiene to GodelTest code, and then escape any user-defined rule code.  However
-# since GodelTest code is mixed very closely in AST with user code (for instance when a GT construct appears in 
-# argument values passed to a function), this difficult to achieve correctly. For example, escaping all nodes
-# apart from those that are GT construct will work in most cases, but fails if the user defines an anonymous
-# function such i->... (e.g. in a call to map(..., )) as the escaped variable gives rise to an error (invalid
-# assignment target)
-#
-# 
-# 
 macro generator(gensig, genbody)
 	
 	# macro is passed:
@@ -54,7 +41,7 @@ macro generator(gensig, genbody)
 	
 	typeblock = constructtype(genname, subgenargs, metadata, ruletransforminfo)
 
-	esc(mergeexprs(typeblock, rulesblock))
+	mergeexprs(typeblock, rulesblock)
 	
 end
 
@@ -156,10 +143,10 @@ type RuleTransformInfo
 	statearg::Expr
 	function RuleTransformInfo(genname, subgenargs, rules, rulefunctionnames)
 		choicepointoffset = rand63bitint() # all choice points numbers will come in sequence after this number
-		genparam = gensym(:g)
-		stateparam = gensym(:s)
-		genarg = :( $(genparam)::$(genname) )
-		statearg = :( $(stateparam)::$(THIS_MODULE).DerivationState )
+		genparam = :g
+		stateparam = :s
+		genarg = Expr(:(::), genparam, esc(genname))
+		statearg = Expr(:(::), stateparam, :DefaultDerivationState)
 		new(choicepointoffset, 0, Dict{Int, Dict{Symbol, Any}}(), genname, subgenargs, rules, rulefunctionnames, genparam, genarg, stateparam, statearg)
 	end
 end
@@ -200,7 +187,7 @@ function transformrules(genname, subgenargs, rules)
 			
 			# rewrite rule -- regardless of the original form -- as a short form function
 			rewrittenargs = [rti.genarg; rti.statearg; rulemethod.args]
-			push!(ruleexprs, Expr(:(=), Expr(:call, rulemethod.functionname, rewrittenargs...), transformedbody))
+			push!(ruleexprs, Expr(:(=), Expr(:call, esc(rulemethod.functionname), rewrittenargs...), transformedbody))
 			
 		end
 		
@@ -242,13 +229,13 @@ function constructumbrellamethod(rulename, rulemethods, rti::RuleTransformInfo)
 			rulemethods[idx].functionname = uniquerulename(rulename)
 
 			# call method with new name
-			callexpr = Expr(:call, rulemethods[idx].functionname, rewrittenparams...)
+			callexpr = Expr(:call, esc(rulemethods[idx].functionname), rewrittenparams...)
 		
 			# build conditional expr
 			if condexpr == nothing
 				condexpr = callexpr
 			else
-				condexpr = :( ($(chosenidxvar) == $(idx)) ? $(callexpr) : ($condexpr) )
+				condexpr = :( ($(esc(chosenidxvar)) == $(idx)) ? $(callexpr) : ($condexpr) )
 			end
 
 		end
@@ -256,7 +243,7 @@ function constructumbrellamethod(rulename, rulemethods, rti::RuleTransformInfo)
 		cpinfo = Dict{Symbol,Any}(:rulename => rulename, :min => 1, :max => length(rulemethods))
 		cpid = recordchoicepoint(rti, RULE_CP, cpinfo)
 
-		rulebody = Expr(:block, :( $(chosenidxvar) = $(THIS_MODULE).chooserule($(rti.stateparam), $(cpid), $(length(rulemethods))) ), condexpr)
+		rulebody = Expr(:block, :( $(esc(chosenidxvar)) = chooserule($(rti.stateparam), $(cpid), $(length(rulemethods))) ), condexpr)
 		
 	else
 		
@@ -265,7 +252,7 @@ function constructumbrellamethod(rulename, rulemethods, rti::RuleTransformInfo)
 		# create unique name for original rule method
 		rulemethods[1].functionname = uniquerulename(rulename)
 		
-		callexpr = Expr(:call, rulemethods[1].functionname, rewrittenparams...)
+		callexpr = Expr(:call, esc(rulemethods[1].functionname), rewrittenparams...)
 		
 		rulebody = Expr(:block, callexpr)
 		
@@ -286,18 +273,19 @@ function constructumbrellamethod(rulename, rulemethods, rti::RuleTransformInfo)
 	resultvar = gensym("result")
 	rulenameexpr = QuoteNode(rti.rulefunctionnames[rulename])
 	wrappedrulebody = Expr(:block,
-		:( $(THIS_MODULE).recordstartofrule($(rti.stateparam), $(rulenameexpr)) ),
-		:( $(resultvar) = $(rulebody) ), 
-		:( $(THIS_MODULE).recordendofrule($(rti.stateparam)) ),
-		:( $(resultvar) )
+		:( recordstartofrule($(rti.stateparam), $(rulenameexpr)) ),
+		:( $(esc(resultvar)) = $(rulebody) ), 
+		:( recordendofrule($(rti.stateparam)) ),
+		:( $(esc(resultvar)) )
 	)
-	Expr(:(=), Expr(:call, rti.rulefunctionnames[rulename], rewrittenargs...), wrappedrulebody)
+	Expr(:(=), Expr(:call, esc(rti.rulefunctionnames[rulename]), rewrittenargs...), wrappedrulebody)
 	
 end
 
 
 #
 # identify and transform GT-specific constructs
+# in addition, escape non-GT function so that rest of the rule code uses the current module scope rather than GodelTest
 #
 function transformconstructs(node, rti::RuleTransformInfo)
 	
@@ -325,7 +313,7 @@ function transformconstructs(node, rti::RuleTransformInfo)
 	end
 	
 	# esc'ing the node ensures that it runs in the scope of the current module not the GodelTest module
-	return node
+	return esc(node)
 
 end
 
@@ -402,7 +390,7 @@ function transformsequencechoicepoint(construct, params, rti::RuleTransformInfo)
 
 	cpid = recordchoicepoint(rti, SEQUENCE_CP, cpinfo)
 	idxvar = gensym("idx")
-	:( [ $(functocallexpr) for $(idxvar) in 1:($(THIS_MODULE).choosereps($(rti.stateparam), $(cpid), $(minreps), $(maxreps), $(rangeisliteral))) ] )
+	:( [ $(functocallexpr) for $(esc(idxvar)) in 1:(choosereps($(rti.stateparam), $(cpid), $(minreps), $(maxreps), $(rangeisliteral))) ] )
 end
 
 
@@ -417,117 +405,102 @@ end
 function transformvaluechoicepoint(construct, params, rti::RuleTransformInfo)
 
 	if (length(params) < 1) || (typeof(params[1]) != Symbol)
-		error("first parameter to choose($(params[1]),...) must be a literal data type or a sub-generator")
+		error("first parameter to choose($(params[1]),...) must be a literal data type")
 	end
 
-	if params[1] in rti.subgenargs
-		# choose of sub-generator
+	datatype = eval(params[1]) # TODO could eval perform side-effects here? should be OK since we know it is a symbol
+	if (typeof(datatype) != DataType) || !isleaftype(datatype)
+		error("first parameter to choose($(params[1]),...) must be a concrete data type")
+	end
+
+	if datatype <: Bool
+
+		# follows same pattern as other 'numeric' types, which is possible since 0~false 1~true
+		# we don't allow any possibility to restrict this range
 
 		if length(params) > 1
-			error("choose($(params[1])) must have no further parameters")
+			error("choose($(datatype)) must have no further parameter")
 		end
 
-		i = findfirst(rti.subgenargs, params[1])
+		minval = false
+		maxval = true
+		rangeisliteral = true
+		cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
+		cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
+		chooseexpr = :( choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
+		# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
 
-		chooseexpr = :( $(THIS_MODULE).subgen($(rti.genparam), $(rti.stateparam), $(i)) )
+	elseif datatype <: Char
+
+		# not currently supported
+		# one issue is that returning valid (Unicode) chars is not straightforward - the domain is not easily defined: for example typemin / typemax
+		# is not defined for the Char type
+		error("choose($(datatype),...) is not currently supported")
+
+	elseif datatype <: Real
+		# note Char <: Real, and so is excluded above
+
+		# here parameters can be used to define a range of possible values
+		# this can either be done via literals or expression - in the former case, the literal values are recorded and passed to the choice model
+		# since knowing the bound(s) of the valid range can enable a better model than one that must potentially varying ranges
+
+		if length(params) > 3
+			error("choose($(datatype),...) must have at most two further parameters")
+		end
+
+		if length(params) >= 2
+			minval, minisliteral = processpossiblyliteralparam(params[2], datatype, rti)
+		else
+			minval, minisliteral = typemin(datatype), true
+		end
+
+		if length(params) >= 3
+			maxval, maxisliteral = processpossiblyliteralparam(params[3], datatype, rti)
+		else
+			maxval, maxisliteral = typemax(datatype), true
+		end
+
+		cpinfo = Dict{Symbol,Any}(:datatype=>datatype)
+
+		# record literal values in choice point info as an indicator to choice model that limit on range will not change
+		if minisliteral
+			cpinfo[:min] = minval
+		end
+		if maxisliteral
+			cpinfo[:max] = maxval
+		end
+
+		# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
+		rangeisliteral = minisliteral && maxisliteral
+
+		cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
+		chooseexpr = :( choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
+		# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
+
+	elseif datatype <: AbstractString
+		# TODO it may be a bit ambitious to allow all concrete string subtypes, but let's see ;-)
+
+		# string data types are handled differently from numeric ones: instead of a call to choosenumber,
+		# a block of statementsis constructed to build strings that comply with the reguler expression
+		# within the block, multiple choice points are likely to be used
+
+		if length(params) > 2
+			error("choose($(datatype),...) must have at most one further parameter")
+		end
+
+		regex = "" # interpreted as wildcard
+		if length(params) >= 2
+			if !(typeof(regex) <: AbstractString)
+				error("regex in choose($(datatype),...) must be a literal string")
+			end
+			regex = params[2]
+		end
+
+		chooseexpr = transformchoosestring(regex, datatype, rti)
 
 	else
 
-		datatype = eval(params[1]) # TODO could eval perform side-effects here? should be OK since we know it is a symbol
-		if (typeof(datatype) != DataType) || !isleaftype(datatype)
-			error("first parameter to choose($(params[1]),...) must be a concrete data type or a sub-generator")
-		end
-
-		if datatype <: Bool
-
-			# follows same pattern as other 'numeric' types, which is possible since 0~false 1~true
-			# we don't allow any possibility to restrict this range
-
-			if length(params) > 1
-				error("choose($(datatype)) must have no further parameters")
-			end
-
-			minval = false
-			maxval = true
-			rangeisliteral = true
-			cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
-			cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
-			chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-			# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
-
-		elseif datatype <: Char
-
-			# not currently supported
-			# one issue is that returning valid (Unicode) chars is not straightforward - the domain is not easily defined: for example typemin / typemax
-			# is not defined for the Char type
-			error("choose($(datatype),...) is not currently supported")
-
-		elseif datatype <: Real
-			# note Char <: Real, and so is excluded above
-
-			# here parameters can be used to define a range of possible values
-			# this can either be done via literals or expression - in the former case, the literal values are recorded and passed to the choice model
-			# since knowing the bound(s) of the valid range can enable a better model than one that must potentially varying ranges
-
-			if length(params) > 3
-				error("choose($(datatype),...) must have at most two further parameters")
-			end
-
-			if length(params) >= 2
-				minval, minisliteral = processpossiblyliteralparam(params[2], datatype, rti)
-			else
-				minval, minisliteral = typemin(datatype), true
-			end
-
-			if length(params) >= 3
-				maxval, maxisliteral = processpossiblyliteralparam(params[3], datatype, rti)
-			else
-				maxval, maxisliteral = typemax(datatype), true
-			end
-
-			cpinfo = Dict{Symbol,Any}(:datatype=>datatype)
-
-			# record literal values in choice point info as an indicator to choice model that limit on range will not change
-			if minisliteral
-				cpinfo[:min] = minval
-			end
-			if maxisliteral
-				cpinfo[:max] = maxval
-			end
-
-			# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
-			rangeisliteral = minisliteral && maxisliteral
-
-			cpid = recordchoicepoint(rti, VALUE_CP, cpinfo)
-			chooseexpr = :( $(THIS_MODULE).choosenumber($(rti.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-			# choosenumber is not esc'ed so will be transformed to GodelTest.choosenumber by macro hygiene
-
-		elseif datatype <: AbstractString
-			# TODO it may be a bit ambitious to allow all concrete string subtypes, but let's see ;-)
-
-			# string data types are handled differently from numeric ones: instead of a call to choosenumber,
-			# a block of statementsis constructed to build strings that comply with the reguler expression
-			# within the block, multiple choice points are likely to be used
-
-			if length(params) > 2
-				error("choose($(datatype),...) must have at most one further parameter")
-			end
-
-			regex = "" # interpreted as wildcard
-			if length(params) >= 2
-				if !(typeof(regex) <: AbstractString)
-					error("regex in choose($(datatype),...) must be a literal string")
-				end
-				regex = params[2]
-			end
-
-			chooseexpr = transformchoosestring(regex, datatype, rti)
-
-		else
-
-			error("choose($(datatype),...) is not supported")
-
-		end
+		error("choose($(datatype),...) is not supported")
 
 	end
 
@@ -540,7 +513,7 @@ end
 #   rule(g, s, ...)
 function transformrulecall(rulename, ruleparams, rti::RuleTransformInfo)
 	rewrittenparams = [rti.genparam; rti.stateparam; ruleparams]
-	Expr(:call, rti.rulefunctionnames[rulename], rewrittenparams...)
+	Expr(:call, esc(rti.rulefunctionnames[rulename]), rewrittenparams...)
 	# rule is esc'ed so that it is interpreted in context of current module and not GodelTest
 end
 
@@ -550,16 +523,12 @@ end
 # where i it the index of the sub-generators in the arguments
 #   
 function transformsubgencall(subgenname, subgenparams, rti::RuleTransformInfo)
-
-	# Now deprecated
-	warn("Direct calls to sub-generators are deprecated; please use: choose(<subgenname>)")
 	i = findfirst(rti.subgenargs, subgenname)
 	if length(subgenparams) != 0
 		# TODO
 	end
-	# Expr(:call, :subgen, rti.genparam, rti.stateparam, i)
-	:( $(THIS_MODULE)..subgen($(rti.genparam), $(rti.stateparam), $(i)) )
-
+	Expr(:call, :subgen, rti.genparam, rti.stateparam, i)
+	# :subgen is not esc'ed so that it is interpreted in context of GodelTest and not current module
 end
 
 
@@ -578,33 +547,28 @@ function constructtype(genname, subgenargs, metaInfo, rti::RuleTransformInfo)
 	# it would be possible to derive the owning module from the fully specified type of the generator,
 	# but there is currently no built-in Julia function to do this cleanly; instead we would need to 
 	# perform some custom string-manipulation on the type name, and this wouldn't be very robust (e.g.
-	# may not survive type-aliasing etc.)
-
-	# Further note: Module is stored as a symbol in the type since deepcopy does not support fields of type Module,
-	# and to recreate the Module type, we also need its parent
-	
-
+	# may not survive type-aliasing etc.)	
 	quote
-		type $(genname) <: $(THIS_MODULE).Generator
+		type $(esc(genname)) <: Generator
 			meta::Dict{Symbol, Any}
+			statetype
 			choicepointinfo::Dict{UInt, Dict{Symbol, Any}}
 			rulefunctionnames::Dict{Symbol,Symbol}
-			subgens::Vector{$(THIS_MODULE).Generator}
-			evalfn::Function
+			subgens::Vector{Generator}
+			owningmodule::Module
 
-			function $(genname)(subgens::Vector = [])
+			function $(esc(genname))(subgens::Vector = [])
 				if length(subgens) != $(length(rti.subgenargs))
 					error("Incorrect number of sub generators $(length(subgens))")
 				end
 
-				if !all([typeof(sg) <: $(THIS_MODULE).Generator for sg in subgens])
-					error("Not all subgenerators are of type $(THIS_MODULE).Generator $(subgens)")
+				if !all([typeof(sg) <: Generator for sg in subgens])
+					error("Not all subgenerators are of type GodelTest.Generator $(subgens)")
 				end
-				new($metaInfo, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens,
-				 ex->eval($(current_module()),ex))
+				new($metaInfo, DefaultDerivationState, $(rti.choicepointinfo), $(rti.rulefunctionnames), subgens, $(current_module()))
 			end
 
-			$(genname)(subgens...) = $(genname)(collect(subgens))
+			$(esc(genname))(subgens...) = $(esc(genname))(collect(subgens))
 		end
 	end
 	
@@ -753,10 +717,10 @@ function extractparamfromarg(argexpr)
 	if typeof(argexpr) == Symbol
 		return argexpr
 	end
-	if typeof(argexpr) == Expr
+	if (typeof(argexpr) == Expr)
 		filteredargs = removelinenodes(argexpr.args)
 		if (argexpr.head == :(::)) && (length(filteredargs) == 2)
-			return extractparamfromarg(filteredargs[1])
+			extractparamfromarg(filteredargs[1])
 		end
 	end
 	if (argexpr.head == :kw) && (length(filteredargs) == 2) # :kw indicates parameter defaulting

@@ -16,16 +16,6 @@ const MAX_CHOICES_DEFAULT = 10017
 const MAX_SEQ_REPS_DEFAULT = 4868
 
 
-#
-# Abstract interface to all Generator sub-types. Override for specific behavior.
-#
-statetype(g::Generator) = g.statetype
-
-subgenerator(g::Generator, index::Integer) = g.subgens[index]
-
-# Return the meta information associated with a generator.
-meta(g::Generator) = g.meta
-
 # Return the choice point info associated with a generator. This includes both the choicepointinfo for
 # the generator itself plus any subgenerators
 function choicepointinfo(g::Generator)
@@ -93,6 +83,16 @@ type DefaultDerivationState <: DerivationState
 end
 
 #
+# Abstract interface to all Generator sub-types. Override for specific behavior.
+#
+statetype(g::Generator) = DefaultDerivationState
+
+subgenerator(g::Generator, index::Integer) = g.subgens[index]
+
+# Return the meta information associated with a generator.
+meta(g::Generator) = g.meta
+
+#
 # Operations on derivation state related to record rule execution trees and stacks
 # 
 # recordstartofrulemethod and recordendofrulemethod are written into rule methods by generator macro
@@ -138,6 +138,9 @@ end
 # in the generator) - this is achieved by having a single "umbrella" method which decides which of the rules with the same name to call
 getcurrentrulename(s::DerivationState) = s.rulenamestack[end]
 
+# the "depth" at the current rule (including the rule itself)
+getruledepth(s::DerivationState) = length(s.rulenamestack)
+
 # the recursion depth of a given rule (in terms of its immediate ancestor rules with the same name)
 getrecursiondepth(s::DerivationState, rulename::Symbol) = count(r->r==rulename, s.rulenamestack)
 
@@ -178,11 +181,15 @@ end
 
 # Generate an object from the generator using the startrule as entry point. 
 # Uses the default choice model and creates a new state object unless one is given.
-function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), startrule = :start, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
-	state = (state == nothing) ? newstate(g, choicemodel, maxchoices, maxseqreps) : state	
+function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, startrule = :start, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
+	state = (state == nothing) ? newstate(g, choicemodel, maxchoices, maxseqreps) : state
+	if resetchoicemodelstate
+		resetstate!(choicemodel)
+	end
 	startfunc = functionforrulenamed(g, startrule)
-	# important: we evaluate in the current module since this (rather than GodelTest) will be where rule functions are defined
-	result = eval(current_module(), Expr(:call, startfunc, g, state))
+	# important: we evaluate in the module that owns the type and since this (rather than GodelTest) will be where rule functions are defined
+	# the correct eval function is set in the generator on creation
+	result = g.evalfn(Expr(:call, startfunc, g, state))
 	return (result, state)
 end
 
@@ -190,16 +197,16 @@ end
 # Derived helper/convenience functions based on the core...
 #
 
-gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
-		first(generate(g; state = state, choicemodel = choicemodel, maxchoices = maxchoices, maxseqreps = maxseqreps))
+gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
+		first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
 
 many(g, num = int(floor(rand() * 10))) = [gen(g) for i in 1:num]
 
 # call generator and handle termination exception
 # if termination occurs, return nothing as the object
-function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
+function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
 	try
-		return first(generate(g; state = state, choicemodel = choicemodel, maxchoices = maxchoices, maxseqreps = maxseqreps))
+		return first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
 	catch e
 		if isa(e, GenerationTerminatedException)
 			return nothing

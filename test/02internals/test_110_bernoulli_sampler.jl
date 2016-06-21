@@ -2,6 +2,8 @@ include("sampler_test_utils.jl")
 
 @testset "Bernoulli Sampler" begin
 
+cc = dummyChoiceContext()
+
 @testset "default construction" begin
 		
     s = GodelTest.BernoulliSampler()
@@ -19,7 +21,7 @@ include("sampler_test_utils.jl")
     end
 
     @testset repeats=NumReps "default sampling" begin
-        x, trace = GodelTest.sample(s, (0,1))
+        x, trace = GodelTest.sample(s, (0,1), cc)
         @test typeof(x) <: Int
         @mcheck_values_are x [0,1]
     end
@@ -89,7 +91,7 @@ end
         s1 = GodelTest.BernoulliSampler(params)
         s2 = GodelTest.BernoulliSampler(otherparams)	
         traces = map(1:100) do i
-            x, trace = GodelTest.sample(s1, (0,1))
+            x, trace = GodelTest.sample(s1, (0,1), cc)
             trace
         end
         estimateparams(s2, traces)
@@ -101,7 +103,7 @@ end
         s1 = GodelTest.BernoulliSampler(params)
         s2 = GodelTest.BernoulliSampler(otherparams)	
         traces = map(1:100) do i
-            x, trace = GodelTest.sample(s1, (0,1))
+            x, trace = GodelTest.sample(s1, (0,1), cc)
             trace
         end
         estimateparams(s2, traces)
@@ -114,7 +116,7 @@ end
         s1 = GodelTest.BernoulliSampler(params)
         s2 = GodelTest.BernoulliSampler(otherparams)	
         traces = map(1:100) do i
-            x, trace = GodelTest.sample(s1, (0,1))
+            x, trace = GodelTest.sample(s1, (0,1), cc)
             trace
         end
         estimateparams(s2, traces)
@@ -126,7 +128,7 @@ end
         s1 = GodelTest.BernoulliSampler(params)
         s2 = GodelTest.BernoulliSampler(otherparams)	
         traces = map(1:0) do i
-            x, trace = GodelTest.sample(s1, (0,1))
+            x, trace = GodelTest.sample(s1, (0,1), cc)
             trace
         end
         @test isconsistentbernoulli(s2, otherparams)

@@ -31,3 +31,5 @@ function setparams(s::ConstrainParametersSampler, params)
 	checkparamranges(s, params)
 	setparams(s.subsampler, params)
 end
+
+minimumsupport(s::ConstrainParametersSampler) = minimumsupport(s.subsampler)

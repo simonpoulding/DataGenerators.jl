@@ -6,13 +6,9 @@ abstract ContinuousDistributionSampler <: DistributionSampler
 paramranges(s::DistributionSampler) = copy(s.paramranges)
 
 function sample(s::DistributionSampler, support, cc::ChoiceContext)
-	sample(s, support) # Fallback when we do not care about context...
-end
-
-function sample(s::DistributionSampler, support)
-	x = rand(s.distribution)
- 	# we return both the sampled value, and a dict as trace information
-	x, Dict{Symbol,Any}(:rnd=>x)
+ x = rand(s.distribution)
+ # we return both the sampled value, and a dict as trace information
+ x, Dict{Symbol,Any}(:rnd=>x)
 end
 
 function extractsamplesfromtraces(s::DistributionSampler, traces)
@@ -44,3 +40,5 @@ function show(io::IO, s::DistributionSampler, indentdepth::Int=1)
 	# since this sampler will be a 'leaf' in the sampler tree, can finish with a new line
 	println(io, getsamplertypename(s) * " $(getparams(s))")
 end
+
+minimumsupport(s::DistributionSampler) = minimum(s.distribution)

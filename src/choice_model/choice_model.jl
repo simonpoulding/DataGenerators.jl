@@ -6,6 +6,10 @@
 
 numparams(cm::ChoiceModel) = length(paramranges(cm::ChoiceModel))
 
+# reset any internal state of the choice model
+resetstate!(cm::ChoiceModel) = nothing
+
+
 # setparams(cm::ChoiceModel, params) = nothing
 
 # getparams(cm::ChoiceModel) = (Float64)[]
