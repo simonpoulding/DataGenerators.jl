@@ -220,6 +220,14 @@ end
 choose(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
 		first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
 
+function choose(gt::DataType; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT)
+	if !(super(gt) == Generator)
+		error("choose(::DataType) is currently supported outside of generator code only when the datatype is a generator type")
+	end
+	g = gt()
+	first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
+end
+
 # call generator and handle termination exception
 # if termination occurs, return nothing as the object
 function robustchoose(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
