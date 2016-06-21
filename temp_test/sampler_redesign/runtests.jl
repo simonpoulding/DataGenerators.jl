@@ -1,5 +1,0 @@
-include("test_conditional_sampler.jl")
-include("test_poisson_sampler.jl")
-include("test_recursion_depth_sampler.jl")
-include("test_estimate_conditional_model.jl")
-include("test_restrict_to_ancestors.jl")

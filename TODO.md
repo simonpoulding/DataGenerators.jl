@@ -1,1 +1,0 @@
-* Create separate test scripts for each Sampler. Can partly be moved from test_030_sampler_choice_model.jl but we have separate scripts for mixture, gaussian and categorical but not for the others.
