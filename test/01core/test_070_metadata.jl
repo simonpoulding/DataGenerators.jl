@@ -15,7 +15,7 @@ gn = MDGeneratesGen()
 end
 	
 @testset "generator returns an integer between 1 and 6" begin
-    td = gen(gn)
+    td = choose(gn)
     @test 1 <= td <= 6		
 end
 	

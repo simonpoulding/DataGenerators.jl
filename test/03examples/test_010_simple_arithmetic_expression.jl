@@ -17,7 +17,7 @@ end
 gn = EXSimpleExprGen()
 
 @testset repeats=NumReps "emits a valid simple expression as a string" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: AbstractString
     @test ismatch(r"^-?[0-9]+ [+\-/*] -?[0-9]+$", td)
     @mcheck_values_vary td

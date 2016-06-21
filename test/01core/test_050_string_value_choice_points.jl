@@ -9,7 +9,7 @@ end
 gn = SCWildcardGen()
 
 @testset repeats=NumReps "emits different ASCII strings that match regex" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^.$", td)
     @mcheck_values_vary td
@@ -27,7 +27,7 @@ end
 gn = SCQuantifiersGen()
 
 @testset repeats=NumReps "emits different ASCII strings that match regex" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^a?b+c*d{4}e{5,6}f{7,}g{8,8}$", td)
     @mcheck_values_include count(x->x=='a',td) [0,1]
@@ -51,7 +51,7 @@ end
 gn = SCAlternationGen()
 
 @testset repeats=NumReps "emits different ASCII strings that match regex" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^foo|bar|baz$", td)
     @mcheck_values_are td ["foo","bar","baz"]
@@ -69,7 +69,7 @@ end
 gn = SCBracketsGen()
 
 @testset repeats=NumReps "emits different ASCII strings that match regex" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^a[uvw][x-z0-3]b$", td)
     @mcheck_values_are td[2] ['u','v','w']
@@ -88,7 +88,7 @@ end
 gn = SCParenthesesGen()
 
 @testset repeats=NumReps "emits different ASCII strings that match regex" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^a(bc+|de+)$", td)
     @mcheck_values_are td[2] ['b','d']
@@ -107,7 +107,7 @@ end
 gn = SCClassesGen()
 
 @testset repeats=NumReps "emits different ASCII strings that match regex" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^\s\S\d\D\w\W$", td)
     @mcheck_values_vary td
@@ -124,7 +124,7 @@ end
 gn = SCEscapesGen()
 
 @testset repeats=NumReps "emits different ASCII strings that match regex" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^\.\[\]\|\?\+\*\\$", td)
 end

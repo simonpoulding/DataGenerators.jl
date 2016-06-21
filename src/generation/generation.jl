@@ -197,14 +197,15 @@ end
 # Derived helper/convenience functions based on the core...
 #
 
-gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
-		first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
-
-many(g, num = int(floor(rand() * 10))) = [gen(g) for i in 1:num]
+function gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT)
+	warn("gen() is deprecated: use choose() instead")
+	first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
+end
 
 # call generator and handle termination exception
 # if termination occurs, return nothing as the object
 function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
+	warn("robustgen() is deprecated: use robustchoose() instead")
 	try
 		return first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
 	catch e
@@ -215,6 +216,26 @@ function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceMod
 		end
 	end
 end
+
+choose(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
+		first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
+
+# call generator and handle termination exception
+# if termination occurs, return nothing as the object
+function robustchoose(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
+	try
+		return first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
+	catch e
+		if isa(e, GenerationTerminatedException)
+			return nothing
+		else
+			throw(e) # rethrow other types of error
+		end
+	end
+end
+
+many(g, num = int(floor(rand() * 10))) = [choose(g) for i in 1:num]
+
 
 
 #
@@ -325,7 +346,7 @@ end
 
 
 # Generate data from the subgenerator with given index.
-subgen(g::Generator, s::DerivationState, index::Integer) = gen(subgenerator(g, index); state = s)
+subgen(g::Generator, s::DerivationState, index::Integer) = choose(subgenerator(g, index); state = s)
 
 
 #

@@ -20,7 +20,7 @@ end
 gn = GMShortGen()
 	
 @testset "emits pair of different symbols" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == Tuple{Symbol,Symbol}
     @test td[1] != td[2]
 end
@@ -40,7 +40,7 @@ end
 gn = GMShortBlockGen()
 	
 @testset "emits pair of different symbols" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == Tuple{Symbol,Symbol}
     @test td[1] != td[2]
 end
@@ -60,7 +60,7 @@ end
 gn = GMLongGen()
 	
 @testset "emits pair of different symbols" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == Tuple{Symbol,Symbol}
     @test td[1] != td[2]
 end
@@ -78,7 +78,7 @@ end
 gn = GMShortNoParenGen()
 	
 @testset "emits pair of different symbols" begin
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) == Tuple{Symbol,Symbol}
     @test td[1] != td[2]
 end
@@ -100,7 +100,7 @@ end
 gn = GMCallNoParenGen()
 	
 @testset "all three rules are called" begin
-    td = gen(gn)
+    td = choose(gn)
     @test td == ('a','b','c')
 end
 	
@@ -119,7 +119,7 @@ end
 gn = GMLiteralParamGen()
 	
 @testset "parameters are passed correctly" begin
-    td = gen(gn)
+    td = choose(gn)
     @test td == (6,2)
 end
 	
@@ -142,7 +142,7 @@ end
 gn = GMNonLiteralParamGen()
 	
 @testset "parameters are passed correctly" begin
-    td = gen(gn)
+    td = choose(gn)
     @test td == (10,4)
 end
 	
@@ -165,7 +165,7 @@ end
 gn = GMBlockGen()
 	
 @testset "rules identified inside a block" begin
-    td = gen(gn)
+    td = choose(gn)
     @test td == 42
 end
 	

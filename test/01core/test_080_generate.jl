@@ -39,12 +39,12 @@ end
 gn = GNChoiceModelGen()
 	
 @testset repeats=NumReps "default choice model" begin
-    td = gen(gn)
+    td = choose(gn)
     @mcheck_values_include length(td) [1,2,3]	
 end
 
 @testset repeats=NumReps "non-default choice model" begin
-    td = gen(gn, choicemodel=GNMinimumValueChoiceModel())
+    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
     @mcheck_values_are length(td) [1,]	
 end
 	
@@ -65,12 +65,12 @@ ign = GNIntGen()
 gn = GNMainGen(ign)
 	
 @testset repeats=NumReps "default choice model" begin
-    td = gen(gn)
+    td = choose(gn)
     @mcheck_values_include first(td) [5,6,7]	
 end
 
 @testset repeats=NumReps "non-default choice model" begin
-    td = gen(gn, choicemodel=GNMinimumValueChoiceModel())
+    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
     @mcheck_values_are first(td) [5,]	
 end
 	
@@ -95,7 +95,7 @@ infgn = GNInfRecursionGen()
 @testset "infinite recursion throws GenerationTerminatedException" begin	
     exc = nothing
     try
-        td = gen(infgn)
+        td = choose(infgn)
     catch e
         if isa(e,GenerationTerminatedException)
             exc = e
@@ -116,7 +116,7 @@ c100gn = GN100ChoicesGen()
 @testset "number of choices <= maxchoices parameter to generator" begin	
     exc = nothing
     try
-        td = gen(c100gn, maxchoices = 99)
+        td = choose(c100gn, maxchoices = 99)
     catch e
         if isa(e,GenerationTerminatedException)
             exc = e
@@ -131,7 +131,7 @@ end
 @testset "number of choices > maxchoices parameter to generator" begin	
     exc = nothing
     try
-        td = gen(c100gn, maxchoices = 100)
+        td = choose(c100gn, maxchoices = 100)
     catch e
         if isa(e,GenerationTerminatedException)
             exc = e
@@ -144,11 +144,11 @@ end
 end
 
 @testset "robustgen with number of choices <= maxchoices parameter to generator" begin	
-    @test robustgen(c100gn, maxchoices = 99) == nothing
+    @test robustchoose(c100gn, maxchoices = 99) == nothing
 end
 
 @testset "robustgen with number of choices > maxchoices parameter to generator" begin	
-    @test robustgen(c100gn, maxchoices = 100) != nothing
+    @test robustchoose(c100gn, maxchoices = 100) != nothing
 end
 	
 end
@@ -176,7 +176,7 @@ setparams(scm, [0.000001])
     exc = nothing
     td = nothing
     try
-        td = gen(gn, choicemodel = scm)
+        td = choose(gn, choicemodel = scm)
     catch e
         if isa(e,GenerationTerminatedException)
             exc = e
@@ -197,7 +197,7 @@ end
     exc = nothing
     td = nothing
     try
-        td = gen(gn, choicemodel = scm, maxseqreps = 87)
+        td = choose(gn, choicemodel = scm, maxseqreps = 87)
     catch e
         if isa(e,GenerationTerminatedException)
             exc = e

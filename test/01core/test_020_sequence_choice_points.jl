@@ -14,7 +14,7 @@ end
 gn = SCRepsGen()
 
 @testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
@@ -35,7 +35,7 @@ end
 gn = SCRepsNoMaxGen()
 
 @testset "returns array of 'a's with different lengths of minimum or more" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 2 <= length(td)
     @test all(td .== 'a')
@@ -55,7 +55,7 @@ end
 gn = SCRepsNoMinGen()
 
 @testset "returns array of 'a's with different lengths of 0 or more" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 0 <= length(td)
     @test all(td .== 'a')
@@ -75,7 +75,7 @@ end
 gn = SCRepsNonLiteralMinMaxGen()
 
 @testset "returns array of 'a's with different lengths between minimum and maximum" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 4 <= length(td) <= 6
     @test all(td .== 'a')
@@ -96,7 +96,7 @@ end
 gn = SCRepsRuleNonLiteralMinMaxGen()
 
 @testset "returns array of 'a's with different lengths between minimum and maximum" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 4 <= length(td) <= 6
     @test all(td .== 'a')
@@ -115,7 +115,7 @@ end
 gn = SCRepsShortFormParenGen()
 
 @testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
@@ -140,7 +140,7 @@ end
 gn = SCRepsRuleParamGen()
 
 @testset "returns array of different tuples which use parameter values, with different lengths between minimum and maximum" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 2 <= length(td) <= 4
     td1 = map(x->x[1],td)
@@ -163,7 +163,7 @@ end
 gn = SCRepsNonRuleGen()
 
 @testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
@@ -188,7 +188,7 @@ sg = SCSubGen()
 gn = SCRepsSubGenGen(sg)
 
 @testset "returns array of different symbols with different lengths between minimum and maximum" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 2 <= length(td) <= 4
     @test all(map(x->typeof(x),td) .== Symbol)
@@ -212,7 +212,7 @@ end
 gn = SCMultGen()
 
 @testset "returns array of 'a's with different lengths of 0 or more" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 0 <= length(td)
     @test all(td .== 'a')
@@ -238,7 +238,7 @@ end
 gn = SCPlusGen()
 
 @testset "returns array of 'a's with different lengths of 1 or more" for i in 1:NumReps 
-    td = gen(gn)
+    td = choose(gn)
     @test typeof(td) <: Array
     @test 1 <= length(td)
     @test all(td .== 'a')

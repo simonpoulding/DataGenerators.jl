@@ -12,7 +12,7 @@ end
 @testset "rule choice point using short form function definitions" begin
     gn = RCShortGen()
     @testset "returns 'a' or 'b' or 'c'" for i in 1:NumReps 
-        td = gen(gn)
+        td = choose(gn)
         @mcheck_values_are td ['a','b','c']
     end
 end
@@ -35,7 +35,7 @@ end
     gn = RCLongGen()
 
     @testset "returns 'a' or 'b' or 'c'" for i in 1:NumReps 
-        td = gen(gn)
+        td = choose(gn)
         @mcheck_values_are td ['a','b','c']
     end
 
@@ -56,7 +56,7 @@ end
     gn = RCMixedGen()
 
     @testset "returns 'a' or 'b' or 'c'" for i in 1:NumReps 
-        td = gen(gn)
+        td = choose(gn)
         @mcheck_values_are td ['a','b','c']
     end
 	

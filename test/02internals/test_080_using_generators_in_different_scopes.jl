@@ -10,7 +10,7 @@ module GenDefinedInModuleThatIncludesDataGenerators
     end
 
     function generate_in_a_function()
-        gen(TestGen())
+        choose(TestGen())
     end
 end
 
@@ -24,16 +24,16 @@ end
     @testset "use generator defined outside module" for i in 1:NumReps 
         g = GenOutsideModule()
         @test typeof(g) <: DataGenerators.Generator
-        @test typeof(gen(g)) <: Integer
+        @test typeof(choose(g)) <: Integer
     end
 end
 
 @testset "generator defined in a module" begin
-    # This fail on the gen(g) line. Skipping until we fix.
+    # This fail on the choose(g) line. Skipping until we fix.
     @testset skip=true "use Int generator (defined in module which includes DataGenerators. outside of module" begin
         g = GenDefinedInModuleThatIncludesDataGenerators.TestGen()
         @test typeof(g) <: DataGenerators.Generator
-        d = gen(g)
+        d = choose(g)
         @test typeof(d) <: Int
     end
 

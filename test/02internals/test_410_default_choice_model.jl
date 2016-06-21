@@ -310,7 +310,7 @@ gn = DCMChooseStringGen()
 cm = DefaultChoiceModel(gn)
 	
 @testset repeats=NumReps "full range of values generated using choice model" begin
-    td = gen(gn, choicemodel=cm)
+    td = choose(gn, choicemodel=cm)
     @test ismatch(r"^a(b|c)d+ef?$", td)
     @mcheck_values_include count(x->x=='d', td) [1,2,3]
     @mcheck_values_are td[2] ['b','c']
