@@ -14,6 +14,7 @@ function myrev(l)
     end
 end
 
+
 #
 # 2. Property-based (random) testing with two properties being tested
 #
@@ -32,18 +33,15 @@ using DataGenerators
     element() = (rand() < 0.30) ? start() : []
 end
 arraygen = ArrayOfMixedElements()
+ary = first(filter(a -> !props_myrev(a), Any[choose(arraygen) for i in 1:100]))
 
-ary = :notfound
-for i in 1:100
-    ary = choose(arraygen)
-    if !props_myrev(ary)
-        break
-    end
-end
 println("Property fails for\n  ary        = $ary\n  myrev(ary) = $(myrev(ary))")
+
 
 #
 # 3. Shrink the failing test datum
 #
-ary = DataMutators.shrink(ary, prop)
+a = DataMutators.shrink(ary, props_myrev)
+
+println("Property fails for\n  a        = $a\n  myrev(a) = $(myrev(a))")
 println("Property fails for\n  ary        = $ary\n  myrev(ary) = $(myrev(ary))")
