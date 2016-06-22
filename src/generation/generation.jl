@@ -181,7 +181,8 @@ end
 
 # Generate an object from the generator using the startrule as entry point. 
 # Uses the default choice model and creates a new state object unless one is given.
-function generate(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, startrule = :start, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
+function generate(g::Generator; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, startrule = :start, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
+	choicemodel = (choicemodel == nothing) ? DefaultChoiceModel(g) : choicemodel
 	state = (state == nothing) ? newstate(g, choicemodel, maxchoices, maxseqreps) : state
 	if resetchoicemodelstate
 		resetstate!(choicemodel)
@@ -217,10 +218,10 @@ function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceMod
 	end
 end
 
-choose(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
+choose(g::Generator; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT) = 
 		first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
 
-function choose(gt::DataType; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT)
+function choose(gt::DataType; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT)
 	if !(super(gt) == Generator)
 		error("choose(::DataType) is currently supported outside of generator code only when the datatype is a generator type")
 	end
@@ -230,7 +231,7 @@ end
 
 # call generator and handle termination exception
 # if termination occurs, return nothing as the object
-function robustchoose(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
+function robustchoose(g::Generator; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT)
 	try
 		return first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps))
 	catch e
