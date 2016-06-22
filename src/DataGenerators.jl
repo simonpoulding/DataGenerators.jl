@@ -29,4 +29,7 @@ include(joinpath("registry","registry.jl"))
 # choice models
 include(joinpath("choice_model","choice_model.jl"))
 
+# translator submodule
+include(joinpath("translators","Translators.jl"))
+
 end
