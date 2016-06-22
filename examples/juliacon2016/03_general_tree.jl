@@ -1,20 +1,4 @@
-using DataGenerators
-using DataMutators
-
-# To ensure things are compiled let's define simple generator and use it
-@generator SomeData begin
-    start() = [element() for i in 1:rand(2:3)]
-    element() = choose(ASCIIString, "\\w+\\.\\w+")
-    element() = choose(Int, 1, 100)
-    element() = start()
-end
-gen = SomeData();
-big = choose(gen);
-
-prop(l) = length(l) < 2
-
-smaller = DataMutators.shrink(big, prop);
-
+# general tree generator
 type TreeNode
 	label::Any
 	childnodes::Vector{TreeNode}
@@ -38,11 +22,8 @@ function show(io::IO, t::TreeNode, indent=0)
 	end
 end
 
-@generator EmailTreeGen begin
-  start = treenode
-  treenode = TreeNode(label, mult(treenode))
-  label = choose(ASCIIString, "([a-z0-9]+\\.)*[a-z0-9]+@([a-z0-9]+\\.){1,2}[a-z0-9]+")
-end
+
+using DataGenerators
 
 @generator TreeGen begin
   start = treenode
@@ -50,4 +31,9 @@ end
   label = choose(Int, 1, 9)
 end
 
+@generator EmailTreeGen begin
+  start = treenode
+  treenode = TreeNode(label, mult(treenode))
+  label = choose(ASCIIString, "([a-z0-9]+\\.)*[a-z0-9]+@([a-z0-9]+\\.){1,2}[a-z0-9]+")
+end
 
