@@ -22,7 +22,6 @@ function show(io::IO, t::TreeNode, indent=0)
 	end
 end
 
-
 using DataGenerators
 
 @generator TreeGen begin
@@ -31,9 +30,4 @@ using DataGenerators
   label = choose(Int, 1, 9)
 end
 
-@generator EmailTreeGen begin
-  start = treenode
-  treenode = TreeNode(label, mult(treenode))
-  label = choose(ASCIIString, "([a-z0-9]+\\.)*[a-z0-9]+@([a-z0-9]+\\.){1,2}[a-z0-9]+")
-end
 
