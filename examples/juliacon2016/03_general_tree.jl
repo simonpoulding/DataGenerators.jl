@@ -30,4 +30,3 @@ using DataGenerators
   label = choose(Int, 1, 9)
 end
 
-
