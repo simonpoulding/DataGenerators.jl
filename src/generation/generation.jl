@@ -187,7 +187,7 @@ function generate(g::Generator; state = nothing, choicemodel = nothing, resetcho
 	if resetchoicemodelstate
 		resetstate!(choicemodel)
 	end
-	startfunc = functionforrulenamed(g, startrule)
+	startfunc = methodforrulenamed(g, startrule)
 	# important: we evaluate in the module that owns the type and since this (rather than DataGenerators) will be where rule functions are defined
 	# the correct eval function is set in the generator on creation
 	result = g.evalfn(Expr(:call, startfunc, g, state))
@@ -362,13 +362,13 @@ subgen(g::Generator, s::DerivationState, index::Integer) = choose(subgenerator(g
 # Internal functions used by the core functions. They are not exported.
 #
 
-# Return the top-level function with the name ruleName
-# Since rule functions have unique rule names to avoid issues with extending existing methods, need to look this up
-function functionforrulenamed(g::Generator, rulename::Symbol)
-	if !haskey(g.rulefunctionnames, rulename)
+# Return the top-level method for thhe rule
+# Since rule method have unique names to avoid issues with extending existing methods, need to look this up
+function methodforrulenamed(g::Generator, rulename::Symbol)
+	if !haskey(g.rulemethodnames, rulename)
 		error("generator has no rule named $(rulename)")
 	end	
-  g.rulefunctionnames[rulename]
+  g.rulemethodnames[rulename]
 end
 
 # Create a new derivation state object for a given generator and choice model.

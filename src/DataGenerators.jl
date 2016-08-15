@@ -20,8 +20,9 @@ const THIS_MODULE = current_module() # used when creating calls to this module i
 include(joinpath("generation","generation.jl"))
 
 # @generator macro
-include(joinpath("generator_macro","generator_macro.jl"))
-include(joinpath("generator_macro","generator_macro_choose_string.jl"))
+include(joinpath("generator","transform_rules.jl"))
+include(joinpath("generator","generator_macro.jl"))
+include(joinpath("generator","generator_macro_choose_string.jl"))
 
 # updating and querying registry metadata
 include(joinpath("registry","registry.jl"))
