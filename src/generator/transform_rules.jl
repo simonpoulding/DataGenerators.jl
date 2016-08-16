@@ -1,6 +1,6 @@
 #
 # method and types in this file are used to transform generator code (i.e. Julia code with DataGenerator-specific
-# constructs such as choose) into standard Julia methods
+# constructs) into standard Julia methods
 #
 
 #
@@ -46,164 +46,197 @@ end
 
 
 #
-# main entry point -- transforms rules written in Data Generator syntax to Julia methods
+# main entry point -- transforms rules written with Data Generator constructs into standard Julia methods
 #
 function transformrules!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 
-	# (1) process choose(Type)
-	transformvaluechoicepoints!(genrules, gencontext)
-	# but must split into: generator / compound type / string / simple type
+	# (1) choose(Type) where type is a not a string, number, nor generator
+	# NB enumerate, nullable
+	# transformchoosecomplextypes!(genrules, gencontext)
 
-	# (2) transform sequence choice point 
+	# (2) choose(<: String, [regex])
+	transformchoosestrings!(genrules, gencontext)
+
+	# up to here is processing of syntactic sugar: expansion adds rules that use Data Generators constructs
+	# (which will be processed in subsequent steps, so this sugar processing must occur first)
+	# however, subsequent transforms change Data Generators constructs into standard Julia
+
+	# (3) choose(<: Number, [min, [max]])
+	transformchoosenumbers!(genrules, gencontext)
+
+	# (4) choose(Gen) where Gen is a generator type (means include choice points into this generator) 
+	# transformchoosegentypes!(genrules, gencontext)
+
+	# (5) choose(subgen) where subgen is a generator instance (means call gen but don't include choice points)
+	transformchoosesubgens!(genrules, gencontext)
+
+	# (6) sequence choice point 
 	transformsequencechoicepoints!(genrules, gencontext)
 
-    # (3) transform signatures (method names and arguments)
+    # (7) transform signatures (method names and arguments)
 	transformsignatures!(genrules, gencontext)
 
-	# (4) create umbrella methods, and transform rule choice points
+	# (8) create umbrella methods, and transform rule choice points
 	createumbrellamethods!(genrules, gencontext)
 
-	# (5) process calls to other rules
+	# (9) calls to other rules
 	transformrulecalls!(genrules, gencontext)
 
-	# (6) process direct call to subgenerators (deprecated)
+	# (10) direct call to subgenerators (deprecated)
 	transformdirectsubgencalls!(genrules, gencontext)
 
 end
 
 
+
+
 #
 # transform all value choice points (i.e. choose(...))
 #
-function transformvaluechoicepoints!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
+function transformchoosestrings!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
-		genrule.body = transformfunccall(genrule.body, gencontext, isvaluechoicepoint, transformvaluechoicepoint)
+		genrule.body = transformfunccall(genrule.body, gencontext, ischoosestring, transformchoosestring)
 	end
 end
 
-# is a call to value choice point
-isvaluechoicepoint(callname, callparams, gencontext) = (callname == :choose)
+# list of number types that are supported directly
+# (could do this automatically as leaf subtypes of AbstractString, but some of these we can't really handle directly yet)
+SUPPORTED_CHOOSE_STRING_TYPES = [ASCIIString, UTF8String, UTF16String, UTF32String,]
 
-# transform value choice points of the form:
-#		choose(type,...)
+# is a call to choose(String) point
+function ischoosestring(callname, callparams, gencontext)
+	if (callname == :choose)
+		if (length(callparams) >= 1) && (typeof(callparams[1]) == Symbol)
+			datatype = converttodatatype(callparams[1])
+			if (typeof(datatype) == DataType) && (datatype in SUPPORTED_CHOOSE_STRING_TYPES)
+				return true
+			end
+		end
+	end
+	false
+end
+
+# expand String choice points of the form:
+#		choose(type,[regex])
+# by creating additional rules to emit strings satisfying the regex
+function transformchoosestring(callname, callparams, gencontext, matchfn, transformfn)
+
+	datatype = converttodatatype(callparams[1])
+
+	if length(callparams) > 2
+		error("choose($(datatype),...) must have at most one further parameter")
+	end
+
+	regex = "" # interpreted as wildcard
+	if length(callparams) >= 2
+		if !(typeof(regex) <: AbstractString)
+			error("regex in choose($(datatype),...) must be a literal string")
+		end
+		regex = callparams[2]
+	end
+
+	transformchooseregex(regex, datatype, gencontext)
+	
+end
+
+
+
+#
+# transform value choice points with simple numeric (inc. Boolean) types
+#
+
+function transformchoosenumbers!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
+	for genrule in genrules
+		genrule.body = transformfunccall(genrule.body, gencontext, ischoosenumber, transformchoosenumber)
+	end
+end
+
+# list of number types that are supported directly
+# (could do this automatically as leaf subtypes of Integer and AbstractFloat, but some of these we can't really handle directly yet - e.g. BigInt, BigFloat - and it is possible that
+# custom subtypes could have been added)
+SUPPORTED_CHOOSE_NUMBER_TYPES = [Bool, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float16, Float32, Float64,]
+
+# is a call to value choice point
+function ischoosenumber(callname, callparams, gencontext)
+	if (callname == :choose)
+		if (length(callparams) >= 1) && (typeof(callparams[1]) == Symbol)
+			datatype = converttodatatype(callparams[1])
+			if (typeof(datatype) == DataType) && (datatype in SUPPORTED_CHOOSE_NUMBER_TYPES)
+				return true
+			end
+		end
+	end
+	false
+end
+
+# transform numeric value choice points of the form:
+#		choose(type, [min, [max]])
 # (where parameters after the datatype constrain the range of the type)
 # to:
 #		DataGenerators.choosenumber(s, cpid, datatype, minval, maxval, rangeisliteral)
-# except for string datatypes that construct their own rules to emit strings satisfying a regular expression
-function transformvaluechoicepoint(callname, callparams, gencontext, matchfn, transformfn)
+function transformchoosenumber(callname, callparams, gencontext, matchfn, transformfn)
 
-	if (length(callparams) < 1) || (typeof(callparams[1]) != Symbol)
-		error("first parameter to choose($(callparams[1]),...) must be a literal data type or a sub-generator")
-	end
+	datatype = converttodatatype(callparams[1])
+	# thanks to ischoosenumber matching function, we know we that there is at least one param, and that it is a symbol
 
-	if callparams[1] in gencontext.subgenargs
-		# choose of sub-generator
+	if datatype <: Bool
+
+		# follows same pattern as other 'numeric' types, which is possible since 0~false 1~true
+		# we don't allow any possibility to restrict this range
 
 		if length(callparams) > 1
-			error("choose($(callparams[1])) must have no further parameters")
+			error("choose($(datatype)) must have no further parameters")
 		end
 
-		i = findfirst(gencontext.subgenargs, callparams[1])
-
-		chooseexpr = :( $(THIS_MODULE).subgen($(gencontext.genparam), $(gencontext.stateparam), $(i)) )
+		minval = false
+		maxval = true
+		rangeisliteral = true
+		cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
+		cpid = recordchoicepoint(gencontext, VALUE_CP, cpinfo)
+		chooseexpr = :( $(THIS_MODULE).choosenumber($(gencontext.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
 
 	else
 
-		datatype = eval(callparams[1]) # TODO could eval perform side-effects here? should be OK since we know it is a symbol
-		if (typeof(datatype) != DataType) || !isleaftype(datatype)
-			error("first parameter to choose($(callparams[1]),...) must be a concrete data type or a sub-generator")
+		# here parameters can be used to define a range of possible values
+		# this can either be done via literals or expression - in the former case, the literal values are recorded and passed to the choice model
+		# since knowing the bound(s) of the valid range can enable a better model than one that must potentially varying ranges
+
+		if length(callparams) > 3
+			error("choose($(datatype),...) must have at most two further parameters")
 		end
 
-		if datatype <: Bool
+		# parameters themselves could be nested choose(Number, ...) expression, so transform these recursively:
+		for i in 2:length(callparams)
+			callparams[i] = transformfunccall(callparams[i], gencontext, matchfn, transformfn)
+		end
 
-			# follows same pattern as other 'numeric' types, which is possible since 0~false 1~true
-			# we don't allow any possibility to restrict this range
-
-			if length(callparams) > 1
-				error("choose($(datatype)) must have no further parameters")
-			end
-
-			minval = false
-			maxval = true
-			rangeisliteral = true
-			cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
-			cpid = recordchoicepoint(gencontext, VALUE_CP, cpinfo)
-			chooseexpr = :( $(THIS_MODULE).choosenumber($(gencontext.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-			# choosenumber is not esc'ed so will be transformed to DataGenerators.choosenumber by macro hygiene
-
-		elseif datatype <: Char
-
-			# not currently supported
-			# one issue is that returning valid (Unicode) chars is not straightforward - the domain is not easily defined: for example typemin / typemax
-			# is not defined for the Char type
-			error("choose($(datatype),...) is not currently supported")
-
-		elseif datatype <: Real
-			# note Char <: Real, and so is excluded above
-
-			# here parameters can be used to define a range of possible values
-			# this can either be done via literals or expression - in the former case, the literal values are recorded and passed to the choice model
-			# since knowing the bound(s) of the valid range can enable a better model than one that must potentially varying ranges
-
-			if length(callparams) > 3
-				error("choose($(datatype),...) must have at most two further parameters")
-			end
-
-			if length(callparams) >= 2
-				minval, minisliteral = processpossiblyliteralparam(callparams[2], datatype, gencontext)
-			else
-				minval, minisliteral = typemin(datatype), true
-			end
-
-			if length(callparams) >= 3
-				maxval, maxisliteral = processpossiblyliteralparam(callparams[3], datatype, gencontext)
-			else
-				maxval, maxisliteral = typemax(datatype), true
-			end
-
-			cpinfo = Dict{Symbol,Any}(:datatype=>datatype)
-
-			# record literal values in choice point info as an indicator to choice model that limit on range will not change
-			if minisliteral
-				cpinfo[:min] = minval
-			end
-			if maxisliteral
-				cpinfo[:max] = maxval
-			end
-
-			# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
-			rangeisliteral = minisliteral && maxisliteral
-
-			cpid = recordchoicepoint(gencontext, VALUE_CP, cpinfo)
-			chooseexpr = :( $(THIS_MODULE).choosenumber($(gencontext.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
-			# choosenumber is not esc'ed so will be transformed to DataGenerators.choosenumber by macro hygiene
-
-		elseif datatype <: AbstractString
-			# TODO it may be a bit ambitious to allow all concrete string subtypes, but let's see ;-)
-
-			# string data types are handled differently from numeric ones: instead of a call to choosenumber,
-			# a block of statementsis constructed to build strings that comply with the reguler expression
-			# within the block, multiple choice points are likely to be used
-
-			if length(callparams) > 2
-				error("choose($(datatype),...) must have at most one further parameter")
-			end
-
-			regex = "" # interpreted as wildcard
-			if length(callparams) >= 2
-				if !(typeof(regex) <: AbstractString)
-					error("regex in choose($(datatype),...) must be a literal string")
-				end
-				regex = callparams[2]
-			end
-
-			chooseexpr = transformchoosestring(regex, datatype, gencontext)
-
+		if length(callparams) >= 2
+			minval, minisliteral = processpossiblyliteralparam(callparams[2], datatype, gencontext)
 		else
-
-			error("choose($(datatype),...) is not supported")
-
+			minval, minisliteral = typemin(datatype), true
 		end
+
+		if length(callparams) >= 3
+			maxval, maxisliteral = processpossiblyliteralparam(callparams[3], datatype, gencontext)
+		else
+			maxval, maxisliteral = typemax(datatype), true
+		end
+
+		cpinfo = Dict{Symbol,Any}(:datatype=>datatype)
+
+		# record literal values in choice point info as an indicator to choice model that limit on range will not change
+		if minisliteral
+			cpinfo[:min] = minval
+		end
+		if maxisliteral
+			cpinfo[:max] = maxval
+		end
+
+		# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
+		rangeisliteral = minisliteral && maxisliteral
+
+		cpid = recordchoicepoint(gencontext, VALUE_CP, cpinfo)
+		chooseexpr = :( $(THIS_MODULE).choosenumber($(gencontext.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
 
 	end
 
@@ -214,8 +247,33 @@ end
 
 
 #
+# transform choose(subgen)
+#
+
+function transformchoosesubgens!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
+	for genrule in genrules
+		genrule.body = transformfunccall(genrule.body, gencontext, ischoosesubgen, transformchoosesubgen)
+	end
+end
+
+# is a call to value choice point
+ischoosesubgen(callname, callparams, gencontext) = (callname == :choose) && (length(callparams) >= 1) && (callparams[1] in gencontext.subgenargs)
+
+# call to a sub-generator becomes: DataGenerators.subgen(g, s, i) where i it the index of the sub-generators in the arguments  
+function transformchoosesubgen(callname, callparams, gencontext::GeneratorContext, matchfn, transformfn)
+	if length(callparams) > 1
+		error("choose($(callparams[1])) must have no further parameters")
+	end
+	i = findfirst(gencontext.subgenargs, callparams[1])
+	:( $(THIS_MODULE).subgen($(gencontext.genparam), $(gencontext.stateparam), $(i)) )
+end
+
+
+
+#
 # transform all sequence choice points
 #
+
 function transformsequencechoicepoints!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
 		genrule.body = transformfunccall(genrule.body, gencontext, issequencechoicepoint, transformsequencechoicepoint)
@@ -302,10 +360,12 @@ function transformsequencechoicepoint(callname, callparams, gencontext, matchfn,
 end
 
 
+
 #
 # transform rule signatures (name and args)
 # rule name is converted to a unique method name; internal arguments are added
 #
+
 function transformsignatures!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 
 	for genrule in genrules
@@ -324,11 +384,13 @@ function transformsignatures!(genrules::Vector{GeneratorRule}, gencontext::Gener
 end
 
 
+
 #
 # create an 'umbrella' method for each unique rule name
 # the umbrella method is the entry point for the rule, and records rule entry and exit during generation
 # for rule choice points (where there is more than one rule with the same name), it handles the selection of which rule is called
 #
+
 function createumbrellamethods!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 
 	# group rules with the same name together (so we can process rule choice constructs)
@@ -425,9 +487,11 @@ function createumbrellamethods!(genrules::Vector{GeneratorRule}, gencontext::Gen
 end
 
 
+
 #
 # transform all call to rules by calling the umbrella method
 #
+
 function transformrulecalls!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
 		genrule.body = transformfunccall(genrule.body, gencontext, isrulecall, transformrulecall)
@@ -445,9 +509,11 @@ function transformrulecall(callname, callparams, gencontext::GeneratorContext, m
 end
 
 
+
 #
 # transform all direct calls to rules by calling the umbrella method (deprecated)
 #
+
 function transformdirectsubgencalls!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
 		genrule.body = transformfunccall(genrule.body, gencontext, isdirectsubgencall, transformdirectsubgencall)
@@ -568,6 +634,22 @@ function extractparamfromarg(argexpr)
 	end
 	error("cannot extract parameter name from argument definition")
 end
+
+# attempt to convert symbol to DataType (otherwise returns false)
+function converttodatatype(s::Symbol)
+	datatype = nothing
+	try
+		datatype = eval(s)
+		# TODO could eval perform side-effects here? should be OK since we know it is a symbol
+	catch
+		datatype = nothing
+	end
+	if typeof(datatype) != DataType
+		return nothing
+	end
+	datatype
+end
+
 
 # test whether syntax tree node in an expression is a line node (i.e. a file and line location)
 # (as of v0.3, LineNumberNode does not seem to occur)

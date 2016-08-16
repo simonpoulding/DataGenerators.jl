@@ -6,7 +6,7 @@
 # TODO: optimise ast (e.g. OR with only 1 child; consecutive terminals)
 
 # entry point from main set of generator macro functions
-function transformchoosestring(regex, datatype, gencontext::GeneratorContext)
+function transformchooseregex(regex, datatype, gencontext::GeneratorContext)
 	
 	# currently wildcards assume ASCII
 	if !(datatype <: ASCIIString)
