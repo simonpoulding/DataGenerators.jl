@@ -1,7 +1,6 @@
 function build_xsd_generator(io::IO, ast::ASTNode, genname, startelement)
 	
-	assign_methodnames(ast)
-	ast.methodname = "start"
+	assign_rulenames(ast)
 
 	println(io, "using LightXML")			# LightXML specific
 

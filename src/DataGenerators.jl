@@ -16,13 +16,15 @@ using Distributions
 
 const THIS_MODULE = current_module() # used when creating calls to this module in the macro
 
+# translator submodule
+include(joinpath("translators","Translators.jl"))
+
 # generation and associated functions
 include(joinpath("generation","generation.jl"))
 
 # @generator macro
 include(joinpath("generator","transform_rules.jl"))
 include(joinpath("generator","generator_macro.jl"))
-include(joinpath("generator","generator_macro_choose_string.jl"))
 
 # updating and querying registry metadata
 include(joinpath("registry","registry.jl"))
@@ -30,7 +32,5 @@ include(joinpath("registry","registry.jl"))
 # choice models
 include(joinpath("choice_model","choice_model.jl"))
 
-# translator submodule
-include(joinpath("translators","Translators.jl"))
 
 end

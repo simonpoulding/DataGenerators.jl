@@ -1,7 +1,6 @@
 function build_bnf_generator(io::IO, ast::ASTNode, genname, startvariable, addwhitespace)
 	
-	assign_methodnames(ast)
-	ast.methodname = "start"
+	assign_rulenames(ast)
 
 	build_generator_start(io, genname, "BNF starting with variable $(startvariable)")
 	build_bnf_methods(io, ast, addwhitespace)

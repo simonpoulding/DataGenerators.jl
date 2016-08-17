@@ -1,16 +1,16 @@
 type ASTNode
 	func::Symbol
-	children::Array{ASTNode}
+	children::Vector{ASTNode}
 	args::Dict{Symbol,Any}
-	source::Array{AbstractString}
-	refs::Array{ASTNode}
-	warnings::Array{AbstractString}
+	source::Vector{AbstractString}
+	refs::Vector{ASTNode}
+	warnings::Vector{AbstractString}
 	reachable::Bool
-	methodname::AbstractString
+	rulename::Symbol
 end
 
-function ASTNode(func::Symbol, children::Array{ASTNode} = (ASTNode)[], args::Dict{Symbol,Any} =  Dict{Symbol,Any}())
-	ASTNode(func, children, args, (AbstractString)[], (ASTNode)[], (AbstractString)[], false, "")
+function ASTNode(func::Symbol, children::Array{ASTNode} = (ASTNode)[], args::Dict{Symbol,Any} = Dict{Symbol,Any}())
+	ASTNode(func, children, args, (AbstractString)[], (ASTNode)[], (AbstractString)[], false, :unnamed)
 end
 
 describe_ast_node(node::ASTNode) = "$(node.func)" * (haskey(node.args,:name) ? " " * "$(node.args[:name])" : "")
@@ -41,8 +41,8 @@ function show(io::IO, astnode::ASTNode, indent=0)
   if (!astnode.reachable)
     print(io, " UNREACHABLE")
   end
-  if !isempty(astnode.methodname)
-    print(io, " GENNAME: $(astnode.methodname)")
+  if astnode.rulename != :unnamed
+    print(io, " RULENAME: $(astnode.rulename)")
   end
   println(io)
   for child in astnode.children

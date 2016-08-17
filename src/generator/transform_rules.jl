@@ -82,8 +82,8 @@ function transformrules!(genrules::Vector{GeneratorRule}, gencontext::GeneratorC
 	# (9) calls to other rules
 	transformrulecalls!(genrules, gencontext)
 
-	# (10) direct call to subgenerators (deprecated)
-	transformdirectsubgencalls!(genrules, gencontext)
+	# (10) direct call to subgenerators (no longer supported)
+	# transformdirectsubgencalls!(genrules, gencontext)
 
 end
 
@@ -95,7 +95,7 @@ end
 #
 function transformchoosestrings!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
-		genrule.body = transformfunccall(genrule.body, gencontext, ischoosestring, transformchoosestring)
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, ischoosestring, transformchoosestring)
 	end
 end
 
@@ -119,7 +119,7 @@ end
 # expand String choice points of the form:
 #		choose(type,[regex])
 # by creating additional rules to emit strings satisfying the regex
-function transformchoosestring(callname, callparams, gencontext, matchfn, transformfn)
+function transformchoosestring(callname, callparams, genrules, gencontext, matchfn, transformfn)
 
 	datatype = converttodatatype(callparams[1])
 
@@ -135,7 +135,15 @@ function transformchoosestring(callname, callparams, gencontext, matchfn, transf
 		regex = callparams[2]
 	end
 
-	transformchooseregex(regex, datatype, gencontext)
+	# attempt to make rulenames unique for additional regex rules
+	# (no guarantee since the unique symbol is later manipulated and is only unique in itself, but not when used as a prefix)
+	rulenameprefix = string(gensym("choosestring"))
+	# create rules for regex
+	regexrules = Translators.regex_rules(regex, datatype, rulenameprefix)
+	# add rules to generator
+	addrulesources(genrules, regexrules)
+	# replace choose with call to entry point for regex rules (the first rule)
+	:( $(regexrules[1].rulename)() )
 	
 end
 
@@ -147,7 +155,7 @@ end
 
 function transformchoosenumbers!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
-		genrule.body = transformfunccall(genrule.body, gencontext, ischoosenumber, transformchoosenumber)
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, ischoosenumber, transformchoosenumber)
 	end
 end
 
@@ -174,7 +182,7 @@ end
 # (where parameters after the datatype constrain the range of the type)
 # to:
 #		DataGenerators.choosenumber(s, cpid, datatype, minval, maxval, rangeisliteral)
-function transformchoosenumber(callname, callparams, gencontext, matchfn, transformfn)
+function transformchoosenumber(callname, callparams, genrules, gencontext, matchfn, transformfn)
 
 	datatype = converttodatatype(callparams[1])
 	# thanks to ischoosenumber matching function, we know we that there is at least one param, and that it is a symbol
@@ -207,7 +215,7 @@ function transformchoosenumber(callname, callparams, gencontext, matchfn, transf
 
 		# parameters themselves could be nested choose(Number, ...) expression, so transform these recursively:
 		for i in 2:length(callparams)
-			callparams[i] = transformfunccall(callparams[i], gencontext, matchfn, transformfn)
+			callparams[i] = transformfunccall(callparams[i], genrules, gencontext, matchfn, transformfn)
 		end
 
 		if length(callparams) >= 2
@@ -252,7 +260,7 @@ end
 
 function transformchoosesubgens!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
-		genrule.body = transformfunccall(genrule.body, gencontext, ischoosesubgen, transformchoosesubgen)
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, ischoosesubgen, transformchoosesubgen)
 	end
 end
 
@@ -260,7 +268,7 @@ end
 ischoosesubgen(callname, callparams, gencontext) = (callname == :choose) && (length(callparams) >= 1) && (callparams[1] in gencontext.subgenargs)
 
 # call to a sub-generator becomes: DataGenerators.subgen(g, s, i) where i it the index of the sub-generators in the arguments  
-function transformchoosesubgen(callname, callparams, gencontext::GeneratorContext, matchfn, transformfn)
+function transformchoosesubgen(callname, callparams, genrules, gencontext, matchfn, transformfn)
 	if length(callparams) > 1
 		error("choose($(callparams[1])) must have no further parameters")
 	end
@@ -276,7 +284,7 @@ end
 
 function transformsequencechoicepoints!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
-		genrule.body = transformfunccall(genrule.body, gencontext, issequencechoicepoint, transformsequencechoicepoint)
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, issequencechoicepoint, transformsequencechoicepoint)
 	end
 end
 
@@ -289,14 +297,14 @@ issequencechoicepoint(callname, callparams, gencontext) = (callname in [:mult, :
 #		plus(:rule)
 #	to:
 #		DataGenerators.choosereps(s, cpid, ()->rule(g,s), minreps, maxreps, rangeisliteral)
-function transformsequencechoicepoint(callname, callparams, gencontext, matchfn, transformfn)
+function transformsequencechoicepoint(callname, callparams, genrules, gencontext, matchfn, transformfn)
 
 	if length(callparams) < 1
 		error("$(callname) must specify an expression to sequence")
 	end
 
 	# allow for nested sequence choice points by transforming the expression to sequence
-	functocallexpr = transformfunccall(callparams[1], gencontext, matchfn, transformfn)
+	functocallexpr = transformfunccall(callparams[1], genrules, gencontext, matchfn, transformfn)
 	
 	if callname == :mult
 
@@ -494,7 +502,7 @@ end
 
 function transformrulecalls!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
-		genrule.body = transformfunccall(genrule.body, gencontext, isrulecall, transformrulecall)
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, isrulecall, transformrulecall)
 	end
 end
 
@@ -502,7 +510,7 @@ end
 isrulecall(callname, callparams, gencontext) = haskey(gencontext.rulemethodnames, callname)
 
 # to call a method, call the umbrella method
-function transformrulecall(callname, callparams, gencontext::GeneratorContext, matchfn, transformfn)
+function transformrulecall(callname, callparams, genrules, gencontext, matchfn, transformfn)
 	umbrellamethodname = gencontext.rulemethodnames[callname]
 	rewrittenparams = [gencontext.genparam; gencontext.stateparam; callparams]
 	Expr(:call, umbrellamethodname, rewrittenparams...)
@@ -516,7 +524,7 @@ end
 
 function transformdirectsubgencalls!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
-		genrule.body = transformfunccall(genrule.body, gencontext, isdirectsubgencall, transformdirectsubgencall)
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, isdirectsubgencall, transformdirectsubgencall)
 	end
 end
 
@@ -525,7 +533,7 @@ isdirectsubgencall(callname, callparams, gencontext) = (callname in gencontext.s
 
 # call to a sub-generator becomes: DataGenerators.subgen(g, s, i)
 # where i it the index of the sub-generators in the arguments  
-function transformdirectsubgencall(callname, callparams, gencontext::GeneratorContext, matchfn, transformfn)
+function transformdirectsubgencall(callname, callparams, gencontext, matchfn, transformfn)
 	warn("Direct calls to sub-generators are deprecated; please use: choose(<subgenname>)")
 	i = findfirst(gencontext.subgenargs, callname)
 	:( $(THIS_MODULE).subgen($(gencontext.genparam), $(gencontext.stateparam), $(i)) )
@@ -568,7 +576,7 @@ uniquemethodname(rulename) = gensym(string(rulename))
 # matchfn should return true if the desired type of function call is identified
 # transformfn should return the tree to replace the node containing the call
 # note: transformfn must handle recursively checking any nodes in its argument list itself (which is why matchfn is passed)
-function transformfunccall(node, gencontext::GeneratorContext, matchfn::Function, transformfn::Function)
+function transformfunccall(node, genrules::Vector{GeneratorRule}, gencontext::GeneratorContext, matchfn::Function, transformfn::Function)
 	
 	if islinenode(node)
 		return node
@@ -582,11 +590,11 @@ function transformfunccall(node, gencontext::GeneratorContext, matchfn::Function
 	callname, callparams = extractfunccall(node)
 
 	if (callname != nothing) && matchfn(callname, callparams, gencontext)
-		return transformfn(callname, callparams, gencontext, matchfn, transformfn)
+		return transformfn(callname, callparams, genrules, gencontext, matchfn, transformfn)
 	end
 
 	if typeof(node) == Expr
-		node.args = map(arg -> transformfunccall(arg, gencontext, matchfn, transformfn), node.args)
+		node.args = map(arg -> transformfunccall(arg, genrules, gencontext, matchfn, transformfn), node.args)
 		return node
 	end
 	
@@ -726,4 +734,12 @@ function mergeexprs(ex1::Expr, ex2::Expr)
 	end
 end
 
+
+# parses rule sources (as returned by Translators sub-modules) and appends them generator rules
+function addrulesources(genrules::Vector{GeneratorRule}, rulesources::Vector{Translators.RuleSource})
+	for rulesource in rulesources
+		genrule = GeneratorRule(rulesource.rulename, rulesource.args, parse(join(rulesource.source, "\n")))
+		push!(genrules, genrule)
+	end
+end
 
