@@ -14,6 +14,8 @@ function process_regex_or_nodes(parentnode::ASTNode)
     if node.func == :or
       if length(node.children) == 1
         # flatten if a single child since no need for a choice
+        append!(node.children[1].warnings, parentnode.children[idx].warnings)
+        append!(node.children[1].source, parentnode.children[idx].source)
         parentnode.children[idx] = node.children[1]
       end
     end
@@ -29,6 +31,8 @@ function process_regex_and_nodes(parentnode::ASTNode)
       i = 1
       while i < length(node.children)
         if (node.children[i].func == :terminal) && (node.children[i+1].func == :terminal)
+          append!(node.children[i].warnings, node.children[i+1].warnings)
+          append!(node.children[i].source, node.children[i+1].source)
           node.children[i].args[:value] *= node.children[i+1].args[:value]
           deleteat!(node.children, i+1)
         else
@@ -37,6 +41,8 @@ function process_regex_and_nodes(parentnode::ASTNode)
       end
       # flatten if a single child since no need for and rule
       if length(node.children) == 1
+        append!(node.children[1].warnings, parentnode.children[idx].warnings)
+        append!(node.children[1].source, parentnode.children[idx].source)
         parentnode.children[idx] = node.children[1]
       end
     end
