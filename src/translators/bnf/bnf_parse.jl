@@ -1,6 +1,6 @@
 using ParserCombinator
 
-function parse_bnf(bnffilepath, syntax)
+function parse_bnf(bnf::IO, syntax)
 		
 	# using a flexible grammar incorporating common variants of BNF and EBNF so as to avoid need for user to specify the variant
 	
@@ -106,12 +106,10 @@ function parse_bnf(bnffilepath, syntax)
 	
 	
 	
-	astarray = open(bnffilepath, "r") do io
-	  parse_try(io, Try(grammar + Eos()))
-	  # note: Try not only enables (limited?) backtracking but also
-	  # permits use of parse_try to process whole file (parse_one cannout be used
-	  # in the same way in this particular idiom)
-	end
+	astarray = parse_try(bnf, Try(grammar + Eos()))
+ 	# note: Try not only enables (limited?) backtracking but also
+ 	# permits use of parse_try to process whole file (parse_one cannot be used
+ 	# in the same way in this particular idiom)
 	
 	if isempty(astarray)
 		error("No production rules found")

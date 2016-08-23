@@ -2,15 +2,17 @@ include("xsd_parse.jl")
 include("xsd_transform.jl")
 include("xsd_build.jl")
 
-function translate_from_xsd(xsduri, startelement, genname, genfilename, )
 
+function xsd_rules(xsduri::AbstractString, startelement::AbstractString, rulenameprefix="")
 	ast = parse_xsd(xsduri)
 	transform_xsd_ast(ast, startelement)
 	transform_ast(ast)
+	build_xsd_rules(ast, rulenameprefix)
+end
 
-	genfile = open(genfilename,"w")
-	build_xsd_generator(genfile, ast, genname, startelement)
-	close(genfile)
-
+function xsd_generator(io::IO, genname::AbstractString, xsduri::AbstractString, startelement::AbstractString)
+	rules = xsd_rules(xsduri, startelement)
+	description = "XML with root element " * escape_string(startelement)
+	output_generator(io, genname, description, rules)
 end
 

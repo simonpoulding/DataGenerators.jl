@@ -2,14 +2,16 @@ include("bnf_parse.jl")
 include("bnf_transform.jl")
 include("bnf_build.jl")
 
-function translate_from_bnf(bnffilepath, startvariable, genname, genfilename, addwhitespace=true, syntax=:ebnf)
 
-	ast = parse_bnf(bnffilepath, syntax)
+function bnf_rules(bnf::IO, startvariable::AbstractString, syntax::Symbol=:ebnf, addwhitespace::Bool=true, rulenameprefix="")
+	ast = parse_bnf(bnf::IO, syntax)
 	transform_bnf_ast(ast, startvariable)
 	transform_ast(ast)
+	build_bnf_rules(ast, addwhitespace, rulenameprefix)
+end
 
-	genfile = open(genfilename,"w")
-	build_bnf_generator(genfile, ast, genname, startvariable, addwhitespace)
-	close(genfile)
-	
+function bnf_generator(io::IO, genname::AbstractString, bnf::IO, startvariable::AbstractString, syntax::Symbol=:ebnf, addwhitespace::Bool=true)
+	rules = bnf_rules(bnf, startvariable, syntax, addwhitespace)
+	description = "string accepted by BNF starting with variable " * escape_string(startvariable)
+	output_generator(io, genname, description, rules)
 end

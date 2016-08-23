@@ -1,11 +1,11 @@
 function build_regex_rules(ast::ASTNode, rulenameprefix="")
 	assign_rulenames(ast, rulenameprefix)
     rules = Vector{RuleSource}()
-    build_regex_methods(ast, rules)
+    build_regex_rule(ast, rules)
     rules
 end
 
-function build_regex_methods(node::ASTNode, rules::Vector{RuleSource})
+function build_regex_rule(node::ASTNode, rules::Vector{RuleSource})
 
     if node.func in [:regex]
         build_regex_regex(node, rules)
@@ -28,78 +28,78 @@ function build_regex_methods(node::ASTNode, rules::Vector{RuleSource})
     end
 
     for child in node.children
-        build_regex_methods(child, rules)
+        build_regex_rule(child, rules)
     end
 
 end
 
 # "start" rule explicitly converts result to datatype
 function build_regex_regex(node::ASTNode, rules::Vector{RuleSource})
-    rule = build_method_shortform_start(node)
+    rule = build_rule_shortform_start(node)
     calledrulename = build_called_rulename(node.refs[1])
     push!(rule.source, "convert($(node.args[:datatype]), $(calledrulename))")
-    build_method_shortform_end(rule, node)
+    build_rule_shortform_end(rule, node)
     push!(rules, rule)
 end
 
 # apply rule choice point to children
 function build_regex_or(node::ASTNode, rules::Vector{RuleSource})
     for child in node.children
-        rule = build_method_shortform_start(node)
+        rule = build_rule_shortform_start(node)
         calledrulename = build_called_rulename(child)
         push!(rule.source, "$(calledrulename)")
-        build_method_shortform_end(rule, node)
+        build_rule_shortform_end(rule, node)
         push!(rules, rule)        
     end
 end
 
 # concenate results of calls to the children
 function build_regex_and(node::ASTNode, rules::Vector{RuleSource})
-    rule = build_method_shortform_start(node)
+    rule = build_rule_shortform_start(node)
     push!(rule.source, "*(")
     for child in node.children
         calledrulename = build_called_rulename(child)
         push!(rule.source, "$(calledrulename),")
     end
     push!(rule.source, ")")
-    build_method_shortform_end(rule, node)
+    build_rule_shortform_end(rule, node)
     push!(rules, rule)        
 end
 
 # apply sequence choice point
 function build_regex_quantifier(node::ASTNode, rules::Vector{RuleSource})
-    rule = build_method_shortform_start(node)
+    rule = build_rule_shortform_start(node)
     calledrulename = build_called_rulename(node.children[1])
     if node.args[:upperbound] >= typemax(Int)
         push!(rule.source, "join(reps($(calledrulename), $(node.args[:lowerbound])))")
     else
         push!(rule.source, "join(reps($(calledrulename), $(node.args[:lowerbound]), $(node.args[:upperbound])))")
     end
-    build_method_shortform_end(rule, node)
+    build_rule_shortform_end(rule, node)
     push!(rules, rule)        
 end
 
 # apply choose(Bool)
 function build_regex_optional(node::ASTNode, rules::Vector{RuleSource})
-    rule = build_method_shortform_start(node)
+    rule = build_rule_shortform_start(node)
     calledrulename = build_called_rulename(node.children[1])
     push!(rule.source, "choose(Bool) ? $(calledrulename) : \"\"")
-    build_method_shortform_end(rule, node)
+    build_rule_shortform_end(rule, node)
     push!(rules, rule)        
 end
 
 # return constant value
 function build_regex_terminal(node::ASTNode, rules::Vector{RuleSource})
-    rule = build_method_shortform_start(node)
+    rule = build_rule_shortform_start(node)
     push!(rule.source, "\"$(escape_string(node.args[:value]))\"")
-    build_method_shortform_end(rule, node)
+    build_rule_shortform_end(rule, node)
     push!(rules, rule)        
 end
 
 # use choose(Int) to choose uniformly across all possible ranges (which are the child nodes)
 function build_regex_bracket(node::ASTNode, rules::Vector{RuleSource})
     
-    rule = build_method_start(node)
+    rule = build_rule_start(node)
     
     cardinality = 0
     for child in node.children
@@ -129,7 +129,7 @@ function build_regex_bracket(node::ASTNode, rules::Vector{RuleSource})
 
     end
 
-    build_method_end(rule, node)
+    build_rule_end(rule, node)
     push!(rules, rule)        
 
 end
