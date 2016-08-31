@@ -230,9 +230,8 @@ end
 #
 function transformrules!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 
-	# (1) choose(Type) where type is a not a string, number, nor generator
-	# NB enumerate, nullable
-	# transformchoosecomplextypes!(genrules, gencontext)
+	# (1) choose(Type) where Type is a not a directly supported type, nor generator
+	transformchoosetypes!(genrules, gencontext)
 
 	# (2) choose(<: String, [regex])
 	transformchoosestrings!(genrules, gencontext)
@@ -268,9 +267,53 @@ function transformrules!(genrules::Vector{GeneratorRule}, gencontext::GeneratorC
 end
 
 
+#
+# transform all type choice points: choose(Type)
+#
+function transformchoosetypes!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
+	for genrule in genrules
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, ischoosetype, transformchoosetype)
+	end
+end
+
+# is a call to choose(Type) point
+function ischoosetype(callname, callparams, gencontext)
+	if (callname == :choose)
+		if (length(callparams) >= 1)
+			datatype = converttodatatype(callparams[1])
+			# type must not be a directly supported type (e.g. Int64, ASCIIString) nor a Generator
+			if (typeof(datatype) <: Type) && !(datatype in GENERATOR_SUPPORTED_CHOOSE_TYPES) && !(datatype <: Generator)
+				return true
+			end
+		end
+	end
+	false
+end
+
+# expand Type choice points of the using translator for Types
+function transformchoosetype(callname, callparams, genrules, gencontext, matchfn, transformfn)
+
+	datatype = converttodatatype(callparams[1])
+
+	if length(callparams) > 2
+		error("choose($(datatype)) must have no further parameters")
+	end
+
+	# attempt to make rulenames unique for additional type rules by adding a prefix containing a random 64-bit values
+	# in particular, it is unlikely any user-defined (or auto-generated) rules will have names the same as rule generated
+	# for this type
+	rulenameprefix = "choosetype" * hex(rand(UInt64))
+	# create rules for regex
+	typerules = type_rules(datatype, rulenameprefix)
+	# add rules to generator
+	addrulesources(genrules, typerules)
+	# replace choose with call to entry point for regex rules (the first rule)
+	:( $(typerules[1].rulename)() )
+	
+end
 
 #
-# transform all value choice points (i.e. choose(...))
+# transform all string choice points: choose(StringType, [regex])
 #
 function transformchoosestrings!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
 	for genrule in genrules
@@ -278,16 +321,12 @@ function transformchoosestrings!(genrules::Vector{GeneratorRule}, gencontext::Ge
 	end
 end
 
-# list of number types that are supported directly
-# (could do this automatically as leaf subtypes of AbstractString, but some of these we can't really handle directly yet)
-SUPPORTED_CHOOSE_STRING_TYPES = [ASCIIString, UTF8String, UTF16String, UTF32String,]
-
 # is a call to choose(String) point
 function ischoosestring(callname, callparams, gencontext)
 	if (callname == :choose)
-		if (length(callparams) >= 1) && (typeof(callparams[1]) == Symbol)
+		if (length(callparams) >= 1)
 			datatype = converttodatatype(callparams[1])
-			if (typeof(datatype) == DataType) && (datatype in SUPPORTED_CHOOSE_STRING_TYPES)
+			if (typeof(datatype) <: Type) && (datatype in GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES)
 				return true
 			end
 		end
@@ -339,17 +378,13 @@ function transformchoosenumbers!(genrules::Vector{GeneratorRule}, gencontext::Ge
 	end
 end
 
-# list of number types that are supported directly
-# (could do this automatically as leaf subtypes of Integer and AbstractFloat, but some of these we can't really handle directly yet - e.g. BigInt, BigFloat - and it is possible that
-# custom subtypes could have been added)
-SUPPORTED_CHOOSE_NUMBER_TYPES = [Bool, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float16, Float32, Float64,]
 
 # is a call to value choice point
 function ischoosenumber(callname, callparams, gencontext)
 	if (callname == :choose)
-		if (length(callparams) >= 1) && (typeof(callparams[1]) == Symbol)
+		if (length(callparams) >= 1)
 			datatype = converttodatatype(callparams[1])
-			if (typeof(datatype) == DataType) && (datatype in SUPPORTED_CHOOSE_NUMBER_TYPES)
+			if (typeof(datatype) <: Type) && (datatype in GENERATOR_SUPPORTED_CHOOSE_NUMBER_TYPES)
 				return true
 			end
 		end
@@ -823,17 +858,20 @@ function extractparamfromarg(argexpr)
 	error("cannot extract parameter name from argument definition")
 end
 
-# attempt to convert symbol to DataType (otherwise returns false)
-function converttodatatype(s::Symbol)
+# attempt to convert to DataType (otherwise returns nothing)
+function converttodatatype(s)
 	datatype = nothing
-	try
-		datatype = eval(s)
-		# TODO could eval perform side-effects here? should be OK since we know it is a symbol
-	catch
-		datatype = nothing
-	end
-	if typeof(datatype) != DataType
-		return nothing
+	if (typeof(s) == Symbol) || ((typeof(s) == Expr) && (s.head == :curly))
+		# :curly expression for Union{...}, Vector{...} etc.
+		try
+			datatype = eval(s)
+			# TODO could eval perform side-effects here? should be OK when we know it is a symbol, but what about curly expression?
+		catch
+			datatype = nothing
+		end
+		if !(typeof(datatype) <: Type) # Type rather than datatype as Union{} is a subtype of Type, but not a DataType
+			datatype = nothing
+		end
 	end
 	datatype
 end
