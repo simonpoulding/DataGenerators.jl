@@ -30,7 +30,7 @@ function process_type_consolidate_typevar_nodes(parentnode::ASTNode, rootnode::A
 			# is there already a child of the root for the same TypeVar, then simply re-use the existing one
 			reftarget = nothing
 			for rootchild in rootnode.children
-				if (rootchild.func == :typevar) && (rootchild.args[:typevar] == node.args[:typevar])
+				if (rootchild.func == :typevar) && (rootchild.args[:typevar] === node.args[:typevar])
 					reftarget = rootchild
 					break
 				end
