@@ -36,9 +36,6 @@ const GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES = [ASCIIString, UTF8String, UTF16S
 # all choose types supported directly by the generator maco
 const GENERATOR_SUPPORTED_CHOOSE_TYPES = [GENERATOR_SUPPORTED_CHOOSE_NUMBER_TYPES; GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES]
 
-# simple leaf types supported by Type translator as subtypes of abstract types
-const TYPE_TRANSLATOR_SUPPORTED_SIMPLE_LEAF_TYPES = [GENERATOR_SUPPORTED_CHOOSE_TYPES; Symbol]
-
 
 # translators
 include(joinpath("translators","translators.jl"))

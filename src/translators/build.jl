@@ -72,6 +72,12 @@ function build_called_rulename(callnode::ASTNode)
   end
 end
 
+function build_called_child_rulename(node::ASTNode, func::Symbol)
+    funcchildren = filter(child -> child.func == func, node.children)
+    @assert length(funcchildren) == 1
+    build_called_rulename(funcchildren[1])
+end
+
 escape_rule_name(name) = replace(name, r"[^a-zA-Z0-9]", "_")
 
 function assign_rulenames(node::ASTNode, rulenameprefix="")

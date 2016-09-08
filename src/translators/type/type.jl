@@ -1,3 +1,4 @@
+include("type_utilities.jl")
 include("type_parse.jl")
 include("type_transform.jl")
 include("type_build.jl")

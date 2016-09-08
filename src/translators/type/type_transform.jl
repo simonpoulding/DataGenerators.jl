@@ -1,127 +1,142 @@
 function transform_type_ast(ast::ASTNode)
-	# consolidate typevar so that one exists as root of the child for each unique typevar
-	process_type_consolidate_typevar_nodes(ast, ast)
-	# handle Arrays
-	process_type_array_nodes(ast)	# TODO: extend to AbstractArray
-	# find datatypes node referring to abstract datatype
-	process_type_abstract_datatypes(ast)
-	# process abstract datatypes and typevars to add supported concrete types
-	process_type_abstract_types(ast)
-  	# add start node as reference to root to enable reachability check
-  	push!(ast.refs, ast.children[1])
+
+	supporteddatatypes = derive_supported_datatypes(ast.args[:datatypes], ast.args[:typevardatatypes])
+
+	datatyperootnode = create_datatype_root_node(supporteddatatypes)
+	unionnode = create_union_node()
+	typerootnode = create_type_root_node(datatyperootnode, unionnode)
+	typevarnode = create_typevar_node()
+	ast.children = [typerootnode, typevarnode,]
+
+	add_choose_child(ast)
+	add_datatype_root_node_ref(ast, datatyperootnode)
+	add_type_root_node_ref(ast, typerootnode)
+	add_typevar_node_ref(ast, typevarnode)
+
+  	push!(ast.refs, typerootnode) # add start node as reference to root to enable reachability check
+
 end
 
+function derive_supported_datatypes(datatypes, typevardatatypes)
+	# supported dataypes are those specified in the type to generate for (except Any in upper bound of typevars)
+	# plus those types that can be handled directly by the generator macro
+	# and finally Type and Tuple as these are useful for handling method signatures
+	merge_datatypes_up([datatypes; filter(bound -> bound != Any, typevardatatypes); GENERATOR_SUPPORTED_CHOOSE_TYPES; Type; Tuple;])
+end
 
-#TODO process non-concrete types (NB parameterised types can be abstract)
-#TODO process composites (use constructors?)
-# NB when defining parameterized types, can explicit paramters such as use Point{Float64}(1,2)
-# parameterised types are not co-variant, but Tuples are!
+function create_type_root_node(datatyperootnode::ASTNode, unionnode::ASTNode)
+	node = ASTNode(:typeroot)
+	push!(node.children, datatyperootnode)
+	push!(node.children, unionnode)
+	node
+end
 
+function create_typevar_node()
+	node = ASTNode(:typevar)
+	node.args[:name] = :TypeVar
+	node
+end
 
-# TypeVars are moved to be a child of the root node, and replaced with a reference in their original location in the AST
-# If the TypeVar is used in multiple places ('bound'), then the typevar occurs only once as a child of the root, and all
-# references refer to this same child: this ensures only one set of generator rules is generated for the typevar.
-function process_type_consolidate_typevar_nodes(parentnode::ASTNode, rootnode::ASTNode)
-	for idx in 1:length(parentnode.children)
-		node = parentnode.children[idx]
-		process_type_consolidate_typevar_nodes(node, rootnode)
-		if node.func == :typevar
-			# move the node a child of the root where we share it using references
-			# is there already a child of the root for the same TypeVar, then simply re-use the existing one
-			reftarget = nothing
-			for rootchild in rootnode.children
-				if (rootchild.func == :typevar) && (rootchild.args[:typevar] === node.args[:typevar])
-					reftarget = rootchild
-					break
-				end
+function create_union_node()
+	node = ASTNode(:union)
+	node.args[:name] = :Union
+	node
+end
+
+function create_datatype_root_node(supporteddatatypes::Vector{DataType}) 
+	if Any in supporteddatatypes
+		create_datatype_node(Any)
+	else
+		# a "dummy" Any node in the sense that not all genuine subtypes of Any are available
+		node = ASTNode(:dt)
+		node.args[:name] = Any.name.name
+		node.args[:datatype] = Any
+		node.args[:abstract] = true
+		node.children = map(st->create_datatype_node(st, supporteddatatypes), supporteddatatypes)
+		node
+	end
+end
+
+function create_datatype_node(t::DataType, supporteddatatypes::Vector{DataType})
+	primarydatatype = primary_datatype(t)
+	primaryisabstract = is_abstract_type(primarydatatype)
+	node = ASTNode(:dt)
+	node.args[:name] = primarydatatype.name.name
+	node.args[:datatype] = primarydatatype
+	node.args[:abstract] = primaryisabstract
+	if primaryisabstract
+		node.children = map(st->create_datatype_node(st, supporteddatatypes), supportable_subtypes(primarydatatype))
+	else
+		if !(node.args[:datatype] in [GENERATOR_SUPPORTED_CHOOSE_TYPES; Tuple;])  # only look at constructor methods when the type is not handled directly
+
+			node.children = map(cm->create_constructor_method_node(cm), partially_supported_constructor_methods(supporteddatatypes, primarydatatype))
+			# - constructors methods are partially-supported if for all types required there is at least a subtype as a child of the All node
+			# need to create own bound typevar state (which, for ease of use, might store only symbol)
+			# need to convert parameters of concrete type to typevars, and then get an instance
+			# if call, then need to observe how typevars as this is the number in the Array{}
+			# will need to add type
+			# add hard-coded knowledge about lower case versions, e.g. ntuple, tuple, symbol?
+			# add hard-coded knowledge about parse, convert
+			# TODO Function
+			# TODO Varargs
+		end
+	end
+	node
+end
+
+function create_constructor_method_node(cm::Method)
+	node = ASTNode(:cm)
+	node.args[:method] = cm
+	node
+end
+
+function add_choose_child(node::ASTNode)
+	for child in node.children
+		add_choose_child(child)
+	end
+	if (node.func == :dt)
+		chooseablenodes = filter(child -> child.func == (node.args[:abstract] ? :dt : :cm), node.children)
+		if !isempty(chooseablenodes)
+			choosenode = ASTNode(:choose)
+			for chooseablenode in chooseablenodes
+				push!(choosenode.children, create_reference_node((node.args[:abstract] ? :dtref : :cmref), chooseablenode))
 			end
-			if reftarget == nothing
-				# denormalise some typevar info the node itself as this may be transformed itself
-				node.args[:ub] = node.args[:typevar].ub
-				node.args[:lb] = node.args[:typevar].lb
-				node.args[:numrefs] = 0
-				push!(rootnode.children, node)
-				reftarget = node
-			end
-			reftarget.args[:numrefs] += 1
-			# replace current node with reference to the typevar now stored at root
-			newrefnode = ASTNode(:typevarref)
-			push!(newrefnode.refs, reftarget)
-			parentnode.children[idx] = newrefnode
+			push!(node.children, choosenode)
 		end
 	end
 end
 
-#TODO how to do this for all Array types (subtypes of abstract array)?
-function process_type_array_nodes(parentnode::ASTNode)
-	for idx in 1:length(parentnode.children)
-		node = parentnode.children[idx]
-		process_type_array_nodes(node)
-		if (node.func == :datatype) && (node.args[:datatype] <: Array)
-			@assert length(node.children) == 2  "Expected Array datatype node in AST to have two children"
-			if (node.children[2].func == :typevarref)
-				# if the dimensions argument is a typevar, then set this typevar to show it returns the number of dimensions
-				node.children[2].refs[1].func = :typevarndims # indicates that this typevar represent 
-			end
-		end
-	end 
-end
-
-# TODO: concrete Union{}, Tuple{} and Array{} types may also be subtypes of Any
-# but infinitely recursive: Array{Array{...Array{Int}...}}
-# note: commented out version is VERY slow the first time it is called for Any (presumably has to compile a lot of code)
-# instead, we abandon returning tree where supported leaf types are nodes, and instead simply return a list of of the supported
-# leaf types: this enable us to simply return the constant when parameter is Any.
-process_type_supported_subtypes(datatype::DataType) = filter(t->issubtype(t, datatype), TYPE_TRANSLATOR_SUPPORTED_SIMPLE_LEAF_TYPES)
-# function process_type_supported_subtypes(datatype::DataType)
-# 	if isleaftype(datatype)
-# 		if datatype in TYPE_TRANSLATOR_SUPPORTED_SIMPLE_LEAF_TYPES
-# 			return (datatype, [])
-# 		else
-# 			return nothing
-# 		end
-# 	else
-# 		supportedsubtypeslist = []
-# 		for st in subtypes(datatype)
-# 			if st != Any # Any is subtype of itself
-# 				supportedsubtypes = process_type_supported_subtypes(st)
-# 				if supportedsubtypes != nothing
-# 					push!(supportedsubtypeslist, supportedsubtypes)
-# 				end
-# 			end
-# 		end
-# 		if isempty(supportedsubtypeslist)
-# 			return nothing
-# 		else
-# 			return (datatype, supportedsubtypeslist)
-# 		end
-# 	end
-# end
-
-function process_type_abstract_datatypes(parentnode::ASTNode)
-	for idx in 1:length(parentnode.children)
-		node = parentnode.children[idx]
-		process_type_abstract_datatypes(node)
-		if (node.func == :datatype) && !isleaftype(node.args[:datatype]) && isempty(node.children)
-			# abstract datatypes are not leaf nodes (and for our purposes, do not have parameters: thus Array would not be an abstract datatype)
-			node.func = :abstractdatatype
-		end
-	end 
-end
-
-function process_type_abstract_types(parentnode::ASTNode)
-	for idx in 1:length(parentnode.children)
-		node = parentnode.children[idx]
-		process_type_abstract_types(node)
-		if node.func in [:abstractdatatype, :typevar,]
-			@assert isempty(node.children)
-			# TODO: handle typevar lb
-			node.children = map(process_type_supported_subtypes(node.func == :typevar ? node.args[:ub] : node.args[:datatype])) do subtype
-				subtypenode = ASTNode(:datatype)
-				subtypenode.args[:name] = subtype.name
-				subtypenode.args[:datatype] = subtype 
-				subtypenode
-			end
-		end
+function add_datatype_root_node_ref(node::ASTNode, datatyperootnode::ASTNode)
+	for child in node.children
+		add_datatype_root_node_ref(child, datatyperootnode)
+	end
+	if (node.func == :dt) && (node.args[:datatype] in [DataType; Union;])
+		push!(node.children, create_reference_node(:datatyperootref, datatyperootnode))
 	end
 end
+
+function add_type_root_node_ref(node::ASTNode, typerootnode::ASTNode)
+	for child in node.children
+		add_type_root_node_ref(child, typerootnode)
+	end
+	if (node.func in [:union, :typevar,]) || ((node.func == :dt) && (node.args[:datatype] in [Tuple;]))
+		push!(node.children, create_reference_node(:typerootref, typerootnode))
+	end
+end
+
+function add_typevar_node_ref(node::ASTNode, typevarnode::ASTNode)
+	for child in node.children
+		add_typevar_node_ref(child, typevarnode)
+	end
+	if (node.func in [:union, :dt,])
+		push!(node.children, create_reference_node(:typevarref, typevarnode))
+	end
+end
+
+function create_reference_node(func::Symbol, referencednode::ASTNode)
+	node = ASTNode(func)
+	push!(node.refs, referencednode)
+	node
+end
+
+
