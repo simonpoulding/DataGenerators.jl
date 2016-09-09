@@ -33,13 +33,11 @@ end
 
 function create_typevar_node()
 	node = ASTNode(:typevar)
-	node.args[:name] = :TypeVar
 	node
 end
 
 function create_union_node()
 	node = ASTNode(:union)
-	node.args[:name] = :Union
 	node
 end
 

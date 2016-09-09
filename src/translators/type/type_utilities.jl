@@ -23,7 +23,9 @@ function extract_primary_datatypes(t::Union, datatypes::Vector{DataType}, typeva
 end
 
 function extract_primary_datatypes(t::TypeVar, datatypes::Vector{DataType}, typevardatatypes::Vector{DataType})
-	push!(typevardatatypes, primary_datatype(t.ub))
+	ubdatatypes, ubtypevardatatypes = extract_primary_datatypes(t.ub)
+	@assert isempty(ubtypevardatatypes) # assuming no typevars in typevars
+	append!(typevardatatypes, ubdatatypes)
 end
 
 function extract_primary_datatypes(t::Any, datatypes::Vector{DataType}, typevardatatypes::Vector{DataType})
@@ -105,6 +107,8 @@ function partially_supported_constructor_methods(supporteddts::Vector{DataType},
 	filter(m->is_partially_supported(supporteddts, m), methods(dt)) # TODO restrict by module?  # TODO other filters (e.g. deprecated)
 end
 
+typevar_as_parseable_string(tv::TypeVar) = "TypeVar(symbol(\"$(tv.name)\")," * type_as_parseable_string(tv.ub) * "," * (tv.bound ? "true" : "false") * ")"
+
 function type_as_parseable_string(t::Type)
 	str = ""
 	paramstrs = AbstractString[]
@@ -114,8 +118,10 @@ function type_as_parseable_string(t::Type)
 			for parameter in t.parameters
 				if isa(parameter, Type)
 					push!(paramstrs, type_as_parseable_string(parameter))
+				elseif isa(parameter, TypeVar)
+					push!(paramstrs, typevar_as_parseable_string(parameter))
 				elseif isa(parameter, Number)
-					push!(paramstrs, string(parameter))
+					push!(paramstrs, "$parameter")
 				else
 					break;
 				end
@@ -126,6 +132,8 @@ function type_as_parseable_string(t::Type)
 		for typ in t.types
 			if isa(parameter, Type)
 				push!(paramstrs, type_as_parseable_string(parameter))
+			elseif isa(parameter, TypeVar)
+				push!(paramstrs, typevar_as_parseable_string(parameter))
 			else
 				break;
 			end

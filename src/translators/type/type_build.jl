@@ -67,7 +67,7 @@ end
 function build_type_union(node::ASTNode, rules::Vector{RuleSource})
 	rule = build_rule_start(node)
     rule.args = ["tvs","t"]
-    push!(rule.comments, "Union")
+    push!(rule.comments, "Union{...} (note: datatype Union is handled by a separate rule")
 
     typerootrulename = build_called_child_rulename(node, :typerootref)
     typevarrulename = build_called_child_rulename(node, :typevarref)
@@ -154,27 +154,37 @@ function build_type_datatype(node::ASTNode, rules::Vector{RuleSource})
 
     push!(rule.source, "const primarytype = $(typestr)")
 
-    push!(rule.source, "ti = typeintersect(primarytype, isa(t, TypeVar) ? t.ub : t)")
+    push!(rule.source, "typ = isa(t, TypeVar) ? t.ub : t")
 
 	if node.args[:abstract]
 
 		# abstract datatype
 
-	    push!(rule.source, "isa(ti, DataType) || error(\"type \$(t) cannot be handled by rule for $(typestr)\")") # captures case when no intersection, i.e. Union{}
-	    push!(rule.source, "if ti.name == primarytype.name") # if intersect is this type (or a parameterised version thereof), assume any subtype could apply (this is not necessarily true)
+	    # push!(rule.source, "isa(ti, DataType) || error(\"type \$(t) cannot be handled by rule for $(typestr)\")") # captures case when no intersection, i.e. Union{}
+	    push!(rule.source, "if primarytype <: typ.name.primary") # assume this or any subtype could apply (this is not necessarily true)
 		choosesubtypechildren = filter(child -> child.func == :choose, node.children)
 		@assert length(choosesubtypechildren) <= 1
 	   	if !isempty(choosesubtypechildren)
 			choosesubtyperulename = build_called_rulename(choosesubtypechildren[1])
 		    push!(rule.source, "  if isa(t, TypeVar) && choose(Bool)")
-		    push!(rule.source, "    $(typevarrulename)(tvs, ti)") # expand any typevars and return this abstract type
+		    if isempty(dt.parameters)
+			    push!(rule.source, "    primarytype")
+			else
+			    if !any(p->p.name == Vararg.name, dt.parameters) # TODO handle Varargs
+			    	# apply any typevars where possible from passed type
+			    	push!(rule.source, "    paramtyp = typeintersect(primarytype, typ)")
+			    else
+			    	push!(rule.source, "    paramtyp = (primarytype.name == typ.name) ? typ : primarytype")
+			    end
+			    push!(rule.source, "    $(typevarrulename)(tvs, paramtyp)") # expand any remaining typevars and return this abstract but now fully parameterized type
+			end
 		    push!(rule.source, "  else")
 
 		    if dt == Type # special case since when T in Type{T} is specified, no subtypes apply, so it is acts like a concrete type
-		    	push!(rule.source, "    if isa(t, TypeVar) || isa(ti.parameters[1], TypeVar)")
+		    	push!(rule.source, "    if isa(t, TypeVar) || isa(t.parameters[1], TypeVar)")
 			    push!(rule.source, "      $(choosesubtyperulename)(tvs, t)")
 		    	push!(rule.source, "    else")
-		    	push!(rule.source, "      ti.parameters[1]")
+		    	push!(rule.source, "      t.parameters[1]")
 		    	push!(rule.source, "    end")
 		    else
 			    push!(rule.source, "    $(choosesubtyperulename)(tvs, t)")
@@ -186,10 +196,26 @@ function build_type_datatype(node::ASTNode, rules::Vector{RuleSource})
 		    	if child.func == :dt
 					subtypestr = type_as_parseable_string(child.args[:datatype])
 					subtyperulename = build_called_rulename(child)
-		        	push!(rule.source, "  (t <: $(subtypestr)) ? $(subtyperulename)(tvs, t) :")
+		        	push!(rule.source, "  (typ <: $(subtypestr)) ? $(subtyperulename)(tvs, t) :")
 		        end
 		    end
-		    push!(rule.source, "  error(\"no applicable subtype rule for type \$(t) in rule for $(typestr)\")")
+		    # TODO: special case for ANY: look through subtypes and pick one of them
+		    if dt == Any
+		    	push!(rule.source, "  begin")
+		    	push!(rule.source, "    applicablesubtypefns = Vector{Function}()")
+			    for child in node.children
+			    	if child.func == :dt
+						subtypestr = type_as_parseable_string(child.args[:datatype])
+						subtyperulename = build_called_rulename(child)
+			        	push!(rule.source, "    ($(subtypestr) <: typ) && push!(applicablesubtypefns, $(subtyperulename))")
+			        end
+			    end
+			    push!(rule.source, "    isempty(applicablesubtypefns) && error(\"no applicable subtype rule for type \$(typ) in rule for $(typestr)\")")
+			    push!(rule.source, "    applicablesubtypefns[choose(Int, 1, length(applicablesubtypefns))](tvs, t)")
+			    push!(rule.source, "  end")
+		    else
+			    push!(rule.source, "  error(\"no applicable subtype rule for type \$(typ) in rule for $(typestr)\")")
+			end
 		else
 			push!(rule.source, "  error(\"no supported subtypes in rule for $(typestr)\")")
 		end
@@ -199,28 +225,39 @@ function build_type_datatype(node::ASTNode, rules::Vector{RuleSource})
 
 		# concrete datatype
 
-	    push!(rule.source, "(isa(ti, DataType) && (ti.name == primarytype.name)) || error(\"type \$(t) cannot be handled by rule for $(typestr)\")") # captures case when no intersection, i.e. Union{}, or type is not this concrete type
-	    push!(rule.source, "ti = $(typevarrulename)(tvs, ti)") # expand any typevars
+	    # push!(rule.source, "(isa(ti, DataType) && (ti.name == primarytype.name)) || error(\"type \$(t) cannot be handled by rule for $(typestr)\")") # captures case when no intersection, i.e. Union{}, or type is not this concrete type
+	   	if isempty(dt.parameters)
+			push!(rule.source, "paramtyp = primarytype")
+		else
+		    if !any(p->p.name == Vararg.name, dt.parameters) # TODO handle Varargs
+		    	# apply any typevars where possible from passed type
+	    		push!(rule.source, "paramtyp = typeintersect(primarytype, typ)")
+	    	else
+			    push!(rule.source, "paramtyp = (primarytype.name == typ.name) ? typ : primarytype")
+	    	end
+	    	push!(rule.source, "paramtyp = $(typevarrulename)(tvs, paramtyp)") # expand any remaining typevars
+	    end
 	    
 	    push!(rule.source, "if isa(t, TypeVar)")
-	    push!(rule.source, "  ti")
+	    push!(rule.source, "  paramtyp")
 	    push!(rule.source, "else")
 
 	    if dt in GENERATOR_SUPPORTED_CHOOSE_TYPES
 
-	    	push!(rule.source, "  choose($(typestr))::ti")  # NB type assert
+	    	push!(rule.source, "  choose($(typestr))::paramtyp")  # NB type assert
 
 	    elseif dt == Tuple
 
 		    typerootrulename = build_called_child_rulename(node, :typerootref)
-	    	push!(rule.source, "  tuple(map(p->$(typerootrulename)(tvs, p), ti.parameters)...)::ti")  # NB type assert
+	    	push!(rule.source, "  tuple(map(p->$(typerootrulename)(tvs, p), paramtyp.parameters)...)::paramtyp")  # NB type assert
 
 	    elseif dt == DataType
 
 		    datatyperootrulename = build_called_child_rulename(node, :datatyperootref)
 	    	# return a DataType using the TypeVar mechanism
 	    	# note: Union{S,T} is not a DataType, and therefore we access the datatyperoot directly to avoid possibility of this
-	    	push!(rule.source, "  $(datatyperootrulename)(tvs, TypeVar(gensym(), Any))::ti")  # NB type assert
+	    	# TODO: a type can also include TypeVars
+	    	push!(rule.source, "  $(datatyperootrulename)(tvs, TypeVar(gensym(), Any))::paramtyp")  # NB type assert
 
 	    elseif dt == Union
 
@@ -232,8 +269,8 @@ function build_type_datatype(node::ASTNode, rules::Vector{RuleSource})
 	    	# so return an instance of Union, i.e. a Union of 0 or more datatypes
 		    datatyperootrulename = build_called_child_rulename(node, :datatyperootref)
 	    	# return a union of 0 or more DataTypes using the TypeVar mechanism
-			push!(rule.source, "  Union{mult($(datatyperootrulename)(tvs, TypeVar(gensym(), Any)))...}::ti") # NB type assert
-			# Note: there is a chance that Union is simplified to just one of its consituent datatypes, in which case the type assert ::Union
+			push!(rule.source, "  Union{mult($(datatyperootrulename)(tvs, TypeVar(gensym(), Any)))...}::paramtyp") # NB type assert
+			# Note: there is a chance that Union is simplified to a single consituent datatype, in which case the type assert ::Union
 			# will fail 
 	    	
 	    else
@@ -242,7 +279,7 @@ function build_type_datatype(node::ASTNode, rules::Vector{RuleSource})
 			@assert length(chooseconstructorchildren) <= 1
 		   	if !isempty(chooseconstructorchildren)
 				chooseconstructorrulename = build_called_rulename(chooseconstructorchildren[1])
-			    push!(rule.source, "  $(chooseconstructorrulename)(tvs, ti)::ti")  # NB type assert
+			    push!(rule.source, "  $(chooseconstructorrulename)(tvs, paramtyp)::paramtyp")  # NB type assert
 		   	else
 	    		push!(rule.source, "  error(\"no constructor method in rule for $(typestr)\")")
 	    	end
@@ -265,7 +302,6 @@ function build_type_constructor_method(node::ASTNode, rules::Vector{RuleSource})
     cm = node.args[:method]
     push!(rule.comments, "$(cm)")
     
-
     push!(rule.source, "error(\"would have called: $(cm)\")")
     
     build_rule_end(rule, node)
