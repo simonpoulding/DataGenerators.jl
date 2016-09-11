@@ -1,149 +1,183 @@
-primary_datatype(t::DataType) = t.name.primary
+# TODO: add comments (including assumptions, and quirks of subtype)
 
-is_abstract_type(t::DataType) = t.abstract
+primary_datatype(dt::DataType) = dt.name.primary
 
-function extract_primary_datatypes(t::Type)
-	datatypes = Vector{DataType}()
-	typevardatatypes = Vector{DataType}()
-	extract_primary_datatypes(t, datatypes, typevardatatypes)
-	datatypes, typevardatatypes
-end
+is_abstract(dt::DataType) = dt.abstract
 
-function extract_primary_datatypes(t::DataType, datatypes::Vector{DataType}, typevardatatypes::Vector{DataType})
-	push!(datatypes, primary_datatype(t))
-	for p in t.parameters 
-		extract_primary_datatypes(p, datatypes, typevardatatypes)
+
+
+function datatype_tree_ascend(dt::DataType, dttree::Dict{DataType, Vector{DataType}} = Dict{DataType, Vector{DataType}}())
+	if dt != Any
+		superdt = super(dt)
+		v = get!(dttree, superdt, Vector{DataType}[])
+		if !(dt in v)
+			push!(v, dt)
+		end
+		datatype_tree_ascend(superdt::DataType, dttree)
 	end
+	dttree
 end
 
-function extract_primary_datatypes(t::Union, datatypes::Vector{DataType}, typevardatatypes::Vector{DataType})
-	for p in t.types
-		extract_primary_datatypes(p, datatypes, typevardatatypes)
-	end
-end
-
-function extract_primary_datatypes(t::TypeVar, datatypes::Vector{DataType}, typevardatatypes::Vector{DataType})
-	ubdatatypes, ubtypevardatatypes = extract_primary_datatypes(t.ub)
-	@assert isempty(ubtypevardatatypes) # assuming no typevars in typevars
-	append!(typevardatatypes, ubdatatypes)
-end
-
-function extract_primary_datatypes(t::Any, datatypes::Vector{DataType}, typevardatatypes::Vector{DataType})
-	# do nothing (catch all needed for e.g. array dimensions which are Int values)
-end
-
-# remove any subtypes we explicitly don't want to handle
-function supportable_subtypes(t::DataType)
-	filter(st -> (
-			(st != Any)						# because Any is a subtype of itself and so this could trigger infinite recursion (Any is handled as a special case anyway)
-			&& (st != TypeConstructor)		# 'special' type (note: TypeConstructor <: Type{T}, but not when T is explicit)
-			&& !(st <: DataGenerators.Generator)
-			# && Base.isexported(st.name.module, st.name.name) # TODO (throughout) check which context should be used for this since generator is evaluated when the context of a module
-		), subtypes(current_module(), t)) # TODO (throughout) check which context should be used for this since generator is evaluated when the context of a module
-end
-
-function merge_datatypes_up(ts::Vector{DataType})
-	if isempty(ts)
-		return ts
-	else
-		if length(ts) > 1
-			for i in 2:length(ts)
-				if ts[1] <: ts[i]
-					return merge_datatypes_up(ts[2:end])
+function datatype_tree_descend(dt::DataType, dttree::Dict{DataType, Vector{DataType}} = Dict{DataType, Vector{DataType}}(); subtypefn=subtypes)
+	v = get!(dttree, dt, Vector{DataType}[])
+	subdts = subtypefn(dt)
+	if !isempty(subdts)
+		for subdt in subdts
+			if subdt != Any
+				if !(subdt in v)
+					push!(v, subdt)
 				end
-				if ts[i] <: ts[1]
-					ts[i] = ts[1]
-					return merge_datatypes_up(ts[2:end])
-				end
+				datatype_tree_descend(subdt::DataType, dttree; subtypefn=subtypefn)
 			end
 		end
-		[ts[1]; merge_datatypes_up(ts[2:end])]
 	end
+	dttree
 end
 
-function merge_datatypes_down(ts::Vector{DataType})
-	if isempty(ts)
-		return ts
-	else
-		if length(ts) > 1
-			for i in 2:length(ts)
-				if ts[1] <: ts[i]
-					ts[i] = ts[1]
-					return merge_datatypes_down(ts[2:end])
+function datatype_tree(dt::DataType, dttree::Dict{DataType, Vector{DataType}} = Dict{DataType, Vector{DataType}}(); subtypefn=subtypes)
+	datatype_tree_ascend(dt, dttree)
+	datatype_tree_descend(dt, dttree; subtypefn=subtypefn)
+	dttree
+end
+
+function datatype_tree(dts::Vector{DataType}, dttree::Dict{DataType, Vector{DataType}} = Dict{DataType, Vector{DataType}}(); subtypefn=subtypes)
+	for dt in dts
+		datatype_tree(dt::DataType, dttree; subtypefn=subtypefn)
+	end
+	dttree
+end
+
+
+
+function nonabstract_descendents(dt::DataType, descendents::Vector{DataType} = Vector{DataType}(); subtypefn=subtypes)
+	subdts = subtypefn(dt)
+	for subdt in subdts
+		if subdt != Any
+			if !is_abstract(subdt)
+				if !(subdt in descendents)
+					push!(descendents, subdt)
 				end
-				if ts[i] <: ts[1]
-					return merge_datatypes_down(ts[2:end])
-				end
-			end
-		end
-		[ts[1]; merge_datatypes_down(ts[2:end])]
-	end
-end
-
-function is_partially_supported(supporteddts::Vector{DataType}, t::DataType)
-	for supporteddt in supporteddts
-		if typeintersect(supporteddt, t) != Union{}
-			return true
-		end
-	end
-	false
-end
-
-function is_partially_supported(supporteddts::Vector{DataType}, ts::Vector{DataType})
-	for t in ts
-		if !is_partially_supported(supporteddts, t)
-			return false
-		end
-	end
-	true
-end
-
-function is_partially_supported(supporteddts::Vector{DataType}, m::Method)
-	datatypes, typevardatatypes = extract_primary_datatypes(m.sig)
-	is_partially_supported(supporteddts, [datatypes; typevardatatypes])
-end
-
-function partially_supported_constructor_methods(supporteddts::Vector{DataType}, dt::DataType)
-	filter(m->is_partially_supported(supporteddts, m), methods(dt)) # TODO restrict by module?  # TODO other filters (e.g. deprecated)
-end
-
-typevar_as_parseable_string(tv::TypeVar) = "TypeVar(symbol(\"$(tv.name)\")," * type_as_parseable_string(tv.ub) * "," * (tv.bound ? "true" : "false") * ")"
-
-function type_as_parseable_string(t::Type)
-	str = ""
-	paramstrs = AbstractString[]
-	if isa(t, DataType)
-		str *= string(t.name.name)
-		if t != t.name.primary
-			for parameter in t.parameters
-				if isa(parameter, Type)
-					push!(paramstrs, type_as_parseable_string(parameter))
-				elseif isa(parameter, TypeVar)
-					push!(paramstrs, typevar_as_parseable_string(parameter))
-				elseif isa(parameter, Number)
-					push!(paramstrs, "$parameter")
-				else
-					break;
-				end
-			end
-		end
-	elseif isa(t, Union)
-		str = "Union"
-		for typ in t.types
-			if isa(parameter, Type)
-				push!(paramstrs, type_as_parseable_string(parameter))
-			elseif isa(parameter, TypeVar)
-				push!(paramstrs, typevar_as_parseable_string(parameter))
 			else
-				break;
+				nonabstract_descendents(subdt::DataType, descendents; subtypefn=subtypefn)
 			end
 		end
-	else
-		error("unexpected subtype of Type")
 	end
-	if !isempty(paramstrs) || isa(t, Union)
-		str *= "{" * join(paramstrs, ",") * "}"
-	end
-	str
+	descendents
 end
 
+function nonabstract_descendents(dts::Vector{DataType}, descendents::Vector{DataType} = Vector{DataType}(); subtypefn=subtypes)
+	for dt in dts
+		nonabstract_descendents(dt::DataType, descendents; subtypefn=subtypefn)
+	end
+	descendents
+end
+
+
+function extract_primary_datatypes(dt::DataType, pdts::Vector{DataType} = Vector{DataType}())
+	pdt = primary_datatype(dt)
+	if !(pdt in pdts)
+		push!(pdts, pdt)
+	end
+	for p in dt.parameters 
+		extract_primary_datatypes(p, pdts)
+	end
+	pdts
+end
+
+function extract_primary_datatypes(ts::Vector{Type}, pdts::Vector{DataType} = Vector{DataType}())
+	for t in ts
+		extract_primary_datatypes(t, pdts)
+	end
+	pdts
+end
+
+function extract_primary_datatypes(u::Union, pdts::Vector{DataType} = Vector{DataType}())
+	for t in u.types
+		extract_primary_datatypes(t, pdts)
+	end
+	pdts
+end
+
+function extract_primary_datatypes(tv::TypeVar, pdts::Vector{DataType} = Vector{DataType}())
+	extract_primary_datatypes(tv.ub, pdts)
+	extract_primary_datatypes(tv.lb, pdts) # since Union{} is a Union rather than a DataType, and it contains no types, it will contribute nothing
+	pdts
+end
+
+function extract_primary_datatypes(t::Any, pdts::Vector{DataType} = Vector{DataType}())
+	# do nothing (catch all needed for e.g. array dimensions which are numeric values)
+	pdts
+end
+
+
+function merge_datatypes_up(dts::Vector{DataType})
+	if isempty(dts)
+		return dts
+	else
+		if length(dts) > 1
+			for i in 2:length(dts)
+				if dts[1] <: dts[i]
+					return merge_datatypes_up(dts[2:end])
+				end
+				if dts[i] <: dts[1]
+					dts[i] = dts[1]
+					return merge_datatypes_up(dts[2:end])
+				end
+			end
+		end
+		[dts[1]; merge_datatypes_up(dts[2:end])]
+	end
+end
+
+function merge_datatypes_down(dts::Vector{DataType})
+	if isempty(dts)
+		return dts
+	else
+		if length(dts) > 1
+			for i in 2:length(dts)
+				if dts[1] <: dts[i]
+					dts[i] = dts[1]
+					return merge_datatypes_down(dts[2:end])
+				end
+				if dts[i] <: dts[1]
+					return merge_datatypes_down(dts[2:end])
+				end
+			end
+		end
+		[dts[1]; merge_datatypes_down(dts[2:end])]
+	end
+end
+
+
+is_partially_supported(dt::DataType, supporteddts::Vector{DataType}) = any(supportedt->typeintersect(supportedt, dt) != Union{}, supporteddts)
+
+is_partially_supported(dts::Vector{DataType}, supporteddts::Vector{DataType}) = all(dt -> is_partially_supported(dt, supporteddts), dts)
+
+function is_partially_supported(m::Method, supporteddts::Vector{DataType})
+	dts = extract_primary_datatypes(m.sig)
+	is_partially_supported(dts, supporteddts)
+end
+
+function partially_supported_constructor_methods(dt::DataType, supporteddts::Vector{DataType})
+	filter(m->is_partially_supported(m, supporteddts), methods(dt)) # TODO restrict by module?  # TODO other filters (e.g. deprecated)
+end
+
+
+
+function type_as_parseable_string(tv::TypeVar)
+	"TypeVar(symbol(\"" * string(tv.name) * "\")," * type_as_parseable_string(tv.lb) * "," * type_as_parseable_string(tv.ub) * "," * (tv.bound ? "true" : "false") * ")"
+end
+
+function type_as_parseable_string(n::Number)
+	string(n)
+end
+
+function type_as_parseable_string(dt::DataType)
+	pstrs = (dt == primary_datatype(dt)) ? AbstractString[] : map(p -> type_as_parseable_string(p), dt.parameters)
+	string(dt.name.name) * (isempty(pstrs) ? "" : "{" * join(pstrs, ",") * "}")
+end
+
+function type_as_parseable_string(u::Union)
+	pstrs = map(p -> type_as_parseable_string(p), u.types)
+	"Union" * "{" * join(pstrs, ",") * "}" # note: Union{} is distinct from Union, so always output the curly braces
+end

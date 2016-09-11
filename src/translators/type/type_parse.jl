@@ -1,6 +1,6 @@
-function parse_type(t::Type)
-	node = ASTNode(:type)
+function parse_type(t::Type, supplementalts::Vector{Type})
+	node = ASTNode(:start)
 	node.args[:type] = t
-	node.args[:datatypes], node.args[:typevardatatypes] = extract_primary_datatypes(t)
+	node.args[:supplementaltypes] = supplementalts
 	node
 end
