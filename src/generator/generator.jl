@@ -56,6 +56,8 @@ macro generator(gensig, genbody)
 	typeblock = constructtype(genname, subgenargs, metadata, gencontext)
 	methodsblock = constructmethods(generatorrules)
 
+	println(methodsblock)
+
 	esc(mergeexprs(typeblock, methodsblock))
 	
 end
@@ -80,8 +82,11 @@ type GeneratorContext
 	statearg::Expr
 	function GeneratorContext(genname, subgenargs)
 		choicepointoffset = rand63bitint() # all choice points numbers will come in sequence after this number
-		genparam = gensym(:g)
-		stateparam = gensym(:s)
+		warn("Not applying gensym to genparam and stateparam")
+		# genparam = gensym(:g)
+		genparam = :_genparam
+		# stateparam = gensym(:s)
+		stateparam = :_stateparam
 		genarg = :( $(genparam)::$(genname) )
 		statearg = :( $(stateparam)::$(THIS_MODULE).DerivationState )
 		new(choicepointoffset, 0, Dict{Int, Dict{Symbol, Any}}(), genname, subgenargs, Dict{Symbol, Symbol}(), genparam, genarg, stateparam, statearg)
@@ -186,7 +191,6 @@ function constructtype(genname, subgenargs, metaInfo, gencontext::GeneratorConte
 	# Further note: Module is stored as a symbol in the type since deepcopy does not support fields of type Module,
 	# and to recreate the Module type, we also need its parent
 	
-
 	quote
 		type $(genname) <: $(THIS_MODULE).Generator
 			meta::Dict{Symbol, Any}

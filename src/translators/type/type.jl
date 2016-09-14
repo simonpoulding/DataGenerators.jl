@@ -7,7 +7,6 @@ function type_rules(t::Type, supplementalts::Vector{Type}=Vector{Type}(), rulena
 	ast = parse_type(t, supplementalts)
 	transform_type_ast(ast)
 	transform_ast(ast) # this standard transform (which analysis reachability) isn't really needed for a type, but included for consistency with other translators
-	println(ast)
 	build_type_rules(ast, rulenameprefix)
 end
 

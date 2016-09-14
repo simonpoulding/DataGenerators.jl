@@ -7,7 +7,7 @@ const TRANSLATOR_CONSTRUCTED_TYPES = [GENERATOR_SUPPORTED_CHOOSE_TYPES; Tuple; D
 function translatable_subtypes(dt::DataType)
 	filter(subtypes(current_module(), dt)) do subdt
 		!(subdt <: DataGenerators.Generator) &&
-		Base.isexported(subdt.name.module, subdt.name.name)
+		!(subdt <: Vararg)
 	end
 end
 
@@ -18,7 +18,8 @@ function transform_type_ast(ast::ASTNode)
 	# extract primary datatypes and upper bound datatypes of typevars in the parsed type as well as supplemental types
 	supporteddts = extract_primary_datatypes([ast.args[:type]; ast.args[:supplementaltypes]])
 	#DEBUG println("1: $(supporteddts)")
-	# remove Any from this list (too big), and Vararg (handled in Tuple)
+	# remove Any from this list as tree is too big - instead user could specify required subtypes of Any in supplemental types
+	# remove Vararg since it is handled in a special way within Tuple
 	supporteddts = filter(t -> !(t in [Any; Vararg;]), supporteddts)
 	#DEBUG println("2: $(supporteddts)")
 	# merge datatypes upwards (i.e. if A subsumes B, take just B)
@@ -38,11 +39,13 @@ function transform_type_ast(ast::ASTNode)
 	instancenode = create_instance_node()
 	datatypenode = create_datatype_node()
 	typenode = create_type_node()
+	methodnode = create_method_node()
 	dtrootnode = create_dt_root_node(supporteddts)
-	ast.children = [instancenode; datatypenode; typenode; dtrootnode;]
+	ast.children = [instancenode; datatypenode; typenode; methodnode; dtrootnode;]
 
 	add_reference(ast, :instanceref, instancenode) do node
-		node.func == :cm
+		(node.func == :method) ||
+		((node.func == :cm) && !haskey(node.args, :method))
 	end
 
 	add_reference(ast, :datatyperef, datatypenode) do node
@@ -52,12 +55,17 @@ function transform_type_ast(ast::ASTNode)
 
 	add_reference(ast, :typeref, typenode) do node
 		(node.func == :datatype) ||
+		(node.func == :method) ||
 		((node.func == :dt) && (node.args[:datatype] == Type))
 	end
 
 	add_reference(ast, :dtref, dtrootnode) do node
 		(node.func == :instance) || 
 		(node.func == :type)
+	end
+
+	add_reference(ast, :methodref, methodnode) do node
+		(node.func == :cm) && haskey(node.args, :method)
 	end
 
 	add_choose(ast, :dt, :dtref) do node
@@ -72,11 +80,14 @@ function transform_type_ast(ast::ASTNode)
 
 end
 
+
 create_instance_node() = ASTNode(:instance)
 
 create_datatype_node() = ASTNode(:datatype)
 
 create_type_node() = ASTNode(:type)
+
+create_method_node() = ASTNode(:method)
 
 function create_dt_root_node(supporteddts::Vector{DataType})
 	# supporteddttree is the minimal partial subtree of primary datatypes that includes the supported datatypes, and remains
@@ -87,38 +98,37 @@ function create_dt_root_node(supporteddts::Vector{DataType})
 end
 
 function create_dt_node(t::DataType, supporteddttree::Dict{DataType, Vector{DataType}}, supporteddts::Vector{DataType})
-	primarydatatype = primary_datatype(t)
-	primaryisabstract = is_abstract(primarydatatype)
+	primarydt = primary_datatype(t)
+	primaryisabstract = is_abstract(primarydt)
 	node = ASTNode(:dt)
-	node.args[:name] = primarydatatype.name.name
-	node.args[:datatype] = primarydatatype
+	node.args[:name] = primarydt.name.name
+	node.args[:datatype] = primarydt
 	node.args[:abstract] = primaryisabstract
-	@assert primaryisabstract == !isempty(supporteddttree[primarydatatype])
+	@assert primaryisabstract == !isempty(supporteddttree[primarydt])
 	if primaryisabstract
-		primarysubtypes = supporteddttree[primarydatatype]
+		primarysubtypes = supporteddttree[primarydt]
 		node.children = map(st->create_dt_node(st, supporteddttree, supporteddts), primarysubtypes)
 	else 
-		constructormethods = Vector{Union{Method, DataType}}()
-		if !(primarydatatype in TRANSLATOR_CONSTRUCTED_TYPES) # TODO could also add partially supported constructor methods even in the case of a translator constructed alternative
-			append!(constructormethods, partially_supported_constructor_methods(primarydatatype, supporteddts))
+		if !(primarydt in TRANSLATOR_CONSTRUCTED_TYPES) # TODO could also add partially supported constructor methods even in the case of a translator constructed alternative
+			append!(node.children, map(cm -> create_constructor_method_node(cm, primarydt), partially_supported_constructor_methods(primarydt, supporteddts)))
 		end
-		if isempty(constructormethods)
-			push!(constructormethods, primarydatatype) 
+		if isempty(node.children)
+			push!(node.children, create_constructor_method_node(primarydt))
 		end
-		node.children = map(cm->create_constructor_method_node(cm), constructormethods)
 	end
 	node
 end
 
-function create_constructor_method_node(cm::Method)
+function create_constructor_method_node(cm::Method, primarydt::DataType)
 	node = ASTNode(:cm)
 	node.args[:method] = cm
+	node.args[:datatype] = primarydt
 	node
 end
 
-function create_constructor_method_node(dt::DataType)
+function create_constructor_method_node(primarydt::DataType)
 	node = ASTNode(:cm)
-	node.args[:datatype] = dt
+	node.args[:datatype] = primarydt
 	node
 end
 
