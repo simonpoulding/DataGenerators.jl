@@ -2,6 +2,7 @@ include("type_utilities.jl")
 include("type_parse.jl")
 include("type_transform.jl")
 include("type_build.jl")
+include("type_generator_utilities.jl")
 
 function type_rules(t::Type, supplementalts::Vector{Type}=Vector{Type}(), rulenameprefix="")
 	ast = parse_type(t, supplementalts)

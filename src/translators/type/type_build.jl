@@ -140,8 +140,14 @@ function build_type_method(node::ASTNode, rules::Vector{RuleSource})
     #   fname is function name (Symbol)
     #   sig is method signature (DataType) - specifically a Tuple
     push!(rule.source, "  @assert sig <: Tuple")
+    push!(rule.source, "  @assert isa(dt, DataType)")
 
     push!(rule.source, "  argstype = deepcopy(sig)")
+
+    # ensure required datatype is fully parameterised
+    typerulename = build_called_child_rulename(node, :typeref)
+    push!(rule.source, "   paramdt = dt.name.primary{map(p->$(typerulename)(tvlookup, p), dt.parameters)...}") # any bound typevars to be resolved will be in the old bound typevar context, so use that
+	
     # create a new lookup context for bound typevars
     push!(rule.source, "  newtvlookup = Dict{TypeVar, Any}()") 
 
@@ -152,15 +158,15 @@ function build_type_method(node::ASTNode, rules::Vector{RuleSource})
     push!(rule.source, "    boundtvs = DataGenerators.extract_bound_typevars(argstype)") # get all bind variable in the args Tuple
     push!(rule.source, "    firstargtype = deepcopy(argstype.parameters[1])")
     push!(rule.source, "    firstargtype = DataGenerators.bind_matching_unbound_typevars(firstargtype, boundtvs)") # bind these if they occur in the first parameter
-    push!(rule.source, "    DataGenerators.match_template_bound_typevars(firstargtype, Type{dt}, newtvlookup)") # and match them to value in the desired datatype
+    push!(rule.source, "    DataGenerators.match_template_bound_typevars(firstargtype, Type{paramdt}, newtvlookup)") # and match them to value in the desired datatype
     # note: argstype remains unchanged
 	push!(rule.source, "  end")
 
-	# if any of the bound typevars are still typevars, resolve them now
-	push!(rule.source, "  for (tv, t) in newtvlookup")
-    typerulename = build_called_child_rulename(node, :typeref)
-    push!(rule.source, "    newtvlookup[tv] = $(typerulename)(tvlookup, t)") # any bound typevars to be resolved will be in the old bound typevar context, so use that
-	push!(rule.source, "  end")
+	# # if any of the bound typevars are still typevars, resolve them now
+	# push!(rule.source, "  for (tv, t) in newtvlookup")
+ #    typerulename = build_called_child_rulename(node, :typeref)
+ #    push!(rule.source, "    newtvlookup[tv] = $(typerulename)(tvlookup, t)") # any bound typevars to be resolved will be in the old bound typevar context, so use that
+	# push!(rule.source, "  end")
 
     push!(rule.source, "  argstype = DataGenerators.resolve_bound_typevars(argstype, newtvlookup)")
     # TODO also resolve unbound typevars (perhaps only some)
@@ -173,9 +179,10 @@ function build_type_method(node::ASTNode, rules::Vector{RuleSource})
 	push!(rule.source, "  args = eval(instancecallexpr)")
 
 
-	push!(rule.source, "  info(\"calling \$(fname) with args \$(args) to get datatype \$(dt)\")")
+	push!(rule.source, "  info(\"calling \$(fname) with signature \$(sig) with args \$(args) to get datatype \$(dt) (parameterised type of \$(paramdt))\")")
 	push!(rule.source, "  f = eval(parse(\"\$(fname)\"))")
-	push!(rule.source, "  invoke(f, sig, args...)") # note: original sig
+	push!(rule.source, "  invoke(f, sig, args...)::dt") # note: original sig
+	# note dt, not paramdt, in type assert: we are okay if parameters are ignored (I think - unless they are bound??)
 
     build_rule_end(rule, node)
     push!(rules, rule)

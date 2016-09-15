@@ -56,8 +56,6 @@ macro generator(gensig, genbody)
 	typeblock = constructtype(genname, subgenargs, metadata, gencontext)
 	methodsblock = constructmethods(generatorrules)
 
-	println(methodsblock)
-
 	esc(mergeexprs(typeblock, methodsblock))
 	
 end
