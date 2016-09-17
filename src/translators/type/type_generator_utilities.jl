@@ -43,28 +43,28 @@ resolve_bound_typevars(u::Union, tvlookup::Dict{TypeVar, Any}) = Union{map(t -> 
 resolve_bound_typevars(x::Any, tvlookup::Dict{TypeVar, Any}) = x
 
 
-function extract_bound_typevars(tv::TypeVar, boundtvs::Vector{TypeVar} = Vector{TypeVar}())
-	if tv.bound && !(tv in boundtvs)
-		push!(boundtvs, tv)
+function extract_typevars(tv::TypeVar, tvs::Vector{TypeVar} = Vector{TypeVar}())
+	if !(tv in tvs)
+		push!(tvs, tv)
 	end
-	boundtvs
+	tvs
 end
 
-function extract_bound_typevars(dt::DataType, boundtvs::Vector{TypeVar} = Vector{TypeVar}())
+function extract_typevars(dt::DataType, tvs::Vector{TypeVar} = Vector{TypeVar}())
 	for p in dt.parameters
-		extract_bound_typevars(p, boundtvs)
+		extract_typevars(p, tvs)
 	end
-	boundtvs
+	tvs
 end
 
-function extract_bound_typevars(u::Union, boundtvs::Vector{TypeVar} = Vector{TypeVar}())
+function extract_typevars(u::Union, tvs::Vector{TypeVar} = Vector{TypeVar}())
 	for t in u.types
-		extract_bound_typevars(t, boundtvs)
+		extract_typevars(t, tvs)
 	end
-	boundtvs
+	tvs
 end
 
-extract_bound_typevars(x::Any, boundtvs::Vector{TypeVar} = Vector{TypeVar}()) = boundtvs
+extract_typevars(x::Any, tvs::Vector{TypeVar} = Vector{TypeVar}()) = tvs
 
 
 function bind_matching_unbound_typevars(tv::TypeVar, boundtvs::Vector{TypeVar})
@@ -84,4 +84,15 @@ bind_matching_unbound_typevars(dt::DataType, boundtvs::Vector{TypeVar}) = primar
 bind_matching_unbound_typevars(u::Union, boundtvs::Vector{TypeVar}) = Union{map(t -> bind_matching_unbound_typevars(t, boundtvs), u.types)...}
 
 bind_matching_unbound_typevars(x::Any, boundtvs::Vector{TypeVar}) = x
+
+
+function replace_datatype_parameters(dt::DataType, ps::Vector{Any})
+	if datatype_name(dt) == datatype_name(Union)
+		dt   # since Union is not the same as Union{} - the former is a DataType, the latter is not
+	else
+		primary_datatype(dt){ps...}
+	end::DataType
+end
+
+
 

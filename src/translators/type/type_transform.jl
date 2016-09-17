@@ -1,6 +1,6 @@
 
-# non-abstract types that the generator can build special rules for generating instances
-const TRANSLATOR_CONSTRUCTED_TYPES = [GENERATOR_SUPPORTED_CHOOSE_TYPES; Tuple; DataType; Union; TypeConstructor]
+# non-abstract types that the generator can build special rules for generating values
+const TRANSLATOR_CONSTRUCTED_TYPES = Type[GENERATOR_SUPPORTED_CHOOSE_TYPES; Tuple; DataType; Union; TypeConstructor;]
 
 # returns only subtypes we can translate
 # TODO (throughout) check which context should be used for this since generator is evaluated when the context of a module
@@ -36,21 +36,22 @@ function transform_type_ast(ast::ASTNode)
 		supporteddts = merge_datatypes_up([supporteddts; Tuple; Type])
 	end
 
-	instancenode = create_instance_node()
+	valuenode = create_value_node()
 	datatypenode = create_datatype_node()
 	typenode = create_type_node()
 	methodnode = create_method_node()
 	dtrootnode = create_dt_root_node(supporteddts)
-	ast.children = [instancenode; datatypenode; typenode; methodnode; dtrootnode;]
+	ast.children = [valuenode; datatypenode; typenode; methodnode; dtrootnode;]
 
-	add_reference(ast, :instanceref, instancenode) do node
+	add_reference(ast, :valueref, valuenode) do node
 		(node.func == :method) ||
-		((node.func == :cm) && !haskey(node.args, :method))
+		((node.func == :cm) && !haskey(node.args, :method) && (node.args[:datatype] == Tuple))
 	end
 
 	add_reference(ast, :datatyperef, datatypenode) do node
-		(node.func == :instance) || 
-		(node.func == :type)
+		(node.func == :value) || 
+		(node.func == :type) ||
+		((node.func == :cm) && !haskey(node.args, :method) && (node.args[:datatype] in [DataType; Union;]))
 	end
 
 	add_reference(ast, :typeref, typenode) do node
@@ -60,7 +61,7 @@ function transform_type_ast(ast::ASTNode)
 	end
 
 	add_reference(ast, :dtref, dtrootnode) do node
-		(node.func == :instance) || 
+		(node.func == :value) || 
 		(node.func == :type)
 	end
 
@@ -76,12 +77,12 @@ function transform_type_ast(ast::ASTNode)
 		(node.func == :dt) && !node.args[:abstract]
 	end
 
-  	push!(ast.refs, instancenode) # add type node as reference to root to enable reachability check
+  	push!(ast.refs, valuenode) # add type node as reference to root to enable reachability check
 
 end
 
 
-create_instance_node() = ASTNode(:instance)
+create_value_node() = ASTNode(:value)
 
 create_datatype_node() = ASTNode(:datatype)
 
