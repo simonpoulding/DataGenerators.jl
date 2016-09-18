@@ -86,7 +86,7 @@ function build_type_datatype(node::ASTNode, rules::Vector{RuleSource})
     push!(rule.source, "  t = $(typerulename)(tvlookup, totv, false)::Type") # false avoids probabilistic expansion to union since it will be de-expanded in next few lines here
     push!(rule.source, "  dt = begin")
     push!(rule.source, "    if isa(t, Union)")
-    push!(rule.source, "      isempty(t.types) && error(\"Cannot select a value from Union{}\")")
+    push!(rule.source, "      @assert !isempty(t.types)") # not a Union{}
    	push!(rule.source, "      $(thisrulename)(tvlookup, t.types[choose(Int, 1, length(t.types))])")
    	push!(rule.source, "    else")
     # TODO - handle TypeConstructors here?
@@ -123,6 +123,7 @@ function build_type_type(node::ASTNode, rules::Vector{RuleSource})
 	rule = build_rule_start(node)
     rule.args = ["tvlookup"; "totv"; "unionise";]
 
+    # thisrulename = build_called_rulename(node)
     dtrootrulename = build_called_child_rulename(node, :dtref)
     datatyperulename = build_called_child_rulename(node, :datatyperef)
 
@@ -151,6 +152,24 @@ function build_type_type(node::ASTNode, rules::Vector{RuleSource})
     push!(rule.source, "        end")
     push!(rule.source, "        t")
     push!(rule.source, "      end")
+
+ #    push!(rule.source, "    elseif isa(totv, DataType)")
+ #    push!(rule.source, "  newps = Vector{Any}()")
+	# push!(rule.source, "  for p in totv.parameters")
+	# push!(rule.source, "    if isa(p, TypeVar) && choose(Bool)")
+	# push!(rule.source, "      push!(newps, $(thisrulename)(tvlookup, p, true))")
+	# push!(rule.source, "    elseif isa(p, DataType) && (p.name == Vararg.name) && choose(Bool)")
+	# push!(rule.source, "      while choose(Bool)") # should really use a mult for this, but this seems to lengthen compile-time dramatically (possibly type inference issue as in method rule?)
+	# push!(rule.source, "        if choose(Bool)")
+	# push!(rule.source, "          push!(newps, $(thisrulename)(tvlookup, p.parameters[1], true))")
+	# push!(rule.source, "        end")
+	# push!(rule.source, "      end")
+	# push!(rule.source, "    else")
+	# push!(rule.source, "      push!(newps, p)")
+	# push!(rule.source, "    end")
+	# push!(rule.source, "  end")
+	# push!(rule.source, "  DataGenerators.replace_datatype_parameters(totv , newps)::DataType")
+
     push!(rule.source, "    else")
     push!(rule.source, "      totv")
     push!(rule.source, "    end")
@@ -198,10 +217,15 @@ function build_type_method(node::ASTNode, rules::Vector{RuleSource})
 	valuerulename = build_called_child_rulename(node, :valueref)
 	push!(rule.source, "  args = $(valuerulename)(newtvlookup, argstype)::Tuple") # note: newtvlookup
 
-	push!(rule.source, "  info(\"calling \$(fname) with signature \$(sig) with args \$(args) to get datatype \$(dt) (parameterised type of \$(paramdt))\")")
+	# push!(rule.source, "  info(\"calling \$(fname) with signature \$(sig) with args \$(args) to get a value for datatype \$(paramdt))\")")
 	push!(rule.source, "  f = eval(parse(\"\$(fname)\"))")
-	push!(rule.source, "  invoke(f, sig, args...)::dt") # note: original sig
+	push!(rule.source, "  try")
+	push!(rule.source, "    invoke(f, sig, args...)::dt") # note: original sig
 	# note dt, not paramdt, in type assert: we are okay if parameters are ignored (I think - unless they are bound??)
+	push!(rule.source, "  catch exc")
+	push!(rule.source, "    throw(DataGenerators.TypeGenerationException(symbol(\"$(node.func)\"), \"calling function \$(fname) with signature \$(sig) using args \$(args) to get a value for datatype \$(paramdt)\", exc))")
+	push!(rule.source, "  end")
+	
 
     build_rule_end(rule, node)
     push!(rules, rule)
@@ -236,19 +260,19 @@ function build_type_dt(node::ASTNode, rules::Vector{RuleSource})
 
 		chooserulename = build_called_child_rulename(node, :choose)
 	    if ruleprimarydt == Type
-	    	typerulename = build_called_child_rulename(node, :typeref)
-	    	push!(rule.source, "      if dt.name == Type.name")
-	    	# if the type is explicity Type{T} then we return the parameter:
-	    	# if the parameter is an explicit type, then that is correct since that type the only value of Type{T}
-	    	# if the parameter is a typevar, then it will later be transformed to either a datatype or union by the typerule
-	    	#    this latter case handles the fact that Int is a valid value for Type{T <: Integer}
-			push!(rule.source, "        $(typerulename)(tvlookup, dt.parameters[1], true)")
-			push!(rule.source, "      else")
-			push!(rule.source, "        $(chooserulename)(tvlookup, dtotv)")
+	    	push!(rule.source, "      if (dt.name == Type.name)")
+	    	push!(rule.source, "        if (dt === ruleprimarydt)")
+	    	push!(rule.source, "          if choose(Bool)") # sometimes treat primary as concrete rather than abstract since Type{T} an instance of Type
+	    	datatyperulename = build_called_child_rulename(node, :datatyperef)
+			push!(rule.source, "          	return $(datatyperulename)(tvlookup, dt)") # pass through datatyperulename to optionally parameterise
+			push!(rule.source, "          end")
+			push!(rule.source, "        else")
+	    	typerulename = build_called_child_rulename(node, :typeref) # if not primary, then return first parameter (if it a TypeVar, will be expanded)
+			push!(rule.source, "          return $(typerulename)(tvlookup, dt.parameters[1], true)") # note can unionise, e.g. isa(Union{Int8, Int16}, Type{TypeVar(:T, Integer)}) is true
+			push!(rule.source, "        end")
 			push!(rule.source, "      end")
-	    else
-			push!(rule.source, "      $(chooserulename)(tvlookup, dtotv)")
 		end
+		push!(rule.source, "      $(chooserulename)(tvlookup, dtotv)")
 	    push!(rule.source, "    end")
 
 	    push!(rule.source, "  else")    
@@ -261,7 +285,7 @@ function build_type_dt(node::ASTNode, rules::Vector{RuleSource})
         	# TODO, could 'hardcode' list of primary types from subtypes
         	# TODO: instead of dt, could use dt.name.primary
 	    end
-		push!(rule.source, "    error(\"no applicable subtype rule for type \$(dt) in rule for $(ruleprimarydtstr)\")")
+		push!(rule.source, "    throw(DataGenerators.TypeGenerationException(symbol(\"$(node.func)\"), \"no applicable subtype rule for type \$(dt) in rule for $(ruleprimarydtstr)\"))")
 
 		push!(rule.source, "  end")
 
@@ -358,21 +382,18 @@ function build_type_cm(node::ASTNode, rules::Vector{RuleSource})
 				# entirely possible that this still simplifies to a single datatype, in which case return Union{}
 				push!(rule.source, "  (isa(u, DataType) ? Union{} : u)::Union")
 
-		    # elseif dt == TypeConstructor
-
 		    else
 
-		    	# TODO
-		    	push!(rule.source, "  error(\"need a constructor method for translator constructed type $(primarydt)\")")
+		    	@assert false
 
 		    end
+
 		else
 
-	    	push!(rule.comments, "#TODO")
-	    	push!(rule.source, "  error(\"need a constructor method for type $(primarydt)\")")
+	    	push!(rule.comments, "#TODO write custom constructor method for type $(primarydt)")
+	    	push!(rule.source, "    throw(DataGenerators.TypeGenerationException(symbol(\"$(node.func)\"), \"no constructor method for type $(primarydt)\"))")
 
 		end # translator constructed types
-
 
 	end  # method or datatype
 

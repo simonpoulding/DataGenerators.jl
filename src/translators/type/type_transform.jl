@@ -1,6 +1,6 @@
 
 # non-abstract types that the generator can build special rules for generating values
-const TRANSLATOR_CONSTRUCTED_TYPES = Type[GENERATOR_SUPPORTED_CHOOSE_TYPES; Tuple; DataType; Union; TypeConstructor;]
+const TRANSLATOR_CONSTRUCTED_TYPES = Type[GENERATOR_SUPPORTED_CHOOSE_TYPES; Tuple; DataType; Union;]
 
 # returns only subtypes we can translate
 # TODO (throughout) check which context should be used for this since generator is evaluated when the context of a module
@@ -51,6 +51,7 @@ function transform_type_ast(ast::ASTNode)
 	add_reference(ast, :datatyperef, datatypenode) do node
 		(node.func == :value) || 
 		(node.func == :type) ||
+		((node.func == :dt) && (node.args[:datatype] == Type)) ||
 		((node.func == :cm) && !haskey(node.args, :method) && (node.args[:datatype] in [DataType; Union;]))
 	end
 

@@ -1,3 +1,12 @@
+type TypeGenerationException <: Exception
+	func::Symbol
+	msg::AbstractString
+	caught::Union{Exception, Void}
+	function TypeGenerationException(func::Symbol, msg::AbstractString, caught::Union{Exception, Void}=nothing)
+		new(func, msg, caught)
+	end
+end
+
 include("type_utilities.jl")
 include("type_parse.jl")
 include("type_transform.jl")

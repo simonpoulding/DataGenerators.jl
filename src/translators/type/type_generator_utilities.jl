@@ -1,7 +1,15 @@
 
 # functions called by rule code in translated type generators
 
-apply_type_parameters_to_primary(primarydt::DataType, dt::DataType) = typeintersect(primarydt, dt)
+# TODO can do this more explicitly by matching parameter names?
+function apply_type_parameters_to_primary(primarydt::DataType, dt::DataType)
+	if (primarydt.name == Tuple.name)
+		# because typeintersect(Tuple, Tuple{TypeVar(:S, Signed, true), TypeVar(:S, Signed, true)}) gives Tuple{_,_}, which isn't what is required
+		dt
+	else
+		typeintersect(primarydt, dt)
+	end
+end
 
 
 function match_template_bound_typevars(template::TypeVar, actual::Any, tvlookup::Dict{TypeVar, Any} = Dict{TypeVar, Any}())
