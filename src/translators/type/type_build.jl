@@ -153,8 +153,8 @@ function build_type_type(node::ASTNode, rules::Vector{RuleSource})
     push!(rule.source, "        t")
     push!(rule.source, "      end")
 
- #    push!(rule.source, "    elseif isa(totv, DataType)")
- #    push!(rule.source, "  newps = Vector{Any}()")
+ 	# push!(rule.source, "    elseif isa(totv, DataType)")
+ 	# push!(rule.source, "  newps = Vector{Any}()")
 	# push!(rule.source, "  for p in totv.parameters")
 	# push!(rule.source, "    if isa(p, TypeVar) && choose(Bool)")
 	# push!(rule.source, "      push!(newps, $(thisrulename)(tvlookup, p, true))")
@@ -195,7 +195,7 @@ function build_type_method(node::ASTNode, rules::Vector{RuleSource})
     # ensure required datatype is fully parameterised (but not necessarily parameters of these types as parameters, i.e. only go one level deep)
     typerulename = build_called_child_rulename(node, :typeref)
 
-    push!(rule.source, "   paramdt = DataGenerators.replace_datatype_parameters(dt, map(p -> $(typerulename)(tvlookup, p, true), dt.parameters))") # any bound typevars to be resolved will be in the old bound typevar context, so use that
+    push!(rule.source, "  paramdt = DataGenerators.replace_datatype_parameters(dt, map(p -> $(typerulename)(tvlookup, p, true), dt.parameters))") # any bound typevars to be resolved will be in the old bound typevar context, so use that
 	
     # create a new lookup context for bound typevars
     push!(rule.source, "  newtvlookup = Dict{TypeVar, Any}()") 
@@ -268,7 +268,8 @@ function build_type_dt(node::ASTNode, rules::Vector{RuleSource})
 			push!(rule.source, "          end")
 			push!(rule.source, "        else")
 	    	typerulename = build_called_child_rulename(node, :typeref) # if not primary, then return first parameter (if it a TypeVar, will be expanded)
-			push!(rule.source, "          return $(typerulename)(tvlookup, dt.parameters[1], true)") # note can unionise, e.g. isa(Union{Int8, Int16}, Type{TypeVar(:T, Integer)}) is true
+			push!(rule.source, "          return $(typerulename)(tvlookup, dt.parameters[1], true)")
+			# note can unionise, e.g. isa(Union{Int8, Int16}, Type{TypeVar(:T, Integer)}) is true; 
 			push!(rule.source, "        end")
 			push!(rule.source, "      end")
 		end
@@ -303,6 +304,7 @@ function build_type_dt(node::ASTNode, rules::Vector{RuleSource})
 	    push!(rule.source, "    $(chooserulename)(tvlookup, parameteriseddt)")  
 	    # TODO type assert can't always work, so remove it for the moment.
 	    # Example: when a Tuple{Type{T}, ....} is asserted: T (which *is* a Type{T}) is recognised as a DataType, not a Type{T}, and so assertion fails
+	    # Might be able to use isa_tuple_adjust
 
 		push!(rule.source, "  end")
 

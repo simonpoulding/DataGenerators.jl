@@ -1,30 +1,8 @@
-function create_generator(genname::AbstractString, t::Type, supplementalts::Vector{Type} = Vector{Type}())
-
-	println("  translating, defining, and creating generator")
-
-	genbuf = IOBuffer()
-
-	# println("  translating generator")
-
-	type_generator(genbuf, genname, t, supplementalts)
-
-	genstr = takebuf_string(genbuf)
-
-	# println("  defining generator type")
-
-	include_string(genstr)
-
-	# println("  returning generator")
-
-	eval(parse(genname))
-
-end
-
 function try_generating_for_type(t::Type, supplementalts::Vector{Type} = Vector{Type}(); tries::Int = 100, showdatum::Bool=false, showerror::Bool=false)
 
 	println("type $(t):")
 
-	g = create_generator("TypeGen", t, supplementalts)
+	g = type_generator(:TypeGen, t, supplementalts)
 
 	gi = g()
 
@@ -56,7 +34,7 @@ function try_generating_for_type(t::Type, supplementalts::Vector{Type} = Vector{
 			print(".")
 		end
 
-		@test isa(x, t)
+		@test DataGenerators.isa_tuple_adjust(x, t)
 
 	end
 	println()

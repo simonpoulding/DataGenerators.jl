@@ -10,9 +10,10 @@ function xsd_rules(xsduri::AbstractString, startelement::AbstractString, rulenam
 	build_xsd_rules(ast, rulenameprefix)
 end
 
-function xsd_generator(io::IO, genname::AbstractString, xsduri::AbstractString, startelement::AbstractString)
+function xsd_generator(io::IO, genname::Symbol, xsduri::AbstractString, startelement::AbstractString)
 	rules = xsd_rules(xsduri, startelement)
 	description = "XML with root element " * escape_string(startelement)
 	output_generator(io, genname, description, rules)
 end
 
+xsd_generator(genname::Symbol, xsduri::AbstractString, startelement::AbstractString) = include_generator(genname, xsd_generator, xsduri, startelement)

@@ -8,7 +8,7 @@ type RuleSource
   end
 end
 
-function output_generator(io::IO, genname, description, rules::Vector{RuleSource})
+function output_generator(io::IO, genname::Symbol, description, rules::Vector{RuleSource})
   println(io, "@generator $(genname) begin")
   println(io)
   println(io, "generates: [\"$(description)\"]")

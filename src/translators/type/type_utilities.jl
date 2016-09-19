@@ -6,6 +6,31 @@ primary_datatype(dt::DataType) = datatype_name(dt).primary
 
 is_abstract(dt::DataType) = dt.abstract
 
+function isa_tuple_adjust(x::Any, t::Type)
+	if !isa(t, DataType) || (t.name != Tuple.name) || (t === Tuple)
+		isa(x, t)
+	else
+		if !isa(x, Tuple)
+			return false
+		end
+		xidx = 1
+		pidx = 1
+		ps = collect(t.parameters)
+		while xidx <= length(x)
+			if pidx > length(ps)
+				return false
+			end
+			if !isa(x[xidx], isa(ps[pidx], TypeVar) ? ps[pidx].ub : (ps[pidx].name == Vararg.name) ? ps[pidx].parameters[1] : ps[pidx])
+				return false
+			end
+			xidx += 1
+			if ps[pidx].name != Vararg.name 
+				pidx += 1
+			end
+		end
+		(pidx == length(ps)+1) || ((pidx <= length(ps)) && (ps[pidx].name == Vararg.name))
+	end
+end
 
 
 function datatype_tree_ascend(dt::DataType, dttree::Dict{DataType, Vector{DataType}} = Dict{DataType, Vector{DataType}}())

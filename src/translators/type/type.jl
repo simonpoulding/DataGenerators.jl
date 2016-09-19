@@ -20,8 +20,10 @@ function type_rules(t::Type, supplementalts::Vector{Type}=Vector{Type}(), rulena
 	build_type_rules(ast, rulenameprefix)
 end
 
-function type_generator(io::IO, genname::AbstractString, t::Type, supplementalts::Vector{Type}=Vector{Type}())
+function type_generator(io::IO, genname::Symbol, t::Type, supplementalts::Vector{Type}=Vector{Type}())
 	rules = type_rules(t, supplementalts)
 	description = "an instance of type $(t)"
 	output_generator(io, genname, description, rules)
 end
+
+type_generator(genname::Symbol, t::Type, supplementalts::Vector{Type}=Vector{Type}()) = include_generator(genname, type_generator, t, supplementalts)

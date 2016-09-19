@@ -9,8 +9,10 @@ function regex_rules(regex::AbstractString, datatype::DataType, rulenameprefix="
 	build_regex_rules(ast, rulenameprefix)
 end
 
-function regex_generator(io::IO, genname::AbstractString, regex::AbstractString, datatype::DataType)
+function regex_generator(io::IO, genname::Symbol, regex::AbstractString, datatype::DataType)
 	rules = regex_rules(regex, datatype)
 	description = "$(datatype) satisfying regular expression " * escape_string(regex)
 	output_generator(io, genname, description, rules)
 end
+
+regex_generator(genname::Symbol, regex::AbstractString, datatype::DataType) = include_generator(genname, regex_generator, regex, datatype)

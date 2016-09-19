@@ -10,8 +10,10 @@ function bnf_rules(bnf::IO, startvariable::AbstractString, syntax::Symbol=:ebnf,
 	build_bnf_rules(ast, addwhitespace, rulenameprefix)
 end
 
-function bnf_generator(io::IO, genname::AbstractString, bnf::IO, startvariable::AbstractString, syntax::Symbol=:ebnf, addwhitespace::Bool=true)
+function bnf_generator(io::IO, genname::Symbol, bnf::IO, startvariable::AbstractString, syntax::Symbol=:ebnf, addwhitespace::Bool=true)
 	rules = bnf_rules(bnf, startvariable, syntax, addwhitespace)
 	description = "string accepted by BNF starting with variable " * escape_string(startvariable)
 	output_generator(io, genname, description, rules)
 end
+
+bnf_generator(genname::Symbol, bnf::IO, startvariable::AbstractString, syntax::Symbol=:ebnf, addwhitespace::Bool=true) = include_generator(genname, bnf_generator, bnf, startvariable, syntax, addwhitespace)
