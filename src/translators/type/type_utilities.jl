@@ -172,27 +172,72 @@ function merge_datatypes_down(dts::Vector{DataType})
 end
 
 
-is_partially_supported(dt::DataType, supporteddts::Vector{DataType}) = any(supportedt->typeintersect(supportedt, dt) != Union{}, supporteddts)
 
-is_partially_supported(dts::Vector{DataType}, supporteddts::Vector{DataType}) = all(dt -> is_partially_supported(dt, supporteddts), dts)
-
-function is_partially_supported(m::Method, supporteddts::Vector{DataType})
-	dts = extract_primary_datatypes(m.sig)
-	is_partially_supported(dts, supporteddts)
+is_partially_supported(dt::DataType, supporteddts::Vector{DataType}) = begin
+	any(supporteddt->typeintersect(supporteddt, dt) !== Union{}, supporteddts) &&
+	all(p -> is_partially_supported(p, supporteddts), dt.parameters)
 end
 
-function partially_supported_constructor_methods(dt::DataType, supporteddts::Vector{DataType})
+is_partially_supported(u::Union, supporteddts::Vector{DataType}) = all(p -> is_partially_supported(p, supporteddts), u.types)
+	# TODO really could do any, but for the purposes of the DataGenerator it will pick a Union at random, so really need all to be supported
+
+is_partially_supported(tv::TypeVar, supporteddts::Vector{DataType}) = is_partially_supported(tv.ub, supporteddts)
+	# TODO lb?
+
+is_partially_supported(tc::TypeConstructor, supporteddts::Vector{DataType}) = is_partially_supported(tc.body, supporteddts)
+
+is_partially_supported(x::Any, supporteddts::Vector{DataType}) = true # for type parameters such as integers etc.
+
+# is_partially_supported(dts::Vector{DataType}, supporteddts::Vector{DataType}) = all(dt -> is_partially_supported(dt, supporteddts), dts)
+
+is_partially_supported(m::Method, supporteddts::Vector{DataType}) = is_partially_supported(m.sig, supporteddts)
+
+partially_supported_constructor_methods(dt::DataType, supporteddts::Vector{DataType}) =
 	filter(m->is_partially_supported(m, supporteddts), methods(dt)) # TODO restrict by module?  # TODO other filters (e.g. deprecated)
+
+
+
+is_fully_supported(dt::DataType, supporteddts::Vector{DataType}) = begin
+	(((dt == Any) && !isempty(supporteddts)) # Any is implicitly supported if there is at least datatype
+		|| any(supporteddt->typeintersect(supporteddt, dt) === dt, supporteddts)) && # NB may be bug with ==: Union{} == dt for all dt
+	all(p -> is_fully_supported(p, supporteddts), dt.parameters)
 end
+
+is_fully_supported(u::Union, supporteddts::Vector{DataType}) = all(p -> is_fully_supported(p, supporteddts), u.types)
+	# TODO really could do any, but for the purposes of the DataGenerator it will pick a Union at random, so really need all to be supported
+
+is_fully_supported(tv::TypeVar, supporteddts::Vector{DataType}) = is_fully_supported(tv.ub, supporteddts)
+	# TODO lb?
+
+is_fully_supported(tc::TypeConstructor, supporteddts::Vector{DataType}) = is_fully_supported(tc.body, supporteddts)
+
+is_fully_supported(x::Any, supporteddts::Vector{DataType}) = true # for type parameters such as integers etc.
+
+# is_fully_supported(dts::Vector{DataType}, supporteddts::Vector{DataType}) = all(dt -> is_fully_supported(dt, supporteddts), dts)
+
+is_fully_supported(m::Method, supporteddts::Vector{DataType}) = is_fully_supported(m.sig, supporteddts)
+
+fully_supported_constructor_methods(dt::DataType, supporteddts::Vector{DataType}) =
+	filter(m->is_fully_supported(m, supporteddts), methods(dt)) # TODO restrict by module?  # TODO other filters (e.g. deprecated)
 
 
 
 type_as_parseable_string(tv::TypeVar) = "TypeVar(symbol(\"" * string(tv.name) * "\")," * type_as_parseable_string(tv.lb) * "," * type_as_parseable_string(tv.ub) * "," * (tv.bound ? "true" : "false") * ")"
 
-type_as_parseable_string(dt::DataType) = string(dt.name.name) * (dt === primary_datatype(dt) ? "" : "{" * join(map(p -> type_as_parseable_string(p), dt.parameters), ",") * "}") # note: === rather than == on testing primary datatypes is necessary to ensure parameters match (e.g. bound/unbound TypeVars)
+type_as_parseable_string(dt::DataType) = string(dt.name) * (dt === primary_datatype(dt) ? "" : "{" * join(map(p -> type_as_parseable_string(p), dt.parameters), ",") * "}") # note: === rather than == on testing primary datatypes is necessary to ensure parameters match (e.g. bound/unbound TypeVars)
+
+type_as_parseable_string(tc::TypeConstructor) = type_as_parseable_string(tc.body)
 
 type_as_parseable_string(u::Union) = "Union" * "{" * join(map(p -> type_as_parseable_string(p), u.types), ",") * "}" # note: Union{} is distinct from Union, so always output the curly braces
 
 type_as_parseable_string(x::Any) = string(x)
 
+
+replace_typevars_with_ub(tv::TypeVar) = tv.ub
+
+replace_typevars_with_ub(dt::DataType) = primary_datatype(dt){map(p -> replace_typevars_with_ub(p), dt.parameters)...}
+
+replace_typevars_with_ub(u::Union) = Union{map(p -> replace_typevars_with_ub(p), u.types)...}
+
+replace_typevars_with_ub(x::Any) = x
 

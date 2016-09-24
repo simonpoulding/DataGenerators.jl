@@ -14,17 +14,13 @@ end
 
 function transform_type_ast(ast::ASTNode)
 
-	#DEBUG println("0: $([ast.args[:type]; ast.args[:supplementaltypes]])")
 	# extract primary datatypes and upper bound datatypes of typevars in the parsed type as well as supplemental types
-	supporteddts = extract_primary_datatypes([ast.args[:type]; ast.args[:supplementaltypes]])
-	#DEBUG println("1: $(supporteddts)")
+	supporteddts = isempty(ast.args[:supporteddts]) ? extract_primary_datatypes(ast.args[:type]) : ast.args[:supporteddts]
 	# remove Any from this list as tree is too big - instead user could specify required subtypes of Any in supplemental types
 	# remove Vararg since it is handled in a special way within Tuple
 	supporteddts = filter(t -> !(t in [Any; Vararg;]), supporteddts)
-	#DEBUG println("2: $(supporteddts)")
 	# merge datatypes upwards (i.e. if A subsumes B, take just B)
 	supporteddts = merge_datatypes_up(supporteddts)
-	#DEBUG println("3: $(supporteddts)")
 	# this now gives a non-overlapping list of the datatypes we will support in the dt tree
 	if isempty(supporteddts)
 		error("No supportable datatypes passed in type nor supplemental types")

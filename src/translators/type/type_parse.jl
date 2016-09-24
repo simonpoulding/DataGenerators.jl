@@ -1,6 +1,6 @@
-function parse_type(t::Type, supplementalts::Vector{Type})
+function parse_type(t::Type, supporteddts::Vector{DataType})
 	node = ASTNode(:start)
 	node.args[:type] = t
-	node.args[:supplementaltypes] = supplementalts
+	node.args[:supporteddts] = supporteddts
 	node
 end

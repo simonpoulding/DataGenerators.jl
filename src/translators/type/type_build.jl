@@ -32,13 +32,6 @@ function build_type_rule(node::ASTNode, rules::Vector{RuleSource})
     end
 end
 
-# work around to try and avoid long compilation times (which may be as a result of type inference):
-# make all reference calls (which are the ones that could cause loops between rules) indirect using the eval mechanism
-# on the assumption that the type inference algorithm will not follow these calls
-function build_child_call_as_eval(node::ASTNode, func::Symbol, args::AbstractString)
-	childrulename = build_called_child_rulename(node, func)
-	"eval(Expr(:call, _stateparam.generator.rulemethodnames[symbol(\"$(childrulename)\")], _genparam, _stateparam, $(args)))"
-end
 
 
 # start
@@ -60,14 +53,20 @@ function build_type_value(node::ASTNode, rules::Vector{RuleSource})
 	rule = build_rule_start(node)
     rule.args = ["tvlookup"; "totv"]
 
+    # push!(rule.source, "  info(\"starting value rule with parameter \$(DataGenerators.type_as_parseable_string(totv))\")")
+
     push!(rule.source, "  @assert isa(totv, Union{Type, TypeVar})")
 
-    # datatyperulename = build_called_child_rulename(node, :datatyperef)
+    datatyperulename = build_called_child_rulename(node, :datatyperef)
+    dtrootrulename = build_called_child_rulename(node, :dtref)
+
     # push!(rule.source, "  dt = $(datatyperulename)(tvlookup, totv)::DataType")
-    # dtrootrulename = build_called_child_rulename(node, :dtref)
     # push!(rule.source, "  $(dtrootrulename)(tvlookup, dt)")
-    push!(rule.source, "  dt = " * build_child_call_as_eval(node, :datatyperef, "tvlookup, totv") * "::DataType")
-    push!(rule.source, "  " * build_child_call_as_eval(node, :dtref, "tvlookup, dt"))
+	# work around to try and avoid long compilation times (which may be as a result of type inference):
+	# make all reference calls (which are the ones that could cause loops between rules) indirect using the "rule" construct
+	# on the assumption that the type inference algorithm will not follow these calls
+    push!(rule.source, "  dt = rule(symbol(\"$(datatyperulename)\"), tvlookup, totv)::DataType")
+    push!(rule.source, "  rule(symbol(\"$(dtrootrulename)\"), tvlookup, dt)")
 
     build_rule_end(rule, node)
     push!(rules, rule)
@@ -78,6 +77,8 @@ end
 function build_type_datatype(node::ASTNode, rules::Vector{RuleSource})
 	rule = build_rule_start(node)
     rule.args = ["tvlookup"; "totv"]
+
+    # push!(rule.source, "  info(\"starting datatype rule with parameter \$(DataGenerators.type_as_parseable_string(totv))\")")
 
     thisrulename = build_called_rulename(node)
     typerulename = build_called_child_rulename(node, :typeref)
@@ -122,6 +123,8 @@ end
 function build_type_type(node::ASTNode, rules::Vector{RuleSource})
 	rule = build_rule_start(node)
     rule.args = ["tvlookup"; "totv"; "unionise";]
+
+    # push!(rule.source, "  info(\"starting type rule with parameter \$(DataGenerators.type_as_parseable_string(totv))\")")
 
     # thisrulename = build_called_rulename(node)
     dtrootrulename = build_called_child_rulename(node, :dtref)
@@ -185,6 +188,9 @@ function build_type_method(node::ASTNode, rules::Vector{RuleSource})
 	rule = build_rule_start(node)
     rule.args = ["tvlookup"; "dt"; "fname"; "sig";]
 
+    # push!(rule.source, "  info(\"starting method rule with parameters \$(DataGenerators.type_as_parseable_string(dt)), \$(fname), \$(DataGenerators.type_as_parseable_string(sig)) \")")
+
+
     #   fname is function name (Symbol)
     #   sig is method signature (DataType) - specifically a Tuple
     push!(rule.source, "  @assert sig <: Tuple")
@@ -235,6 +241,8 @@ end
 function build_type_dt(node::ASTNode, rules::Vector{RuleSource})
     rule = build_rule_start(node)
     rule.args = ["tvlookup"; "dtotv"]
+
+    #push!(rule.source, "  info(\"starting dt rule for $(type_as_parseable_string(node.args[:datatype])) with parameter \$(DataGenerators.type_as_parseable_string(dtotv))\")")
 
     ruleprimarydt = node.args[:datatype]
     ruleprimarydtstr = type_as_parseable_string(ruleprimarydt)
@@ -324,6 +332,8 @@ function build_type_cm(node::ASTNode, rules::Vector{RuleSource})
 
 	if haskey(node.args, :method)
 
+	    # push!(rule.source, "  info(\"starting cm rule for method $(node.args[:method]) with parameter \$(DataGenerators.type_as_parseable_string(dt))\")")
+
 	    cm = node.args[:method]
 	    push!(rule.comments, "constructor method $(cm)")
 
@@ -331,6 +341,8 @@ function build_type_cm(node::ASTNode, rules::Vector{RuleSource})
 	    push!(rule.source, "  $(methodrulename)(tvlookup, dt, symbol(\"$(cm.func.code.name)\"), $(type_as_parseable_string(cm.sig)))")
 	    
 	else
+
+	    # push!(rule.source, "  info(\"starting cm rule for datatype $(type_as_parseable_string(node.args[:datatype])) with parameter \$(DataGenerators.type_as_parseable_string(dt))\")")
 
 		primarydt = node.args[:datatype]
 	    push!(rule.comments, "constructor method for datatype $(primarydt)")
