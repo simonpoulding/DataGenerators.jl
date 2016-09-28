@@ -37,7 +37,7 @@ function setparams(s::UniformSampler, params)
 		if (m-a) > realmax(Float64)/2
 			a = m - realmax(Float64)/2
 			b = m + realmax(Float64)/2
-			warn("interval of Uniform sampler adjusted to [$a,$b]")
+			# warn("interval of Uniform sampler adjusted to [$a,$b]")
 		end
 		s.distribution = Uniform(a, b)
 	end

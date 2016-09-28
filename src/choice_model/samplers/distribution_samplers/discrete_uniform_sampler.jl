@@ -53,7 +53,7 @@ function setparams(s::DiscreteUniformSampler, params)
 	if desiredrange > allowedrange
 		factor = allowedrange / desiredrange
 		a, b = convert(Int, a * factor), convert(Int, b * factor)
-	 	warn("interval of DiscreteUniform sampler adjusted to [$a,$b]")
+	 	# warn("interval of DiscreteUniform sampler adjusted to [$a,$b]")
 	end
 	s.distribution = DiscreteUniform(a, b)
 end

@@ -188,9 +188,12 @@ is_partially_supported(tc::TypeConstructor, supporteddts::Vector{DataType}) = is
 
 is_partially_supported(x::Any, supporteddts::Vector{DataType}) = true # for type parameters such as integers etc.
 
-# is_partially_supported(dts::Vector{DataType}, supporteddts::Vector{DataType}) = all(dt -> is_partially_supported(dt, supporteddts), dts)
+# is_partially_supported(ts::Vector{Type}, supporteddts::Vector{DataType}) = all(t -> is_partially_supported(t, supporteddts), ts)
 
-is_partially_supported(m::Method, supporteddts::Vector{DataType}) = is_partially_supported(m.sig, supporteddts)
+function is_partially_supported(m::Method, supporteddts::Vector{DataType})
+	@assert m.sig <: Tuple
+	all(p->is_partially_supported(p, [supporteddts; Vararg]), m.sig.parameters)
+end
 
 partially_supported_constructor_methods(dt::DataType, supporteddts::Vector{DataType}) =
 	filter(m->is_partially_supported(m, supporteddts), methods(dt)) # TODO restrict by module?  # TODO other filters (e.g. deprecated)
@@ -213,9 +216,12 @@ is_fully_supported(tc::TypeConstructor, supporteddts::Vector{DataType}) = is_ful
 
 is_fully_supported(x::Any, supporteddts::Vector{DataType}) = true # for type parameters such as integers etc.
 
-# is_fully_supported(dts::Vector{DataType}, supporteddts::Vector{DataType}) = all(dt -> is_fully_supported(dt, supporteddts), dts)
+# is_fully_supported(ts::Vector{Type}, supporteddts::Vector{DataType}) = all(t -> is_fully_supported(t, supporteddts), ts)
 
-is_fully_supported(m::Method, supporteddts::Vector{DataType}) = is_fully_supported(m.sig, supporteddts)
+function is_fully_supported(m::Method, supporteddts::Vector{DataType})
+	@assert m.sig <: Tuple
+	all(p->is_fully_supported(p, [supporteddts; Vararg]), m.sig.parameters)
+end
 
 fully_supported_constructor_methods(dt::DataType, supporteddts::Vector{DataType}) =
 	filter(m->is_fully_supported(m, supporteddts), methods(dt)) # TODO restrict by module?  # TODO other filters (e.g. deprecated)

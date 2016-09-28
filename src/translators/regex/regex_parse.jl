@@ -1,11 +1,11 @@
 # parse regex into an AST
 function parse_regex(regex::AbstractString, datatype::DataType)
-	child, pos = parse_regex_expression(regex)
+	child, pos = parse_regex_expression(regex, datatype)
 	ast = ASTNode(:regex, [child,], Dict{Symbol, Any}(:datatype=>datatype))
 end
 
 # parse an expression within the regex
-function parse_regex_expression(regex::AbstractString, pos=1)
+function parse_regex_expression(regex::AbstractString, datatype::DataType, pos=1)
 
 	rootexpr = (pos==1)
 	ornode = ASTNode(:or)
@@ -30,13 +30,13 @@ function parse_regex_expression(regex::AbstractString, pos=1)
 
 			if (chr=='|') && (!escaped)
 
-				finish_and_node(andnode)
+				finish_and_node(andnode, datatype)
 				andnode = ASTNode(:and)
 				push!(ornode.children, andnode)
 
 			elseif (chr=='(') && (!escaped)
 
-				exprnode, pos = parse_regex_expression(regex, pos)
+				exprnode, pos = parse_regex_expression(regex, datatype, pos)
 				push!(andnode.children, exprnode)
 
 			elseif (chr==')') && (!escaped)
@@ -111,6 +111,9 @@ function parse_regex_expression(regex::AbstractString, pos=1)
 				# TODO to what extent should ASCII control characters be included? - here have tab (9), new line (10) and carriage return (13)
 				# TODO strictly whitespace can include vertical tab (11) and form feed (13), but XML definition excludes them
 				# TODO strictly wildcard (.) excludes just new line; but XML also excludes carriage return
+
+				# TODO need to handle for non-ASCII datatypes
+
 				if chr == 's'  # whitespace: space, tab, carriage return, new line
 					classspace = (UnitRange)[9:10,13:13,32:32]  	
 	      elseif chr == 'S'  # non-whitespace
@@ -132,11 +135,10 @@ function parse_regex_expression(regex::AbstractString, pos=1)
 		    elseif chr == 'C'  # XSD extension - not name characters
 					classspace = (UnitRange)[9:10,13:13,32:44,47:47,59:64,91:96,123:126]
 	      else
-	        classspace = (UnitRange)[9:9,32:126] # wildcard (.) - excludes new line and -- for XML -- carriage return
-					# (Note: see also handling below of the empty expression which allows strings of any characters, including LF/CR)
-					if chr != '.'
-						warn("cannot process character class $(node.args[:value]) - using wildcard instead")
-					end
+				if chr != '.'
+					warn("cannot process character class $(node.args[:value]) - using wildcard instead")
+				end
+	        	classspace = (UnitRange)[9:9,32:126] # wildcard (.) - excludes new line and -- for XML -- carriage return
 	      end
 
 				bracketnode = ASTNode(:bracket)
@@ -172,14 +174,14 @@ function parse_regex_expression(regex::AbstractString, pos=1)
 
 	end
 	
-	finish_and_node(andnode)
+	finish_and_node(andnode, datatype)
 
 	ornode, pos
 
 end
 
 # at end of an 'and' node in the AST
-function finish_and_node(andnode::ASTNode)
+function finish_and_node(andnode::ASTNode, datatype::DataType)
 	
 	if isempty(andnode.children)
 
@@ -190,7 +192,18 @@ function finish_and_node(andnode::ASTNode)
 		bracketnode = ASTNode(:bracket)
 	    bracketnode.func = :bracket
 
-	    for range in [9:10; 13:13; 32:126] # currently just ASCII
+		if datatype in [ASCIIString,]
+        	classspace = (UnitRange)[9:10, 13:13, 32:126]
+        elseif datatype in [UTF8String, UTF16String, UTF32String,]
+			classspace = (UnitRange)[9:10, 13:13, 32:55295, 65536:131071, 131072:196607]  
+			# 55295 (0xD7FF) is last character before UTF-16 surrogates in plane 0 (BMP)
+			# 65536-131071 (0x10000 - 0x1FFFF) is plane 1 (SMP)
+			# 131072-196607 (0x20000 - 0x2FFFF) is plane 2 (SIP)
+		else
+			error("Do not know how to handle empty regex for string datatype $(datatype)")
+		end
+
+	    for range in classspace # currently just ASCII
 	      rangenode = ASTNode(:range)
 	      rangenode.args[:value] = range
 	      push!(bracketnode.children, rangenode)

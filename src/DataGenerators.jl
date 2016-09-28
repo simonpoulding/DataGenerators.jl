@@ -52,5 +52,6 @@ include(joinpath("registry","registry.jl"))
 # choice models
 include(joinpath("choice_model","choice_model.jl"))
 
+warn("note: commented out sampler warnings")
 
 end
