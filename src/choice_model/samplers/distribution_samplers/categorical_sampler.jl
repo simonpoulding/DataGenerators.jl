@@ -38,7 +38,7 @@ getparams(s::CategoricalSampler) = copy(s.distribution.p)
 function estimateparams(s::CategoricalSampler, traces)
 	samples = extractsamplesfromtraces(s, traces)
 	if length(samples) >= 1
-		s.distribution = fit(typeof(s.distribution), samples)
+		s.distribution = fit(getdistributiontype(s), samples)
 		# if there is a sequence of values at the end of the categories with zero probabilities,
 		# then the fit will reduce the number of categories which will cause get parameters to return too
 		# few values - we fix this here by padding with zeros

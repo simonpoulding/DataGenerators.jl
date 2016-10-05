@@ -20,7 +20,7 @@ function estimateparams(s::DistributionSampler, traces)
 	samples = extractsamplesfromtraces(s, traces)
 	minnumsamples = typeof(s.distribution) in [Normal,] ? 2 : 1
 	if length(samples) >= minnumsamples
-		s.distribution = fit(typeof(s.distribution), samples)
+		s.distribution = fit(getdistributiontype(s), samples) 
 	end
 end
 
@@ -42,3 +42,10 @@ function show(io::IO, s::DistributionSampler, indentdepth::Int=1)
 end
 
 minimumsupport(s::DistributionSampler) = minimum(s.distribution)
+
+# This is a workaround for Distributions.jl 0.11.0 - in this version
+# Bernoulli and Categorical become parameterised types, but using such
+# a parameterised type as the first argument of fit() raises an error
+# As a workaround, we revert the type back to the primary via the typename,
+# effectively removing any workaround
+getdistributiontype(s::DistributionSampler) = typeof(s.distribution).name.primary
