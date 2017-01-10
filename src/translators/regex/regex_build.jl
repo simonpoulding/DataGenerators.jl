@@ -37,7 +37,7 @@ end
 function build_regex_regex(node::ASTNode, rules::Vector{RuleSource})
     rule = build_rule_shortform_start(node)
     calledrulename = build_called_rulename(node.refs[1])
-    push!(rule.source, "convert($(node.args[:datatype]), $(calledrulename))")
+    push!(rule.source, "convert($(node.args[:datatype]), $(calledrulename)())")
     build_rule_shortform_end(rule, node)
     push!(rules, rule)
 end
@@ -47,7 +47,7 @@ function build_regex_or(node::ASTNode, rules::Vector{RuleSource})
     for child in node.children
         rule = build_rule_shortform_start(node)
         calledrulename = build_called_rulename(child)
-        push!(rule.source, "$(calledrulename)")
+        push!(rule.source, "$(calledrulename)()")
         build_rule_shortform_end(rule, node)
         push!(rules, rule)        
     end
@@ -59,7 +59,7 @@ function build_regex_and(node::ASTNode, rules::Vector{RuleSource})
     push!(rule.source, "*(")
     for child in node.children
         calledrulename = build_called_rulename(child)
-        push!(rule.source, "$(calledrulename),")
+        push!(rule.source, "$(calledrulename)(),")
     end
     push!(rule.source, ")")
     build_rule_shortform_end(rule, node)
@@ -71,9 +71,9 @@ function build_regex_quantifier(node::ASTNode, rules::Vector{RuleSource})
     rule = build_rule_shortform_start(node)
     calledrulename = build_called_rulename(node.children[1])
     if node.args[:upperbound] >= typemax(Int)
-        push!(rule.source, "join(reps($(calledrulename), $(node.args[:lowerbound])))")
+        push!(rule.source, "join(reps($(calledrulename)(), $(node.args[:lowerbound])))")
     else
-        push!(rule.source, "join(reps($(calledrulename), $(node.args[:lowerbound]), $(node.args[:upperbound])))")
+        push!(rule.source, "join(reps($(calledrulename)(), $(node.args[:lowerbound]), $(node.args[:upperbound])))")
     end
     build_rule_shortform_end(rule, node)
     push!(rules, rule)        
@@ -83,7 +83,7 @@ end
 function build_regex_optional(node::ASTNode, rules::Vector{RuleSource})
     rule = build_rule_shortform_start(node)
     calledrulename = build_called_rulename(node.children[1])
-    push!(rule.source, "choose(Bool) ? $(calledrulename) : \"\"")
+    push!(rule.source, "choose(Bool) ? $(calledrulename)() : \"\"")
     build_rule_shortform_end(rule, node)
     push!(rules, rule)        
 end

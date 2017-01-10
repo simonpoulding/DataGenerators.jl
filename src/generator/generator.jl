@@ -33,7 +33,7 @@ macro generator(gensig, genbody)
 	# (2) the 'body' of the generator: a block containing methods and metadata
 
 	# extract and check the name of the generator and (zero or more) subgen parameters
-	genname, subgenargs = extractfuncsig(gensig)
+	genname, subgenargs = extractfuncsig(gensig, true) # true: allows permits function signature without parenthesis when there are no parameters
 	
 	# extractfuncsig returns nothing if there is a problem
 	if genname == nothing
@@ -186,7 +186,6 @@ function constructtype(genname, subgenargs, metaInfo, gencontext::GeneratorConte
 	# Further note: Module is stored as a symbol in the type since deepcopy does not support fields of type Module,
 	# and to recreate the Module type, we also need its parent
 	
-
 	quote
 		type $(genname) <: $(THIS_MODULE).Generator
 			meta::Dict{Symbol, Any}
@@ -261,7 +260,10 @@ function transformrules!(genrules::Vector{GeneratorRule}, gencontext::GeneratorC
 	# (9) calls to other rules
 	transformrulecalls!(genrules, gencontext)
 
-	# (10) direct call to subgenerators (no longer supported)
+	# (10) indirect calls to other rules - feature used to avoid long-running compilation as a result of (seemingly) recursive type inference
+	transformindirectrulecalls!(genrules, gencontext)
+
+	# (11) direct call to subgenerators (no longer supported)
 	# transformdirectsubgencalls!(genrules, gencontext)
 
 end
@@ -520,7 +522,10 @@ function transformsequencechoicepoint(callname, callparams, genrules, gencontext
 
 	# allow for nested sequence choice points by transforming the expression to sequence
 	functocallexpr = transformfunccall(callparams[1], genrules, gencontext, matchfn, transformfn)
-	
+
+	# synatic sugar: intepret a symbol of a rule name as a no-parameter call to that rule
+	functocallexpr = convertrulenametorulecall(functocallexpr, genrules)
+
 	if callname == :mult
 
 		if length(callparams) > 1
@@ -732,6 +737,26 @@ function transformrulecall(callname, callparams, genrules, gencontext, matchfn, 
 end
 
 
+#
+# transform all indirect call to rules by calling the umbrella method
+#
+
+function transformindirectrulecalls!(genrules::Vector{GeneratorRule}, gencontext::GeneratorContext)
+	for genrule in genrules
+		genrule.body = transformfunccall(genrule.body, genrules, gencontext, isindirectrulecall, transformindirectrulecall)
+	end
+end
+
+# is a call to a generator rule if called function is a key to the list of rulemethods
+isindirectrulecall(callname, callparams, gencontext) = (callname == :rule) && length(callparams) >= 1
+
+# to call a method, call a helper method in generation code
+function transformindirectrulecall(callname, callparams, genrules, gencontext, matchfn, transformfn)
+	rewrittenparams = [gencontext.genparam; gencontext.stateparam; callparams]
+	:( $(THIS_MODULE).indirectrulecall($(rewrittenparams...)) )
+end
+
+
 
 #
 # transform all direct calls to rules by calling the umbrella method (deprecated)
@@ -785,6 +810,16 @@ end
 
 # generate a unique rule name
 uniquemethodname(rulename) = gensym(string(rulename))
+
+
+# if node is a just rule name, convert it to a call to rule with no parameters
+function convertrulenametorulecall(node, genrules::Vector{GeneratorRule})
+	if isa(node, Symbol) && (node in map(genrule->genrule.rulename, genrules))
+		return Expr(:call, node)	
+	end
+	node
+end
+
 
 
 # generic method for parsing node tree to identify and then transform particular types of function calls
@@ -888,8 +923,8 @@ removelinenodes(args) = filter(arg->!islinenode(arg),args)
 
 # extract method signature into tuple (name, arguments)
 # (1) standard long or short form: foo(bar) or foo(bar) = 
-# (2) GT-specific no args form: foo
-function extractfuncsig(node)
+# (2) GT-specific no args form: foo (but only when allownoparenthesisform is true)
+function extractfuncsig(node, allownoparenthesisform = false)
 	if typeof(node) == Expr
 		if node.head == :call # standard long or short form
 			callargs = removelinenodes(node.args)
@@ -897,7 +932,7 @@ function extractfuncsig(node)
 				return (callargs[1], callargs[2:end])
 			end
 		end
-	elseif typeof(node) == Symbol # GT-specific no args form
+	elseif allownoparenthesisform && (typeof(node) == Symbol) # GT-specific no parenthesis form when no args
 		return (node, [])
 	end
 	return (nothing,nothing)
@@ -907,13 +942,13 @@ end
 # extract function definition into tuple (name, arguments, body)
 # (1) long form: function foo(bar) ... end
 # (2) short form: foo(bar) = ... 
-# (3) GT-specific no args form: foo = ...
-function extractfuncdef(node)
+# (3) GT-specific no args form: foo = ... (but only when allownoparenthesisform is true)
+function extractfuncdef(node, allownoparenthesisform = false)
 	if typeof(node) == Expr
 		if (node.head == :function) || (node.head == :(=) )
 			eqargs = removelinenodes(node.args)
 			if length(eqargs) == 2
-				(name, args) = extractfuncsig(eqargs[1])
+				(name, args) = extractfuncsig(eqargs[1], allownoparenthesisform)
 				if name != nothing
 					return (name, args, eqargs[2])
 				end
@@ -926,8 +961,8 @@ end
 
 # parse function call into tuple (name, params)
 # (1) standard form: foo(bar) = ... 
-# (2) GT-specific no args form: foo
-function extractfunccall(node)
+# (2) GT-specific no args form: foo (but only when allownoparenthesisform is true)
+function extractfunccall(node, allownoparenthesisform = false)
 	if typeof(node) == Expr
 		if node.head == :call # standard long or short form
 			callargs = removelinenodes(node.args)
@@ -935,7 +970,7 @@ function extractfunccall(node)
 				return (callargs[1], callargs[2:end])
 			end
 		end
-	elseif typeof(node) == Symbol
+	elseif allownoparenthesisform && (typeof(node) == Symbol)
 		return(node, [])
 	end
 	return (nothing,nothing)

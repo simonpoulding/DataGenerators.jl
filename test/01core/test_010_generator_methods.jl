@@ -68,43 +68,44 @@ end
 end
 
 
-@generator GMShortNoParenGen begin
-start() = (a(), a())
-a = gensym()
-end
+# Short no paren form no longer supported
+# @generator GMShortNoParenGen begin
+# start() = (a(), a())
+# a = gensym()
+# end
 
-@testset "method defined using function short form without parentheses" begin
+# @testset "method defined using function short form without parentheses" begin
 
-gn = GMShortNoParenGen()
+# gn = GMShortNoParenGen()
 	
-@testset "emits pair of different symbols" begin
-    td = choose(gn)
-    @test typeof(td) == Tuple{Symbol,Symbol}
-    @test td[1] != td[2]
-end
+# @testset "emits pair of different symbols" begin
+#     td = choose(gn)
+#     @test typeof(td) == Tuple{Symbol,Symbol}
+#     @test td[1] != td[2]
+# end
 	
-end
+# end
 
 
-@generator GMCallNoParenGen begin
-start() = (a, b, c)
-a = 'a'
-b() = 'b'
-function c()
-    'c'
-end
-end
+# @generator GMCallNoParenGen begin
+# start() = (a, b, c)
+# a = 'a'
+# b() = 'b'
+# function c()
+#     'c'
+# end
+# end
 
-@testset "method called using short no paren form" begin
+# @testset "method called using short no paren form" begin
 
-gn = GMCallNoParenGen()
+# gn = GMCallNoParenGen()
 	
-@testset "all three rules are called" begin
-    td = choose(gn)
-    @test td == ('a','b','c')
-end
+# @testset "all three rules are called" begin
+#     td = choose(gn)
+#     @test td == ('a','b','c')
+# end
 	
-end
+# end
 
 @generator GMLiteralParamGen begin
 start() = (add(4,2), sub(4,2))

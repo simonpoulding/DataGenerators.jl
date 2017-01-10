@@ -78,14 +78,14 @@ end
 
 
 @generator GNInfRecursionGen() begin
-    start = [plus(start)]
+    start() = [plus(start)]
 end
 
 @generator GN100ChoicesGen() begin
-    start = map(i->a,1:50) # each invocation of a requires two choice points
-    a = choose(Int,1,10)
-    a = plus(b)
-    b = 'b'
+    start() = map(i->a(),1:50) # each invocation of a requires two choice points
+    a() = choose(Int,1,10)
+    a() = plus(b)
+    b() = 'b'
 end
 
 @testset "limit on number of choice points (maxchoices)" begin
@@ -156,8 +156,8 @@ end
 
 
 @generator GNMultGen() begin
-    start = mult(a)
-    a = :a
+    start() = mult(a)
+    a() = :a
 end
 
 @testset "limit on sequence choice point reps (maxseqreps)" begin

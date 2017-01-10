@@ -8,7 +8,7 @@ type RuleSource
   end
 end
 
-function output_generator(io::IO, genname, description, rules::Vector{RuleSource})
+function output_generator(io::IO, genname::Symbol, description, rules::Vector{RuleSource})
   println(io, "@generator $(genname) begin")
   println(io)
   println(io, "generates: [\"$(description)\"]")
@@ -70,6 +70,12 @@ function build_called_rulename(callnode::ASTNode)
     refnode = callnode.refs[1]
     refnode.rulename
   end
+end
+
+function build_called_child_rulename(node::ASTNode, func::Symbol)
+    funcchildren = filter(child -> child.func == func, node.children)
+    @assert length(funcchildren) == 1
+    build_called_rulename(funcchildren[1])
 end
 
 escape_rule_name(name) = replace(name, r"[^a-zA-Z0-9]", "_")
