@@ -38,7 +38,7 @@ function estimateparams(s::GeometricSampler, traces)
 			# distribution gives error if all samples are 0
 			s.distribution = Geometric(0.99999)
 		else
-			s.distribution = fit(typeof(s.distribution), samples)
+			s.distribution = fit(primarydistributiontype(s.distribution), samples)
 		end
 	end
 end

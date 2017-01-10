@@ -522,7 +522,10 @@ function transformsequencechoicepoint(callname, callparams, genrules, gencontext
 
 	# allow for nested sequence choice points by transforming the expression to sequence
 	functocallexpr = transformfunccall(callparams[1], genrules, gencontext, matchfn, transformfn)
-	
+
+	# synatic sugar: intepret a symbol of a rule name as a no-parameter call to that rule
+	functocallexpr = convertrulenametorulecall(functocallexpr, genrules)
+
 	if callname == :mult
 
 		if length(callparams) > 1
@@ -807,6 +810,16 @@ end
 
 # generate a unique rule name
 uniquemethodname(rulename) = gensym(string(rulename))
+
+
+# if node is a just rule name, convert it to a call to rule with no parameters
+function convertrulenametorulecall(node, genrules::Vector{GeneratorRule})
+	if isa(node, Symbol) && (node in map(genrule->genrule.rulename, genrules))
+		return Expr(:call, node)	
+	end
+	node
+end
+
 
 
 # generic method for parsing node tree to identify and then transform particular types of function calls

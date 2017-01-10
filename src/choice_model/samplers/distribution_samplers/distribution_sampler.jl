@@ -15,12 +15,16 @@ function extractsamplesfromtraces(s::DistributionSampler, traces)
 	samples = map(trace->trace[:rnd], traces)
 	convert(typeof(s) <: DiscreteDistributionSampler ? Vector{Int} : Vector{Float64}, samples)
 end
-	
+
+# workaround for call to fit: it needs the unparameterised (primary) type of the distribution 
+# otherwise function suffstats raises an error as there isn't a suitable method to use
+primarydistributiontype(d::Distribution) = typeof(d).name.primary
+
 function estimateparams(s::DistributionSampler, traces)
 	samples = extractsamplesfromtraces(s, traces)
 	minnumsamples = typeof(s.distribution) in [Normal,] ? 2 : 1
 	if length(samples) >= minnumsamples
-		s.distribution = fit(typeof(s.distribution), samples)
+		s.distribution = fit(primarydistributiontype(s.distribution), samples)
 	end
 end
 
