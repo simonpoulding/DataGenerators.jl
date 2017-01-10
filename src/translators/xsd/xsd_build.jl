@@ -27,7 +27,7 @@ function build_xsd_rule(node::ASTNode, rules::Vector{RuleSource})
   elseif node.func in [:optional]
     build_xsd_optional(node, rules)
   elseif node.func in [:enumeration]
-    build_xsd_enumeration(node)
+    build_xsd_enumeration(node, rules)
   elseif node.func in [:list]
     build_xsd_list(node, rules)
   elseif node.func in [:any, :anyAttribute, :nothing]
@@ -75,7 +75,7 @@ function build_xsd_xsd(node::ASTNode, rules::Vector{RuleSource})
   rule = build_rule_start(node)
   @assert length(node.refs)==1
   methodname = build_called_rulename(node)
-  push!(rule.source, "  name, content = $(methodname)")
+  push!(rule.source, "  name, content = $(methodname)()")
   push!(rule.source, "  construct_element(name, content)")
   build_rule_end(rule, node)
   push!(rules, rule)
@@ -96,7 +96,7 @@ function build_xsd_attribute(node::ASTNode, rules::Vector{RuleSource})
   rule = build_rule_start(node)
   @assert length(node.children)==1
   methodname = build_called_rulename(node.children[1])
-  push!(rule.source, "  content = $(methodname)")
+  push!(rule.source, "  content = $(methodname)()")
   push!(rule.source, "  @assert typeof(content)<:AbstractString")
   push!(rule.source, "  (\"$(escape_string(node.args[:name]))\", content)")
   build_rule_end(rule, node)
@@ -116,7 +116,7 @@ function build_xsd_call(node::ASTNode, rules::Vector{RuleSource})
   rule = build_rule_start(node)
   @assert length(node.children)==1
   methodname = build_called_rulename(node.children[1])
-  push!(rule.source, "  $(methodname)")
+  push!(rule.source, "  $(methodname)()")
   build_rule_end(rule, node)
   push!(rules, rule)
 end
@@ -138,7 +138,7 @@ function build_xsd_choice(node::ASTNode, rules::Vector{RuleSource})
     for child in node.children
 		  rule = build_rule_start(node)
 	    methodname = build_called_rulename(child)
-	    push!(rule.source, "  $(methodname)")
+	    push!(rule.source, "  $(methodname)()")
 		  build_rule_end(rule, node)
       push!(rules, rule)
 		end
@@ -155,9 +155,9 @@ function build_xsd_quantifier(node::ASTNode, rules::Vector{RuleSource})
   methodname = build_called_rulename(node.children[1])
 	if (upperbound == Inf) || (lowerbound < upperbound)
 		if (upperbound == Inf)
-			push!(rule.source, "  r = reps($(methodname), $(lowerbound))")
+			push!(rule.source, "  r = reps($(methodname)(), $(lowerbound))")
 		else
-			push!(rule.source, "  r = reps($(methodname), $(lowerbound), $(upperbound))")
+			push!(rule.source, "  r = reps($(methodname)(), $(lowerbound), $(upperbound))")
 		end
 	else
 		push!(rule.source, "  r = [$(methodname)() for i in 1:$(lowerbound)]")
@@ -172,7 +172,7 @@ function build_xsd_optional(node::ASTNode, rules::Vector{RuleSource})
   rule = build_rule_start(node)
   @assert length(node.children)==1
   methodname = build_called_rulename(node.children[1])
-  push!(rule.source, "  choose(Bool) ? $(methodname) : Any[]")
+  push!(rule.source, "  choose(Bool) ? $(methodname)() : Any[]")
   build_rule_end(rule, node)
   push!(rules, rule)
 end
@@ -189,7 +189,7 @@ function build_xsd_list(node::ASTNode)
   rule = build_rule_start(node)
   @assert length(node.children)==1
   methodname = build_called_rulename(node.children[1], rules::Vector{RuleSource})
-  push!(rule.source, "  content = plus($(methodname))")
+  push!(rule.source, "  content = plus($(methodname)())")
   push!(rule.source, "  join(content, \" \")")
   build_rule_end(rule, node)
   push!(rules, rule)
@@ -207,10 +207,10 @@ function build_xsd_sequence_body(parentnode::ASTNode, rule::RuleSource)
   for node in parentnode.children
     methodname = build_called_rulename(node)
     if node.func in [:elementSub]
-      push!(rule.source, "  childelement = $(methodname)")
+      push!(rule.source, "  childelement = $(methodname)()")
       push!(rule.source, "  childcontent = childelement[2]")
     else
-      push!(rule.source, "  childcontent = $(methodname)")
+      push!(rule.source, "  childcontent = $(methodname)()")
     end
     push!(rule.source, "  content = [content; childcontent]")  # note: this flattens arrays in childcontent in a way that push! would not do
   end
