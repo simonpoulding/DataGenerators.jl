@@ -109,7 +109,7 @@ cpids = collect(keys(cpi))
 	
 cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.SEQUENCE_CP, cpids[1], Int, 0, 2)
 		
-@testset repeats=NumReps "valid Godel numbers returned" begin
+@testset "valid Godel numbers returned" begin
     gnum, trace = DataGenerators.godelnumber(cm, cc)
     @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
     @test 0 <= gnum <= 2 # default choice model restricts sequence lengths to a maximum of 3 more than minimum
@@ -122,7 +122,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.SEQUENCE_CP, cpids[1], Int, 11, 16)
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
         @test 11 <= gnum <= 13 # default choice model restricts sequence lengths to a maximum of 3 more than minimum
@@ -135,7 +135,7 @@ end
 
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.SEQUENCE_CP, cpids[1], Int, 1, typemax(Int))
 
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
         @test 1 <= gnum <= 3 # default choice model restricts sequence lengths to a maximum of 3 more than minimum
@@ -156,7 +156,7 @@ cpids = collect(keys(cpi))
 
 cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Bool, false, true)
 	
-@testset repeats=NumReps "valid Godel numbers returned" begin
+@testset "valid Godel numbers returned" begin
     gnum, trace = DataGenerators.godelnumber(cm, cc)
     @test convert(Bool,gnum) != nothing  # raises exception if value can't be converted
     @mcheck_values_are gnum [false,true]
@@ -176,7 +176,7 @@ cpids = collect(keys(cpi))
 
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, -1, 2)
 
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
         @test -1 <= gnum <= 2
@@ -189,7 +189,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, 11, 16)
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
         @test 11 <= gnum <= 16
@@ -202,7 +202,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, 128, typemax(Int))
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
         @test 128 <= gnum <= typemax(Int)
@@ -215,7 +215,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, typemin(Int), 128)
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
         @test typemin(Int) <= gnum <= 128
@@ -228,7 +228,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, typemin(Int), typemax(Int))
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Int,gnum) != nothing  # raises exception if value can't be converted
         @test typemin(Int) <= gnum <= typemax(Int)
@@ -251,7 +251,7 @@ cpids = collect(keys(cpi))
 
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, -42.2, -8.7)
 
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Float64,gnum) != nothing  # raises exception if value can't be converted
         @test -42.2 <= gnum <= -8.7
@@ -265,7 +265,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, 450001.6, Inf)
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Float64,gnum) != nothing  # raises exception if value can't be converted
         @test 450001.6 <= gnum
@@ -279,7 +279,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, -Inf, 450001.6)
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Float64,gnum) != nothing  # raises exception if value can't be converted
         @test gnum <= 450001.6
@@ -293,7 +293,7 @@ end
 	
     cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, -Inf, Inf)
 		
-    @testset repeats=NumReps "valid Godel numbers returned" begin
+    @testset "valid Godel numbers returned" begin
         gnum, trace = DataGenerators.godelnumber(cm, cc)
         @test convert(Float64,gnum) != nothing  # raises exception if value can't be converted
         @mcheck_that_sometimes int(gnum) != gnum
@@ -309,7 +309,7 @@ end
 gn = DCMChooseStringGen()
 cm = DefaultChoiceModel(gn)
 	
-@testset repeats=NumReps "full range of values generated using choice model" begin
+@testset "full range of values generated using choice model" begin
     td = choose(gn, choicemodel=cm)
     @test ismatch(r"^a(b|c)d+ef?$", td)
     @mcheck_values_include count(x->x=='d', td) [1,2,3]

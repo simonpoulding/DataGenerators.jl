@@ -20,7 +20,7 @@ end
 ign = SGIntGen()
 gn = SGMain1SGGen(ign)
 
-@testset repeats=NumReps "emits an integer between 5 and 9" begin
+@testset "emits an integer between 5 and 9" begin
     td = choose(gn)
     @test typeof(td) == Int
     @test 5 <= td <= 9
@@ -39,7 +39,7 @@ bgn = SGBoolGen()
 ign = SGIntGen()
 gn = SGMain2SGGen(bgn, ign)
 
-@testset repeats=NumReps "emits arrays of different Bool of different lengths between 5 and 9" begin
+@testset "emits arrays of different Bool of different lengths between 5 and 9" begin
     td = choose(gn)
     @test typeof(td) == Vector{Bool}
     @test 5 <= length(td) <= 9
@@ -59,7 +59,7 @@ end
 ign = SGIntGen()
 gn = SGNoParamFormGen(ign)
 
-@testset repeats=NumReps "emits integers between 5 and 9" begin
+@testset "emits integers between 5 and 9" begin
     td = choose(gn)
     @test typeof(td) == Int
     @test 5 <= td <= 9
@@ -77,7 +77,7 @@ end
 ign = SGIntGen()
 gn = SGRepsGen(ign)
 
-@testset repeats=NumReps "emits array of integers between 5 and 9" begin
+@testset "emits array of integers between 5 and 9" begin
     td = choose(gn)
     @test typeof(td) <: Array
     @test all(5 .<= td .<= 9)

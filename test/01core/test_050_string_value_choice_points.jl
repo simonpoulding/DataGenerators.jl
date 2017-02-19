@@ -8,7 +8,7 @@ end
 
 gn = SCWildcardGen()
 
-@testset repeats=NumReps "emits different ASCII strings that match regex" begin
+@testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^.$", td)
@@ -26,7 +26,7 @@ end
 
 gn = SCQuantifiersGen()
 
-@testset repeats=NumReps "emits different ASCII strings that match regex" begin
+@testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^a?b+c*d{4}e{5,6}f{7,}g{8,8}$", td)
@@ -50,7 +50,7 @@ end
 
 gn = SCAlternationGen()
 
-@testset repeats=NumReps "emits different ASCII strings that match regex" begin
+@testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^foo|bar|baz$", td)
@@ -68,7 +68,7 @@ end
 
 gn = SCBracketsGen()
 
-@testset repeats=NumReps "emits different ASCII strings that match regex" begin
+@testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^a[uvw][x-z0-3]b$", td)
@@ -87,7 +87,7 @@ end
 
 gn = SCParenthesesGen()
 
-@testset repeats=NumReps "emits different ASCII strings that match regex" begin
+@testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^a(bc+|de+)$", td)
@@ -106,7 +106,7 @@ end
 
 gn = SCClassesGen()
 
-@testset repeats=NumReps "emits different ASCII strings that match regex" begin
+@testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^\s\S\d\D\w\W$", td)
@@ -123,7 +123,7 @@ end
 
 gn = SCEscapesGen()
 
-@testset repeats=NumReps "emits different ASCII strings that match regex" begin
+@testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
     @test typeof(td) == ASCIIString
     @test ismatch(r"^\.\[\]\|\?\+\*\\$", td)

@@ -30,7 +30,7 @@ end
 
 @testset "generator defined in a module" begin
     # This fail on the choose(g) line. Skipping until we fix.
-    @testset skip=true "use Int generator (defined in module which includes DataGenerators. outside of module" begin
+    @testset "use Int generator (defined in module which includes DataGenerators. outside of module" begin
         g = GenDefinedInModuleThatIncludesDataGenerators.TestGen()
         @test typeof(g) <: DataGenerators.Generator
         d = choose(g)
@@ -38,7 +38,7 @@ end
     end
 
     # This also fails. Skipping until we fix.
-    @testset skip=true "use Int generator from function internal to a module" begin
+    @testset "use Int generator from function internal to a module" begin
         d = GenDefinedInModuleThatIncludesDataGenerators.generate_in_a_function()
         @test typeof(d) <: Int
     end

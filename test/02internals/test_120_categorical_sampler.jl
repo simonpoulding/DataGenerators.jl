@@ -20,7 +20,7 @@ end
     @test isconsistentcategorical(s, DataGenerators.getparams(s))
 end
 	
-@testset repeats=NumReps "default sampling" begin
+@testset "default sampling" begin
     x, trace = DataGenerators.sample(s, (0,1), cc)
     @test typeof(x) <: Int
     @mcheck_values_are x [1,2,3,4]
@@ -83,7 +83,7 @@ end
     @test isconsistentcategorical(s, DataGenerators.getparams(s))
 end
 
-@testset repeats=NumReps "setparams with random parameters" begin
+@testset "setparams with random parameters" begin
     params = map(pr->robustmidpoint(pr[1],pr[2])+(2.0*rand()-1.0)*(pr[2]-robustmidpoint(pr[1],pr[2])), prs)
     # convulated expression involving middle to avoid overflow to Inf
     DataGenerators.setparams(s, params)

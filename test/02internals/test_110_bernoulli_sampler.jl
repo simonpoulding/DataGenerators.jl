@@ -20,7 +20,7 @@ cc = dummyChoiceContext()
         @test isconsistentbernoulli(s, DataGenerators.getparams(s))
     end
 
-    @testset repeats=NumReps "default sampling" begin
+    @testset "default sampling" begin
         x, trace = DataGenerators.sample(s, (0,1), cc)
         @test typeof(x) <: Int
         @mcheck_values_are x [0,1]
