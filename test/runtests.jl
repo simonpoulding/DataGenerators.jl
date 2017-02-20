@@ -41,7 +41,7 @@ end
     include(joinpath("02internals","test_080_using_generators_in_different_scopes.jl"))
     include(joinpath("02internals","test_110_bernoulli_sampler.jl"))
     include(joinpath("02internals","test_120_categorical_sampler.jl"))
-    include(joinpath("02internals","test_130_discrete_uniform_sampler.jl"))
+    # include(joinpath("02internals","test_130_discrete_uniform_sampler.jl"))
     # include(joinpath("02internals","test_140_geometric_sampler.jl"))
     # include(joinpath("02internals","test_150_normal_sampler.jl"))
     # include(joinpath("02internals","test_160_uniform_sampler.jl"))
