@@ -1,16 +1,16 @@
 # tests String value choice points, i.e. using choose(StringDataType, regex) construct
 
 @generator SCWildcardGen begin # prefix SC (for String value Choice points) to avoid type name clashes
-    start() = choose(ASCIIString, ".")
+    start() = choose(String, ".")
 end
 
-@testset "choose(ASCIIString) using regex containing wilcard" begin
+@testset "choose(String) using regex containing wilcard" begin
 
 gn = SCWildcardGen()
 
 @testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
-    @test typeof(td) == ASCIIString
+    @test typeof(td) == String
     @test ismatch(r"^.$", td)
     @mcheck_values_vary td
 end
@@ -19,16 +19,16 @@ end
 
 
 @generator SCQuantifiersGen begin
-    start() = choose(ASCIIString, "a?b+c*d{4}e{5,6}f{7,}g{8,8}")
+    start() = choose(String, "a?b+c*d{4}e{5,6}f{7,}g{8,8}")
 end
 
-@testset "choose(ASCIIString) using regex containing quantifiers" begin
+@testset "choose(String) using regex containing quantifiers" begin
 
 gn = SCQuantifiersGen()
 
 @testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
-    @test typeof(td) == ASCIIString
+    @test typeof(td) == String
     @test ismatch(r"^a?b+c*d{4}e{5,6}f{7,}g{8,8}$", td)
     @mcheck_values_include count(x->x=='a',td) [0,1]
     @mcheck_values_include count(x->x=='b',td) [1,2,3]
@@ -43,16 +43,16 @@ end
 
 
 @generator SCAlternationGen begin
-    start() = choose(ASCIIString, "foo|bar|baz")
+    start() = choose(String, "foo|bar|baz")
 end
 
-@testset "choose(ASCIIString) using regex containing alternation" begin
+@testset "choose(String) using regex containing alternation" begin
 
 gn = SCAlternationGen()
 
 @testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
-    @test typeof(td) == ASCIIString
+    @test typeof(td) == String
     @test ismatch(r"^foo|bar|baz$", td)
     @mcheck_values_are td ["foo","bar","baz"]
 end
@@ -61,16 +61,16 @@ end
 
 
 @generator SCBracketsGen begin
-    start() = choose(ASCIIString, "a[uvw][x-z0-3]b")
+    start() = choose(String, "a[uvw][x-z0-3]b")
 end
 
-@testset "choose(ASCIIString) using regex containing bracket" begin
+@testset "choose(String) using regex containing bracket" begin
 
 gn = SCBracketsGen()
 
 @testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
-    @test typeof(td) == ASCIIString
+    @test typeof(td) == String
     @test ismatch(r"^a[uvw][x-z0-3]b$", td)
     @mcheck_values_are td[2] ['u','v','w']
     @mcheck_values_are td[3] ['x','y','z','0','1','2','3']
@@ -80,16 +80,16 @@ end
 
 
 @generator SCParenthesesGen begin
-    start() = choose(ASCIIString, "a(bc|de)")
+    start() = choose(String, "a(bc|de)")
 end
 
-@testset "choose(ASCIIString) using regex containing parentheses" begin
+@testset "choose(String) using regex containing parentheses" begin
 
 gn = SCParenthesesGen()
 
 @testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
-    @test typeof(td) == ASCIIString
+    @test typeof(td) == String
     @test ismatch(r"^a(bc+|de+)$", td)
     @mcheck_values_are td[2] ['b','d']
     @mcheck_values_are td[3] ['c','e']
@@ -99,16 +99,16 @@ end
 
 
 @generator SCClassesGen begin
-    start() = choose(ASCIIString, "\\s\\S\\d\\D\\w\\W")
+    start() = choose(String, "\\s\\S\\d\\D\\w\\W")
 end
 
-@testset "choose(ASCIIString) using regex containing classes" begin
+@testset "choose(String) using regex containing classes" begin
 
 gn = SCClassesGen()
 
 @testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
-    @test typeof(td) == ASCIIString
+    @test typeof(td) == String
     @test ismatch(r"^\s\S\d\D\w\W$", td)
     @mcheck_values_vary td
 end
@@ -116,16 +116,16 @@ end
 end
 
 @generator SCEscapesGen begin
-    start() = choose(ASCIIString, "\\.\\[\\]\\|\\?\\+\\*\\\\")
+    start() = choose(String, "\\.\\[\\]\\|\\?\\+\\*\\\\")
 end
 
-@testset "choose(ASCIIString) using regex that escapes metacharacters" begin
+@testset "choose(String) using regex that escapes metacharacters" begin
 
 gn = SCEscapesGen()
 
 @testset "emits different ASCII strings that match regex" begin
     td = choose(gn)
-    @test typeof(td) == ASCIIString
+    @test typeof(td) == String
     @test ismatch(r"^\.\[\]\|\?\+\*\\$", td)
 end
 	

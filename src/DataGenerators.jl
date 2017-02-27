@@ -31,7 +31,7 @@ const GENERATOR_SUPPORTED_CHOOSE_NUMBER_TYPES = Type[Bool, Int8, Int16, Int32, I
 
 # list of number types that are supported directly by generator macro
 # (could do this automatically as leaf subtypes of AbstractString, but some of these we can't really handle directly yet)
-const GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES = Type[ASCIIString, UTF8String, UTF16String, UTF32String,]
+const GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES = Type[String,]
 
 # all choose types supported directly by the generator maco
 const GENERATOR_SUPPORTED_CHOOSE_TYPES = Type[GENERATOR_SUPPORTED_CHOOSE_NUMBER_TYPES; GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES]

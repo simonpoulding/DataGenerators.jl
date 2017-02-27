@@ -283,7 +283,7 @@ function ischoosetype(callname, callparams, gencontext)
 	if (callname == :choose)
 		if (length(callparams) >= 1)
 			datatype = converttodatatype(callparams[1])
-			# type must not be a directly supported type (e.g. Int64, ASCIIString) nor a Generator
+			# type must not be a directly supported type (e.g. Int64, String) nor a Generator
 			if (typeof(datatype) <: Type) && !(datatype in GENERATOR_SUPPORTED_CHOOSE_TYPES) && !(datatype <: Generator)
 				return true
 			end
@@ -833,7 +833,7 @@ function transformfunccall(node, genrules::Vector{GeneratorRule}, gencontext::Ge
 	end
 
 	# if node is a reference to an explicit DataGenerator method, then don't transform and go no deeper
-	if (typeof(node) == Expr) && (node.head == symbol(".")) && (node.args[1] == THIS_MODULE)
+	if (typeof(node) == Expr) && (node.head == Symbol(".")) && (node.args[1] == THIS_MODULE)
 		return node
 	end
 

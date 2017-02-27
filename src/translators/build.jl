@@ -84,9 +84,9 @@ function assign_rulenames(node::ASTNode, rulenameprefix="")
   rulename = escape_rule_name(rulenameprefix * (isempty(rulenameprefix) ? "" : " ") * describe_ast_node(node))
   if isempty(rulenameprefix)
     # special case: empty prefix at root node, so name this the "start" rule as it will be the entry point to the generator
-    node.rulename = symbol("start")
+    node.rulename = Symbol("start")
   else
-    node.rulename = symbol(rulename)
+    node.rulename = Symbol(rulename)
   end
   for enumchild in enumerate(node.children)
     assign_rulenames(enumchild[2], rulename * " $(enumchild[1])") # note we use "canonical" rulename rather than actual rule name used for this node as prefix to children

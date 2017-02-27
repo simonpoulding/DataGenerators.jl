@@ -192,16 +192,16 @@ function finish_and_node(andnode::ASTNode, datatype::DataType)
 		bracketnode = ASTNode(:bracket)
 	    bracketnode.func = :bracket
 
-		if datatype in [ASCIIString,]
-        	classspace = (UnitRange)[9:10, 13:13, 32:126]
-        elseif datatype in [UTF8String, UTF16String, UTF32String,]
+		# if datatype in [ASCIIString,]
+  #       	classspace = (UnitRange)[9:10, 13:13, 32:126]
+  #       elseif datatype in [UTF8String, UTF16String, UTF32String,]
 			classspace = (UnitRange)[9:10, 13:13, 32:55295, 65536:131071, 131072:196607]  
 			# 55295 (0xD7FF) is last character before UTF-16 surrogates in plane 0 (BMP)
 			# 65536-131071 (0x10000 - 0x1FFFF) is plane 1 (SMP)
 			# 131072-196607 (0x20000 - 0x2FFFF) is plane 2 (SIP)
-		else
-			error("Do not know how to handle empty regex for string datatype $(datatype)")
-		end
+		# else
+		# 	error("Do not know how to handle empty regex for string datatype $(datatype)")
+		# end
 
 	    for range in classspace # currently just ASCII
 	      rangenode = ASTNode(:range)

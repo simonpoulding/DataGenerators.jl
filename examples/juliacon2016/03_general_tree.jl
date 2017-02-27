@@ -25,8 +25,8 @@ end
 using DataGenerators
 
 @generator TreeGen begin
-  start = treenode
-  treenode = TreeNode(label, mult(treenode))
-  label = choose(Int, 1, 9)
+  start() = treenode()
+  treenode() = TreeNode(label(), mult(treenode()))
+  label() = choose(Int, 1, 9)
 end
 

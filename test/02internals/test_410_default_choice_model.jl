@@ -34,7 +34,7 @@ end
 
 # internally will use range of choice points, so convenient for testing choice model when more than one choice point
 @generator DCMChooseStringGen begin
-    start() = choose(ASCIIString,"a(b|c)d+ef?")
+    start() = choose(String,"a(b|c)d+ef?")
 end
 
 @testset "default choice model constructor" begin

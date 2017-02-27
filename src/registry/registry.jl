@@ -8,13 +8,13 @@ abstract GeneratorRegistry
 type DocStringMatchingRegistry <: GeneratorRegistry
 	descriptorstogenerators::Dict
 
-	DocStringMatchingRegistry() = new(Dict{ASCIIString, Vector{Generator}}())
+	DocStringMatchingRegistry() = new(Dict{String, Vector{Generator}}())
 end
 
 global godelTestGeneratorRegistry = DocStringMatchingRegistry()
 
 function resetregistry(r::GeneratorRegistry = godelTestGeneratorRegistry)
-	r.descriptors_to_generators = Dict{ASCIIString, Vector{Generator}}()
+	r.descriptors_to_generators = Dict{String, Vector{Generator}}()
 end
 
 # Return an array of meta tags that are in the generates tag.
