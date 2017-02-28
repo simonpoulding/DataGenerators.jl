@@ -15,10 +15,7 @@ export DefaultChoiceModel, SamplerChoiceModel, NMCSChoiceModel, MCTSChoiceModel
 # exported Choice Model functions
 export paramranges, setparams, getparams, numparams, estimateparams, estimateconditionalmodel
 
-# exported Translators
-export xsd_generator, bnf_generator, regex_generator, type_generator
-
-
+using DataGeneratorTranslators
 using Distributions
 
 
@@ -36,9 +33,6 @@ const GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES = Type[String,]
 # all choose types supported directly by the generator maco
 const GENERATOR_SUPPORTED_CHOOSE_TYPES = Type[GENERATOR_SUPPORTED_CHOOSE_NUMBER_TYPES; GENERATOR_SUPPORTED_CHOOSE_STRING_TYPES]
 
-
-# translators
-include(joinpath("translators","translators.jl"))
 
 # generation and associated functions
 include(joinpath("generation","generation.jl"))

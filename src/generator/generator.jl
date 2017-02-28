@@ -360,7 +360,7 @@ function transformchoosestring(callname, callparams, genrules, gencontext, match
 	# for this regex
 	rulenameprefix = "choosestring" * hex(rand(UInt64))
 	# create rules for regex
-	regexrules = regex_rules(regex, datatype, rulenameprefix)
+	regexrules = DataGeneratorTranslators.regex_rules(regex, datatype, rulenameprefix)
 	# add rules to generator
 	addrulesources(genrules, regexrules)
 	# replace choose with call to entry point for regex rules (the first rule)
@@ -989,7 +989,7 @@ end
 
 
 # parses rule sources (as returned by translator) and appends them generator rules
-function addrulesources(genrules::Vector{GeneratorRule}, rulesources::Vector{RuleSource})
+function addrulesources(genrules::Vector{GeneratorRule}, rulesources::Vector{DataGeneratorTranslators.RuleSource})
 	for rulesource in rulesources
 		genrule = GeneratorRule(rulesource.rulename, rulesource.args, parse(join(rulesource.source, "\n")))
 		push!(genrules, genrule)

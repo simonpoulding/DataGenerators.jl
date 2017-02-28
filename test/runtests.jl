@@ -1,5 +1,5 @@
-using Base.Test
 using DataGenerators
+using Base.Test
 
 #
 # Temporarily stub out BaseTestAuto features

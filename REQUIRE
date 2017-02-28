@@ -1,5 +1,4 @@
-julia 0.4
-Distributions 0.8.10
-HypothesisTests 0.2.10
-LightXML 0.2.1
-ParserCombinator 1.7.7
+julia 0.5
+DataGeneratorTranslators
+Distributions 0.12.1
+HypothesisTests 0.4.0
