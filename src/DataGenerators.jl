@@ -35,13 +35,13 @@ const GENERATOR_SUPPORTED_CHOOSE_TYPES = Type[GENERATOR_SUPPORTED_CHOOSE_NUMBER_
 
 
 # generation and associated functions
-include(joinpath("generation","generation.jl"))
+include("generation.jl")
 
 # @generator macro
-include(joinpath("generator","generator.jl"))
+include("generator_macro.jl")
 
 # updating and querying registry metadata
-include(joinpath("registry","registry.jl"))
+include("registry.jl")
 
 # choice models
 include(joinpath("choice_model","choice_model.jl"))
