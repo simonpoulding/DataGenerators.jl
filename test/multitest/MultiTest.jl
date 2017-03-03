@@ -29,9 +29,11 @@ function finish(ts::MultiTestSet)
 	for (id, mtestclosure) in ts.mtests
 		s = get(ts.samples, id, [])
 		res = try
-				testresult, testtype, testshortdesc = mtestclosure(s)
-				testdesc = string(testtype) * " " * testshortdesc # testtype is the symbol equivalent to the macro name
-				testresult ? Pass(testtype, testdesc, nothing, nothing) : Fail(testtype, testdesc, nothing, nothing)
+				testresult, testname, testexpr, testparams = mtestclosure(s)
+				testdesc = string(testname) * " " * testexpr * " " * testparams * "\n      Sample: " * string(s) 	
+				# this description (macroname evaluand & any parameters) will be reported by DefaultTestSet after the label "Expression:"
+				# the spaces after the \n aligns the label "Sample:" on the second line to this
+				testresult ? Pass(testname, testdesc, nothing, nothing) : Fail(testname, testdesc, nothing, nothing)
 			catch _e
 				Error(:mtest, nothing, _e, catch_backtrace())
 			end
@@ -95,8 +97,7 @@ end
 # mtest_values_vary
 macro mtest_values_vary(ex)
 	paramex = :( nothing ) 
-	mtestclosureex = :( _s->(length(unique(_s))>1, 
-							:mtest_values_vary, $(string(ex)) * "\n      Sample: $_s") )
+	mtestclosureex = :( _s->(length(unique(_s))>1, :mtest_values_vary, $(string(ex)), "") )
 	mtest_macro(ex, paramex, mtestclosureex)
 end
 
@@ -104,8 +105,7 @@ end
 macro mtest_values_are(ex, expex)
 	expvar = gensym(:exp)
 	paramex = :( $expvar = $(esc(expex)) )
-	mtestclosureex = :( _s->(sort(unique(_s))==sort(unique($expvar)), 
-							:mtest_values_are, $(string(ex)) * " $($expvar)\n      Sample: $_s") )
+	mtestclosureex = :( _s->(sort(unique(_s))==sort(unique($expvar)), :mtest_values_are, $(string(ex)), string($expvar)) )
 	mtest_macro(ex, paramex, mtestclosureex)
 end
 
@@ -113,16 +113,14 @@ end
 macro mtest_values_include(ex, expex)
 	expvar = gensym(:exp)
 	paramex = :( $expvar = $(esc(expex)) )
-	mtestclosureex = :( _s->(issubset($expvar, _s), 
-							:mtest_values_include, $(string(ex)) * " $($expvar)\n      Sample: $_s") )
+	mtestclosureex = :( _s->(issubset($expvar, _s), :mtest_values_include, $(string(ex)), string($expvar)) )
 	mtest_macro(ex, paramex, mtestclosureex)
 end
 
 # mtest_that_sometimes
 macro mtest_that_sometimes(ex)
 	paramex = :( nothing ) 
-	mtestclosureex = :( _s->(any(_s), 
-							:mtest_that_sometimes, $(string(ex)) * "\n      Sample: $_s") )
+	mtestclosureex = :( _s->(any(_s), :mtest_that_sometimes, $(string(ex)), "") )
 	mtest_macro(ex, paramex, mtestclosureex)
 	# in description of sample, could handle comparison in same way that DefaultTestSet does to report both sides rather than result
 end
@@ -135,7 +133,7 @@ macro mtest_distributed_as(ex, distex, alphaex)
 	alphavar = gensym(:alpha)
 	paramex = :( $distvar = $(esc(distex)); $alphavar = $(esc(alphaex)) )
 	mtestclosureex = :( _s->(pvalue(MannWhitneyUTest(convert(Vector{Real},_s), rand($distvar, length(_s)))) > $alphavar,
-		 					:mtest_distributed_as, $(string(ex)) * " $($distvar) $($alphavar)\n      Sample: $_s") )
+		 					:mtest_distributed_as, $(string(ex)), string($distvar) * " " * string($alphavar)) )
 	mtest_macro(ex, paramex, mtestclosureex)
 end
 
