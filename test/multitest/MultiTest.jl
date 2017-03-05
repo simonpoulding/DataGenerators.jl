@@ -1,4 +1,4 @@
-# Simplified equivalents of @mcheck macros from AutoTest.jl, implemented using customization features of Base.Test in Julia 0.5
+# Simplified equivalents of @mcheck macros from AutoTest.jl (Robert Feldt), implemented using customization features of Base.Test in Julia 0.5
 # Adds new @mtest_distributed_as to test distributions
 # Simon Poulding, 2017
 
@@ -29,11 +29,11 @@ function finish(ts::MultiTestSet)
 	for (id, mtestclosure) in ts.mtests
 		s = get(ts.samples, id, [])
 		res = try
-				testresult, testname, testexpr, testparams = mtestclosure(s)
-				testdesc = string(testname) * " " * testexpr * " " * testparams * "\n      Sample: " * string(s) 	
-				# this description (macroname evaluand & any parameters) will be reported by DefaultTestSet after the label "Expression:"
+				result, macrosym, evaluand, params = mtestclosure(s)
+				testdesc = string(macrosym) * " " * evaluand * " " * params * "\n      Sample: " * string(s) 	
+				# this description (macrosym evaluand & any parameters) will be reported by DefaultTestSet after the label "Expression:"
 				# the spaces after the \n aligns the label "Sample:" on the second line to this
-				testresult ? Pass(testname, testdesc, nothing, nothing) : Fail(testname, testdesc, nothing, nothing)
+				result ? Pass(macrosym, testdesc, nothing, nothing) : Fail(macrosym, testdesc, nothing, nothing)
 			catch _e
 				Error(:mtest, nothing, _e, catch_backtrace())
 			end
@@ -78,7 +78,7 @@ end
 
 # common code for all mtest macros: output is code to register mtest instance and its associated closure (if first time executed),
 # and then add value to the sample
-function mtest_macro(ex, paramex, mtestclosureex)
+function mtest_macro(ex, paramex, mtestclosureex, macrosym)
     origex = Expr(:inert, ex)
     resultex = get_mtest_result_expr(ex)
 	id = gensym(:mtest)
@@ -86,6 +86,7 @@ function mtest_macro(ex, paramex, mtestclosureex)
 	tsvar = gensym(:ts)
     quote 
 		$tsvar = get_testset()
+		isa($tsvar, MultiTestSet) || error("@" * $(string(macrosym)) * " macro requires a custom test set of type MultiTestSet")
 		if !is_mtest_registered($tsvar, Symbol($idstr))
 			$paramex
 			register_mtest($tsvar, Symbol($idstr), $mtestclosureex)
@@ -96,45 +97,49 @@ end
 
 # mtest_values_vary
 macro mtest_values_vary(ex)
+	macrosym = :mtest_values_vary
 	paramex = :( nothing ) 
-	mtestclosureex = :( _s->(length(unique(_s))>1, :mtest_values_vary, $(string(ex)), "") )
-	mtest_macro(ex, paramex, mtestclosureex)
+	mtestclosureex = :( _s->(length(unique(_s))>1, Symbol($(string(macrosym))), $(string(ex)), "") )
+	mtest_macro(ex, paramex, mtestclosureex, macrosym)
 end
 
 # mtest_values_are
 macro mtest_values_are(ex, expex)
+	macrosym = :mtest_values_are
 	expvar = gensym(:exp)
 	paramex = :( $expvar = $(esc(expex)) )
-	mtestclosureex = :( _s->(sort(unique(_s))==sort(unique($expvar)), :mtest_values_are, $(string(ex)), string($expvar)) )
-	mtest_macro(ex, paramex, mtestclosureex)
+	mtestclosureex = :( _s->(sort(unique(_s))==sort(unique($expvar)), Symbol($(string(macrosym))), $(string(ex)), string($expvar)) )
+	mtest_macro(ex, paramex, mtestclosureex, macrosym)
 end
 
 # mtest_values_include
 macro mtest_values_include(ex, expex)
+	macrosym = :mtest_values_include
 	expvar = gensym(:exp)
 	paramex = :( $expvar = $(esc(expex)) )
-	mtestclosureex = :( _s->(issubset($expvar, _s), :mtest_values_include, $(string(ex)), string($expvar)) )
-	mtest_macro(ex, paramex, mtestclosureex)
+	mtestclosureex = :( _s->(issubset($expvar, _s), Symbol($(string(macrosym))), $(string(ex)), string($expvar)) )
+	mtest_macro(ex, paramex, mtestclosureex, macrosym)
 end
 
 # mtest_that_sometimes
 macro mtest_that_sometimes(ex)
+	macrosym = :mtest_that_sometimes
 	paramex = :( nothing ) 
-	mtestclosureex = :( _s->(any(_s), :mtest_that_sometimes, $(string(ex)), "") )
-	mtest_macro(ex, paramex, mtestclosureex)
-	# in description of sample, could handle comparison in same way that DefaultTestSet does to report both sides rather than result
+	mtestclosureex = :( _s->(any(_s), Symbol($(string(macrosym))), $(string(ex)), "") )
+	mtest_macro(ex, paramex, mtestclosureex, macrosym)
 end
 
 # mtest_distributed_as
 # comparison need not be a Distribution - needs only to permit rand( ,n); a vector would work
 # test is that ranksum test against a sample of the same length from the distribution has a p-value above significance level alpha
 macro mtest_distributed_as(ex, distex, alphaex)
+	macrosym = :mtest_distributed_as
 	distvar = gensym(:dist)
 	alphavar = gensym(:alpha)
 	paramex = :( $distvar = $(esc(distex)); $alphavar = $(esc(alphaex)) )
 	mtestclosureex = :( _s->(pvalue(MannWhitneyUTest(convert(Vector{Real},_s), rand($distvar, length(_s)))) > $alphavar,
-		 					:mtest_distributed_as, $(string(ex)), string($distvar) * " " * string($alphavar)) )
-	mtest_macro(ex, paramex, mtestclosureex)
+		 					Symbol($(string(macrosym))), $(string(ex)), string($distvar) * " " * string($alphavar)) )
+	mtest_macro(ex, paramex, mtestclosureex, macrosym)
 end
 
 end
