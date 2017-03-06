@@ -2,6 +2,8 @@ using DataGenerators
 using Base.Test
 include(joinpath("multitest","MultiTest.jl"))
 using MultiTest
+using Distributions
+
 
 #
 # Temporarily stub out BaseTestAuto features
@@ -24,9 +26,9 @@ macro mcheck_that_sometimes(params...)
 end
 #
 
-
-mtest_num_reps = 20 # usual number of repetitions in MultiTestSet test sets
-mtest_alpha = 0.01 # usual significance level for @mtests based on hypothesis test 
+# note that owing to bug in option passing to TestSets, this must be explicitly prefixed by module (e.g. Main.REPS) in that context
+const REPS = 30 # usual number of repetitions in MultiTestSet test sets
+const ALPHA = 0.01 # usual significance level for @mtests based on hypothesis test 
 
 @testset "DataGenerators" begin
   
@@ -42,10 +44,11 @@ mtest_alpha = 0.01 # usual significance level for @mtests based on hypothesis te
   end
 
   @testset "internals" begin
-    # include(joinpath("02internals","test_010_choice_point_info.jl"))
-    # include(joinpath("02internals","test_080_using_generators_in_different_scopes.jl"))
-    # include(joinpath("02internals","test_110_bernoulli_sampler.jl"))
-    # include(joinpath("02internals","test_120_categorical_sampler.jl"))
+	include(joinpath("internals","_sampler_test_utils.jl"))  
+    include(joinpath("internals","choice_point_info.jl"))
+    include(joinpath("internals","generator_scope.jl"))
+    include(joinpath("internals","bernoulli_sampler.jl"))
+    include(joinpath("internals","categorical_sampler.jl"))
     # # include(joinpath("02internals","test_130_discrete_uniform_sampler.jl"))
     # # include(joinpath("02internals","test_140_geometric_sampler.jl"))
     # # include(joinpath("02internals","test_150_normal_sampler.jl"))
@@ -56,12 +59,12 @@ mtest_alpha = 0.01 # usual significance level for @mtests based on hypothesis te
     # # include(joinpath("02internals","test_240_truncate_to_support_sampler.jl"))
     # # include(joinpath("02internals","test_250_transform_sampler.jl"))
     # # include(joinpath("02internals","test_260_constrain_parameters_sampler.jl"))
-    # include(joinpath("02internals","test_410_default_choice_model.jl"))
+    include(joinpath("internals","default_choice_model.jl"))
     # # include(joinpath("02internals","test_420_sampler_choice_model.jl"))
   end
 
   @testset "examples" begin
-    # include(joinpath("03examples","test_010_simple_arithmetic_expression.jl"))
+    include(joinpath("examples","simple_arithmetic_expression.jl"))
   end
 
 end

@@ -1,10 +1,41 @@
 # Simplified equivalents of @mcheck macros from AutoTest.jl (Robert Feldt), implemented using customization features of Base.Test in Julia 0.5
 # Adds new @mtest_distributed_as to test distributions
 # Simon Poulding, 2017
-
+#
+#
+# Examples:
+#
+# @mtestset "example of autorepeating (defaults to 30 repetitions)" begin
+# 	@mtest_values_vary rand(1:6)
+# end
+#
+# @mtestset "example of autorepeating - set explicitly" reps=7 begin
+# 	@mtest_values_vary rand(1:6)
+# end
+#
+# @mtestset "can use for syntax in same way as for @testset, and similarly creates a new test set for each value of loop var" for i in 1:10
+# 	@mtest_values_vary rand(1:i)
+# end
+#
+# using Distributions
+# @mtestset "compares to a distribution (any type that rand(...) accepts) using MannWhitneyU with defined significance" begin
+#	x = rand(1:6)
+# 	@mtest_distributed_as x DiscreteUniform(1,6) 0.01
+# 	@mtest_distributed_as x 1:6 0.01
+# end
+#
+# @testset MultiTestSet "omit automatic looping" begin
+# 	for x in ["i","j","k"]
+# 		@mtest_values_include x ["k","i"]
+# 	end
+# end
+#
+# 
 module MultiTest
 
-export MultiTestSet, @mtest_values_vary, @mtest_values_are, @mtest_values_include, @mtest_that_sometimes, @mtest_distributed_as
+export MultiTestSet
+export @mtestset
+export @mtest_values_vary, @mtest_values_are, @mtest_values_include, @mtest_that_sometimes, @mtest_distributed_as
 
 import Base.Test: record, finish
 using Base.Test: AbstractTestSet, DefaultTestSet, Result, Pass, Fail, Error, ExecutionResult, Returned, Threw, get_testset
@@ -16,7 +47,11 @@ type MultiTestSet <: AbstractTestSet
 	defaultts::DefaultTestSet
 	mtests::Dict{Symbol, Function}
 	samples::Dict{Symbol, Vector}
-	MultiTestSet(desc) = new(DefaultTestSet(desc), Dict{Symbol, Function}(), Dict{Symbol, Vector}())
+	repetition_count::Int
+	repetitions::Int
+	function MultiTestSet(desc; reps::Int=30)
+		new(DefaultTestSet(desc), Dict{Symbol, Function}(), Dict{Symbol, Vector}(), 0, reps)
+	end
 end 
 
 # for normal tests, record against the wrapped default test set
@@ -42,6 +77,37 @@ function finish(ts::MultiTestSet)
 	finish(ts.defaultts)
 end
 
+
+# determine whether to continue with more repetitions
+# this could be extend with accumulator-type functionality from AutoTest so that number of repeats (sample size) is adjusted automatically
+function continue_sampling()
+	ts = get_testset()
+	ts.repetition_count += 1
+	ts.repetition_count <= ts.repetitions
+end
+
+# syntatic sugar for @testset MultiTestSet, also insert a while loop around test set block that is controlled automatically
+macro mtestset(args...)
+	testsetex = args[end]
+	@assert isa(testsetex, Expr) && (testsetex.head in (:block, :for))
+	testsetblock = testsetex.head == :block ? testsetex : testsetex.args[2]
+	@assert isa(testsetblock, Expr) && (testsetblock.head == :block)
+	mtestloopex = quote
+		while MultiTest.continue_sampling()
+			$(testsetblock)
+		end
+	end
+	if testsetex.head == :block
+		testsetex = mtestloopex
+	else
+		testsetex.args[2] = mtestloopex
+	end
+	newargs = (:MultiTestSet, args[1:end-1]..., testsetex)
+	mc = :( @testset($(newargs...)) )
+	esc(mc)
+end
+
+
 # register a mtest macro first time it is executed, to record both id and the test function (as a closure including any parameters 
 # such as expected results)
 register_mtest(ts::MultiTestSet, id::Symbol, mtestclosure::Function) = ts.mtests[id] = mtestclosure
@@ -61,6 +127,7 @@ function add_to_mtest_sample(ts::MultiTestSet, id::Symbol, result::ExecutionResu
 	    record(ts, testres)
     end
 end
+
 
 # simplified form of Base.Test.get_test_result: special handling for comparisons is removed as we don't need it (but see mtest_that_sometimes)
 function get_mtest_result_expr(ex) 
@@ -86,7 +153,7 @@ function mtest_macro(ex, paramex, mtestclosureex, macrosym)
 	tsvar = gensym(:ts)
     quote 
 		$tsvar = get_testset()
-		isa($tsvar, MultiTestSet) || error("@" * $(string(macrosym)) * " macro requires a custom test set of type MultiTestSet")
+		isa($tsvar, MultiTestSet) || error("To apply the @" * $(string(macrosym)) * " macro, replace @testset with @mtestset")
 		if !is_mtest_registered($tsvar, Symbol($idstr))
 			$paramex
 			register_mtest($tsvar, Symbol($idstr), $mtestclosureex)

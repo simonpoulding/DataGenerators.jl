@@ -14,13 +14,13 @@ end
 
 @testset "simple arithmetic expression generator" begin
 
-gn = EXSimpleExprGen()
+	gn = EXSimpleExprGen()
 
-@testset "emits a valid simple expression as a string" begin
-    td = choose(gn)
-    @test typeof(td) <: AbstractString
-    @test ismatch(r"^-?[0-9]+ [+\-/*] -?[0-9]+$", td)
-    @mcheck_values_vary td
-end
+	@mtestset "emits a valid simple expression as a string" reps=Main.REPS begin
+	    td = choose(gn)
+	    @test typeof(td) <: AbstractString
+	    @test ismatch(r"^-?[0-9]+ [+\-/*] -?[0-9]+$", td)
+	    @mtest_values_vary td
+	end
 	
 end

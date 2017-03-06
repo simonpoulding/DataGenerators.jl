@@ -57,7 +57,7 @@ end
 
 # valid ranges for each parameter, return as a vector; each range is a tuple (min,max) where (ironically, given the notation)
 # values are inclusive
-paramranges(cm::DefaultChoiceModel) = (Real,Real)[]
+paramranges(cm::DefaultChoiceModel) = Tuple{Real,Real}[]
 
 # set parameters using the passed vector of values
 setparams(cm::DefaultChoiceModel, params) = nothing

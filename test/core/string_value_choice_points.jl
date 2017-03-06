@@ -32,11 +32,11 @@ end
 
 @testset "string value choice points" begin
 
-	@testset MultiTestSet "choose(String) using regex containing wilcard" begin
+	@testset "choose(String) using regex containing wilcard" begin
 
 		gn = SCWildcardGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^.$", td)
@@ -45,11 +45,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "choose(String) using regex containing quantifiers" begin
+	@testset "choose(String) using regex containing quantifiers" begin
 
 		gn = SCQuantifiersGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^a?b+c*d{4}e{5,6}f{7,}g{8,8}$", td)
@@ -64,11 +64,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "choose(String) using regex containing alternation" begin
+	@testset "choose(String) using regex containing alternation" begin
 
 		gn = SCAlternationGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^foo|bar|baz$", td)
@@ -77,11 +77,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "choose(String) using regex containing bracket" begin
+	@testset "choose(String) using regex containing bracket" begin
 
 		gn = SCBracketsGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^a[uvw][x-z0-3]b$", td)
@@ -91,11 +91,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "choose(String) using regex containing parentheses" begin
+	@testset "choose(String) using regex containing parentheses" begin
 
 		gn = SCParenthesesGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^a(bc+|de+)$", td)
@@ -105,11 +105,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "choose(String) using regex containing classes" begin
+	@testset "choose(String) using regex containing classes" begin
 
 		gn = SCClassesGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^\s\S\d\D\w\W$", td)
@@ -118,11 +118,11 @@ end
 		
 	end
 
-	@testset MultiTestSet "choose(String) using regex that escapes metacharacters" begin
+	@testset "choose(String) using regex that escapes metacharacters" begin
 
 		gn = SCEscapesGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^\.\[\]\|\?\+\*\\$", td)

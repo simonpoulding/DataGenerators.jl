@@ -31,33 +31,33 @@ end
 
 @testset "rule choice points" begin
 
-	@testset MultiTestSet "rule choice point using short form function definitions" begin
+	@testset "rule choice point using short form function definitions" begin
 	
 	    gn = RCShortGen()
 	
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
         	td = choose(gn)
 			@mtest_values_are td ['a','b','c']
 		end
 
 	end
 
-	@testset MultiTestSet "rule choice point using long form function definitions" begin
+	@testset "rule choice point using long form function definitions" begin
 
 	    gn = RCLongGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
         	td = choose(gn)
 			@mtest_values_are td ['a','b','c']
 		end
 
 	end
 
-	@testset MultiTestSet "rule choice point using mixture of short and long form function definitions" begin
+	@testset "rule choice point using mixture of short and long form function definitions" begin
 
 	    gn = RCMixedGen()
 
-		for i in 1:mtest_num_reps
+		@mtestset reps=Main.REPS begin
         	td = choose(gn)
 			@mtest_values_are td ['a','b','c']
 		end

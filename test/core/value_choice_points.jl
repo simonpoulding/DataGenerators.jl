@@ -77,11 +77,11 @@ end
 
 @testset "value choice points" begin
 
-	@testset MultiTestSet "choose(Bool)" begin
+	@testset "choose(Bool)" begin
 
 	    gn = VCBoolGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Bool
 		    @mtest_values_vary td
@@ -89,11 +89,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "choose(Int)" begin
+	@testset "choose(Int)" begin
 
 		gn = VCIntGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -102,11 +102,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Int) using range defined by non-literals" begin
+	@testset "choose(Int) using range defined by non-literals" begin
 
 		gn = VCIntNonLiteralGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -115,11 +115,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Int) using range defined by variables" begin
+	@testset "choose(Int) using range defined by variables" begin
 
 		gn = VCIntVariableGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -128,11 +128,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Int) with no max specified" begin
+	@testset "choose(Int) with no max specified" begin
 
 		gn = VCIntNoMaxGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td
@@ -141,11 +141,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Int) with no min nor max specified" begin
+	@testset "choose(Int) with no min nor max specified" begin
 
 		gn = VCIntNoRangeGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @mtest_values_vary td
@@ -153,11 +153,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Int64)" begin
+	@testset "choose(Int64)" begin
 
 		gn = VCInt64Gen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -166,11 +166,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Int32)" begin
+	@testset "choose(Int32)" begin
 
 		gn = VCInt32Gen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Int32
 		    @test -1000 <= td <= 2000
@@ -179,11 +179,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(UInt)" begin
+	@testset "choose(UInt)" begin
 
 		gn = VCUIntGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == UInt
 		    @test 4 <= td <= 420
@@ -192,11 +192,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Float64)" begin
+	@testset "choose(Float64)" begin
 
 		gn = VCFloat64Gen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td <= 32.7
@@ -205,11 +205,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Float64) with no max specified" begin
+	@testset "choose(Float64) with no max specified" begin
 
 		gn = VCFloat64NoMaxGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td
@@ -218,11 +218,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "choose(Float64) with no min nor max specified" begin
+	@testset "choose(Float64) with no min nor max specified" begin
 
 		gn = VCFloat64NoRangeGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @mtest_values_vary td
@@ -230,11 +230,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Float64) using defined by non-literals" begin
+	@testset "choose(Float64) using defined by non-literals" begin
 
 		gn = VCFloat64NonLiteralGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td <= 32.7
@@ -243,11 +243,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Float64) using range defined by variables" begin
+	@testset "choose(Float64) using range defined by variables" begin
 
 		gn = VCFloat64VariableGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td <= 32.7
@@ -256,11 +256,11 @@ end
 
 	end
 
-	@testset MultiTestSet "choose(Float32)" begin
+	@testset "choose(Float32)" begin
 
 		gn = VCFloat32Gen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) == Float32
 		    @test -4.2 <= td <= 32.7

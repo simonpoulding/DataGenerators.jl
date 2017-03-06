@@ -14,12 +14,6 @@ module GenDefinedInModuleThatIncludesDataGenerators
     end
 end
 
-#module GenDefinedInModuleWithoutIncludingDataGenerators
-#  DataGenerators.@generator TestGen begin
-#    start() = choose(Float64, 0.0, 5.0)
-#  end
-#end
-
 @testset "generator defined outside of a module" begin
     @testset "use generator defined outside module" for i in 1:NumReps 
         g = GenOutsideModule()

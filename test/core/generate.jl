@@ -66,18 +66,14 @@ end
 
 		gn = GNChoiceModelGen()
 	
-		@testset MultiTestSet "default choice model" begin
-			for i in 1:mtest_num_reps
-		    	td = choose(gn)
-				@mtest_values_include length(td) [1,2,3]
-			end
+		@mtestset "default choice model" reps=Main.REPS begin
+	    	td = choose(gn)
+			@mtest_values_include length(td) [1,2,3]
 		end
 
-		@testset MultiTestSet "non-default choice model" begin
-			for i in 1:mtest_num_reps
-			    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
-				@mtest_values_are length(td) [1,]	
-			end
+		@mtestset "non-default choice model" reps=Main.REPS begin
+		    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
+			@mtest_values_are length(td) [1,]	
 		end
 	
 	end
@@ -88,18 +84,14 @@ end
 		ign = GNIntGen()
 		gn = GNMainGen(ign)
 	
-		@testset MultiTestSet "default choice model" begin
-			for i in 1:mtest_num_reps
-			    td = choose(gn)
-			    @mtest_values_include first(td) [5,6,7]
-			end
+		@mtestset "default choice model" reps=Main.REPS begin
+		    td = choose(gn)
+		    @mtest_values_include first(td) [5,6,7]
 		end
 
-		@testset MultiTestSet "non-default choice model" begin
-			for i in 1:mtest_num_reps
-			    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
-			    @mtest_values_are first(td) [5,]
-			end
+		@mtestset "non-default choice model" reps=Main.REPS begin
+		    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
+		    @mtest_values_are first(td) [5,]
 		end
 	
 	end
@@ -183,51 +175,47 @@ end
 		# sampler choice model should have a single parameter that controls the geometric distribution
 		# set this to a value close to zero so that median length is much larger than the default maxseqreps
 		setparams(scm, [0.000001])
-
-		@testset MultiTestSet "sequence are no longer than the default limit" begin
-			for i in 1:mtest_num_reps
-			    exc = nothing
-			    td = nothing
-			    try
-			        td = choose(gn, choicemodel = scm)
-			    catch e
-			        if isa(e,GenerationTerminatedException)
-			            exc = e
-			        else
-			            throw(e)
-			        end
-			    end
-			    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
-			    @mtest_that_sometimes typeof(exc) == GenerationTerminatedException
-			    if (exc != nothing)
-			        @test match(r"repetitions", exc.reason) != nothing
-			        @test match(r"exceeded", exc.reason) != nothing
-			        @test match(Regex("$(DataGenerators.MAX_SEQ_REPS_DEFAULT)"), exc.reason) != nothing
-			    end
-			end
+		
+		@mtestset "sequence are no longer than the default limit" reps=Main.REPS begin
+		    exc = nothing
+		    td = nothing
+		    try
+		        td = choose(gn, choicemodel = scm)
+		    catch e
+		        if isa(e,GenerationTerminatedException)
+		            exc = e
+		        else
+		            throw(e)
+		        end
+		    end
+		    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+		    @mtest_that_sometimes typeof(exc) == GenerationTerminatedException
+		    if (exc != nothing)
+		        @test match(r"repetitions", exc.reason) != nothing
+		        @test match(r"exceeded", exc.reason) != nothing
+		        @test match(Regex("$(DataGenerators.MAX_SEQ_REPS_DEFAULT)"), exc.reason) != nothing
+		    end
 		end
 
-		@testset MultiTestSet "sequence are no longer than the specified limit" begin
-			for i in 1:mtest_num_reps
-			    exc = nothing
-			    td = nothing
-			    try
-			        td = choose(gn, choicemodel = scm, maxseqreps = 87)
-			    catch e
-			        if isa(e,GenerationTerminatedException)
-			            exc = e
-			        else
-			            throw(e)
-			        end
-			    end
-			    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
-			    @mtest_that_sometimes typeof(exc) == GenerationTerminatedException
-			    if (exc != nothing)
-			        @test match(r"repetitions", exc.reason) != nothing
-			        @test match(r"exceeded", exc.reason) != nothing
-			        @test match(Regex("87"), exc.reason) != nothing
-			    end
-			end
+		@mtestset "sequence are no longer than the specified limit" reps=Main.REPS begin
+		    exc = nothing
+		    td = nothing
+		    try
+		        td = choose(gn, choicemodel = scm, maxseqreps = 87)
+		    catch e
+		        if isa(e,GenerationTerminatedException)
+		            exc = e
+		        else
+		            throw(e)
+		        end
+		    end
+		    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+		    @mtest_that_sometimes typeof(exc) == GenerationTerminatedException
+		    if (exc != nothing)
+		        @test match(r"repetitions", exc.reason) != nothing
+		        @test match(r"exceeded", exc.reason) != nothing
+		        @test match(Regex("87"), exc.reason) != nothing
+		    end
 		end
 	
 	end

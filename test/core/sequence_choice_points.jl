@@ -74,11 +74,11 @@ end
 
 @testset "sequence choice points" begin
 
-	@testset MultiTestSet "reps choice point" begin
+	@testset "reps choice point" begin
 
 		gn = SCRepsGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 	    	td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
@@ -89,11 +89,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "reps choice point with no maximum" begin
+	@testset "reps choice point with no maximum" begin
 
 		gn = SCRepsNoMaxGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td)
@@ -103,11 +103,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "reps choice point with no minimum nor maximum" begin
+	@testset "reps choice point with no minimum nor maximum" begin
 
 		gn = SCRepsNoMinGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 0 <= length(td)
@@ -117,11 +117,11 @@ end
 	
 	end
 
-	@testset MultiTestSet "reps choice point with non-literal minimum and maximum" begin
+	@testset "reps choice point with non-literal minimum and maximum" begin
 
 		gn = SCRepsNonLiteralMinMaxGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 4 <= length(td) <= 6
@@ -131,11 +131,11 @@ end
 
 	end
 
-	@testset MultiTestSet "reps choice point with non-literal minimum and maximum defined by rules" begin
+	@testset "reps choice point with non-literal minimum and maximum defined by rules" begin
 
 		gn = SCRepsRuleNonLiteralMinMaxGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 4 <= length(td) <= 6
@@ -145,11 +145,11 @@ end
 
 	end
 
-	@testset MultiTestSet "reps choice point where function called uses short form with parentheses" begin
+	@testset "reps choice point where function called uses short form with parentheses" begin
 
 		gn = SCRepsShortFormParenGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
@@ -160,11 +160,11 @@ end
 
 	end
 
-	@testset MultiTestSet "reps choice point where function called with parameters" begin
+	@testset "reps choice point where function called with parameters" begin
 
 		gn = SCRepsRuleParamGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
@@ -178,11 +178,11 @@ end
 
 	end
 
-	@testset MultiTestSet "reps choice point where function called is not a rule" begin
+	@testset "reps choice point where function called is not a rule" begin
 
 		gn = SCRepsNonRuleGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
@@ -193,12 +193,12 @@ end
 
 	end
 
-	@testset MultiTestSet "reps choice point where function called is not a rule" begin
+	@testset "reps choice point where function called is not a rule" begin
 
 		sg = SCSubGen()
 		gn = SCRepsSubGenGen(sg)
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
@@ -213,11 +213,11 @@ end
 	# mult(function_as_symbol)
 	#
 
-	@testset MultiTestSet "mult choice point" begin
+	@testset "mult choice point" begin
 
 		gn = SCMultGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 0 <= length(td)
@@ -231,11 +231,11 @@ end
 	# plus(function_as_symbol)
 	#
 
-	@testset MultiTestSet "plus choice point" begin
+	@testset "plus choice point" begin
 
 		gn = SCPlusGen()
 
-		for i in 1:mtest_num_reps 
+		@mtestset reps=Main.REPS begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 1 <= length(td)
