@@ -10,13 +10,25 @@ function robustmidpoint(a::Float64,b::Float64)
 	m
 end
 
+
+import DataGenerators: getcurrentrecursiondepth, getimmediateancestorcpseqnumber, godelnumber
+
 # create dummy choice context 
 # for all apart from the ConditionalSampler, the choice context is not required
 type DummyDerivationState <: DataGenerators.DerivationState
 end
 
+# required for sampler choice model
+getcurrentrecursiondepth(st::DummyDerivationState) = 1
+getimmediateancestorcpseqnumber(st::DummyDerivationState) = 0
+
 dummyChoiceContext() = DataGenerators.ChoiceContext(DummyDerivationState(), DataGenerators.RULE_CP, 0, Int, 0, 0)
 
+# choice model that only returns the lower bound Godel number
+type MinimumValueChoiceModel <: DataGenerators.ChoiceModel; end
+function godelnumber(cm::MinimumValueChoiceModel, cc::DataGenerators.ChoiceContext)
+	return cc.lowerbound, Dict()
+end
 
 #
 # Functions to check that observed distribution is consistent with passed parameters

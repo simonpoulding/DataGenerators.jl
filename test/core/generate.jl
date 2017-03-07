@@ -35,14 +35,6 @@ end
 end
 
 
-# choice model that only returns the lower bound Godel number
-type GNMinimumValueChoiceModel <: DataGenerators.ChoiceModel; end
-import DataGenerators.godelnumber
-function godelnumber(cm::GNMinimumValueChoiceModel, cc::DataGenerators.ChoiceContext)
-return cc.lowerbound, Dict()
-end
-
-
 @testset "generate" begin
 
 	@testset "generate using different start rules" begin
@@ -72,7 +64,7 @@ end
 		end
 
 		@mtestset "non-default choice model" reps=Main.REPS begin
-		    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
+		    td = choose(gn, choicemodel=MinimumValueChoiceModel())
 			@mtest_values_are length(td) [1,]	
 		end
 	
@@ -90,7 +82,7 @@ end
 		end
 
 		@mtestset "non-default choice model" reps=Main.REPS begin
-		    td = choose(gn, choicemodel=GNMinimumValueChoiceModel())
+		    td = choose(gn, choicemodel=MinimumValueChoiceModel())
 		    @mtest_values_are first(td) [5,]
 		end
 	

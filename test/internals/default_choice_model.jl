@@ -55,13 +55,13 @@ end
 
 		@testset "paramranges" begin
 		    ranges = paramranges(cm)
-		    @test typeof(ranges) <: Vector
+		    @test typeof(ranges) <: Vector{Tuple{Float64,Float64}}
 		    @test length(ranges) == 0
 		end
 
 		@testset "getparams" begin
 		    params = getparams(cm)
-		    @test typeof(params) <: Vector
+		    @test typeof(params) <: Vector{Float64}
 		    @test length(params) == 0
 		end
 
@@ -268,7 +268,6 @@ end
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
 		        @test convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 		        @test 450001.6 <= gnum
-		        @mtest_that_sometimes round(gnum) != gnum
 		        @mtest_values_vary gnum
 		    end
 		
@@ -282,7 +281,6 @@ end
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
 		        @test convert(Float64,gnum) != nothing  # raises exception if value can't be converted
 		        @test gnum <= 450001.6
-		        @mtest_that_sometimes round(gnum) != gnum
 		        @mtest_values_vary gnum
 		    end
 		
@@ -295,7 +293,6 @@ end
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
 		        @test convert(Float64,gnum) != nothing  # raises exception if value can't be converted
-		        @mtest_that_sometimes round(gnum) != gnum
 		        @mtest_values_vary gnum
 		    end
 		
@@ -303,7 +300,7 @@ end
 	
 	end
 
-	@testset "default choice model - generate for model with multiple choice points" begin
+	@testset "generate for model with multiple choice points" begin
 
 		gn = DCMChooseStringGen()
 		cm = DefaultChoiceModel(gn)
