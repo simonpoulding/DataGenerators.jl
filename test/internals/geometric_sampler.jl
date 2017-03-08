@@ -1,4 +1,4 @@
-@testset "Bernoulli sampler" begin
+@testset "geometric sampler" begin
 
 	cc = dummyChoiceContext()
 	
@@ -6,7 +6,7 @@
 
 		@testset "using default construction" begin
 		
-		    s = DataGenerators.BernoulliSampler()
+		    s = DataGenerators.GeometricSampler()
 
 		    @testset "numparams and paramranges" begin
 		        @test DataGenerators.numparams(s) == 1
@@ -15,27 +15,27 @@
 		        @test prs == [(0.0,1.0)]
 		    end
 	
-		    @testset "default params" begin			
+		    @testset "default params" begin
 		        @test DataGenerators.getparams(s) == [0.5]
 		    end
 
 		    @mtestset "default sampling" reps=Main.REPS begin
 		        x, trace = DataGenerators.sample(s, (0,1), cc)
 		        @test typeof(x) <: Int
-		        @mtest_values_are x [0,1]
-				@mtest_distributed_as x Bernoulli(0.5) Main.ALPHA
-		    end
+				@mtest_values_include x [0,1,2,3]
+		        @mtest_distributed_as x Geometric(0.5) Main.ALPHA
+			end
 		
 		end
 	
 		@testset "using non-default construction" begin
 
-		    s = DataGenerators.BernoulliSampler([0.3])
+		    s = DataGenerators.GeometricSampler([0.3])
 		    @test DataGenerators.getparams(s) == [0.3]
 
-		    @mtestset "consistent with Bernoulli" reps=Main.REPS begin
+		    @mtestset "consistent with geometric" reps=Main.REPS begin
 		    	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(0.3) Main.ALPHA
+		        @mtest_distributed_as x Geometric(0.3) Main.ALPHA
 		    end
 
 		end
@@ -44,7 +44,7 @@
 
 	@testset "setparams" begin
 
-	    s = DataGenerators.BernoulliSampler()
+	    s = DataGenerators.GeometricSampler()
 	    prs = DataGenerators.paramranges(s)
 	    midparams = map(pr->robustmidpoint(pr[1],pr[2]), prs)
 
@@ -52,9 +52,9 @@
 	 
 	        DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+			@mtestset "consistent with geometric" reps=Main.REPS begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(params[1]) Main.ALPHA			
+		        @mtest_distributed_as x Geometric(params[1]) Main.ALPHA			
 			end
 
 	    end
@@ -66,12 +66,16 @@
 
 			@testset "bound index $bidx" for bidx in 1:2
 		
-	            params[pidx] = pr[bidx] 
+	            params[pidx] = pr[bidx]
+				if params[pidx] == 0.0
+					params[pidx] == 0.05 # hard to check consistency against distribution where p close to zero
+				end
+				
 	            DataGenerators.setparams(s, params)
 			
-				@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+				@mtestset "consistent with geometric" reps=Main.REPS begin
 	            	x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x Bernoulli(params[1]) Main.ALPHA
+			        @mtest_distributed_as x Geometric(adjusttoopeninterval(params[1], 0.0, 1.0)) Main.ALPHA
 				end
 	
 				@testset "range check exception" begin
@@ -94,23 +98,23 @@
 
 	@testset "estimateparams" begin
 
-	    s = DataGenerators.BernoulliSampler()
+	    s = DataGenerators.GeometricSampler()
 	    prs = DataGenerators.paramranges(s)
 	    otherparams = [0.5]
 
-	    @testset "from parameters $params" for params in [[0.2], [0.7], [0.0], [1.0],]
+	    @testset "from parameters $params" for params in [[0.2], [0.7], [0.05], [1.0],]
 	
-	        s1 = DataGenerators.BernoulliSampler(params)
-	        s2 = DataGenerators.BernoulliSampler(otherparams)	
+	        s1 = DataGenerators.GeometricSampler(params)
+	        s2 = DataGenerators.GeometricSampler(otherparams)	
 	        traces = map(1:100) do i
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
 	        estimateparams(s2, traces)
-
-			@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+			
+			@mtestset "consistent with geometric" reps=Main.REPS begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(params[1]) Main.ALPHA
+		        @mtest_distributed_as x Geometric(adjusttoopeninterval(params[1], 0.0, 1.0)) Main.ALPHA
 			end
 
 	    end
@@ -118,17 +122,16 @@
 	    @testset "too few traces" begin
 	
 	        params = [0.2]
-	        s1 = DataGenerators.BernoulliSampler(params)
-	        s2 = DataGenerators.BernoulliSampler(otherparams)	
+	        s1 = DataGenerators.GeometricSampler(params)
+	        s2 = DataGenerators.GeometricSampler(otherparams)	
 	        traces = map(1:0) do i
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
-	        estimateparams(s2, traces)
 
-			@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+			@mtestset "consistent with geometric" reps=Main.REPS begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(otherparams[1]) Main.ALPHA
+		        @mtest_distributed_as x Geometric(otherparams[1]) Main.ALPHA
 			end
 
 	    end

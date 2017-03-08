@@ -16,20 +16,14 @@
 			end
 	
 			@testset "default params" begin
-		
 			    @test DataGenerators.getparams(s) == [0.25, 0.25, 0.25, 0.25]
-			
-			    @mtestset "consistent with Categorical" reps=Main.REPS begin
-	            	x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x Categorical([0.25, 0.25, 0.25, 0.25]) Main.ALPHA
-			    end
-			
 			end
 	
 			@mtestset "default sampling" reps=Main.REPS begin
 			    x, trace = DataGenerators.sample(s, (0,1), cc)
 			    @test typeof(x) <: Int
 			    @mtest_values_are x [1,2,3,4]
+		        @mtest_distributed_as x Categorical([0.25, 0.25, 0.25, 0.25]) Main.ALPHA
 			end
 
 		end

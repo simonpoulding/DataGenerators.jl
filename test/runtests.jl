@@ -43,17 +43,18 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 	    include(joinpath("core","subgenerators.jl"))
 	    include(joinpath("core","metadata.jl"))
 	    include(joinpath("core","generate.jl"))
+	    include(joinpath("core","generator_scope.jl"))
 	end
 	
 	@testset "internals" begin
 	    include(joinpath("internals","choice_point_info.jl"))
-	    include(joinpath("internals","generator_scope.jl"))
+		include(joinpath("internals","default_choice_model.jl"))
 	    include(joinpath("internals","bernoulli_sampler.jl"))
 	    include(joinpath("internals","categorical_sampler.jl"))
-	    # # include(joinpath("02internals","test_130_discrete_uniform_sampler.jl"))
-	    # # include(joinpath("02internals","test_140_geometric_sampler.jl"))
-	    # # include(joinpath("02internals","test_150_normal_sampler.jl"))
-	    # # include(joinpath("02internals","test_160_uniform_sampler.jl"))
+	    include(joinpath("internals","geometric_sampler.jl"))
+	    include(joinpath("internals","discrete_uniform_sampler.jl"))
+	    include(joinpath("internals","uniform_sampler.jl"))
+	    include(joinpath("internals","normal_sampler.jl"))
 	    # # include(joinpath("02internals","test_210_mixture_sampler.jl"))
 	    # # include(joinpath("02internals","test_220_adjust_parameters_to_support_sampler.jl"))
 	    # # include(joinpath("02internals","test_230_align_minimum_support_sampler.jl"))
@@ -61,7 +62,6 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 	    # # include(joinpath("02internals","test_250_transform_sampler.jl"))
 	    # # include(joinpath("02internals","test_260_constrain_parameters_sampler.jl"))		
 		include(joinpath("internals","sampler_choice_model.jl"))
-		include(joinpath("internals","default_choice_model.jl"))
 	end
 
 	@testset "examples" begin
