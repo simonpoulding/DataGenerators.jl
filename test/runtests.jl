@@ -26,7 +26,7 @@ macro mcheck_that_sometimes(params...)
 end
 #
 
-# note that owing to bug (?) in option passing to TestSets, this must be explicitly prefixed by module (e.g. Main.REPS) in that context
+# note that owing to scoping bug (?) in option passing to TestSets, this must be explicitly prefixed by module (e.g. Main.REPS) in that context
 const REPS = 30 # number of repetitions in MultiTestSet test sets
 const ALPHA = 0.01 # significance level for @mtests based on hypothesis test 
 
@@ -56,11 +56,11 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 		include(joinpath("internals","uniform_sampler.jl"))
 		include(joinpath("internals","normal_sampler.jl"))
 		include(joinpath("internals","mixture_sampler.jl"))
-	    # # include(joinpath("02internals","test_220_adjust_parameters_to_support_sampler.jl"))
-	    # # include(joinpath("02internals","test_230_align_minimum_support_sampler.jl"))
-	    # # include(joinpath("02internals","test_240_truncate_to_support_sampler.jl"))
-	    # # include(joinpath("02internals","test_250_transform_sampler.jl"))
-	    # # include(joinpath("02internals","test_260_constrain_parameters_sampler.jl"))		
+	    include(joinpath("internals","adjust_parameters_to_support_sampler.jl"))
+	    include(joinpath("internals","align_minimum_support_sampler.jl"))
+	    # include(joinpath("internals","_truncate_to_support_sampler.jl"))
+	    # include(joinpath("internals","_transform_sampler.jl"))
+	    # include(joinpath("internals","_constrain_parameters_sampler.jl"))
 		include(joinpath("internals","sampler_choice_model.jl"))
 	end
 
