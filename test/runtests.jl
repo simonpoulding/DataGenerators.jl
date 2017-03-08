@@ -47,15 +47,15 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 	end
 	
 	@testset "internals" begin
-	    include(joinpath("internals","choice_point_info.jl"))
+		include(joinpath("internals","choice_point_info.jl"))
 		include(joinpath("internals","default_choice_model.jl"))
-	    include(joinpath("internals","bernoulli_sampler.jl"))
-	    include(joinpath("internals","categorical_sampler.jl"))
-	    include(joinpath("internals","geometric_sampler.jl"))
-	    include(joinpath("internals","discrete_uniform_sampler.jl"))
-	    include(joinpath("internals","uniform_sampler.jl"))
-	    include(joinpath("internals","normal_sampler.jl"))
-	    # # include(joinpath("02internals","test_210_mixture_sampler.jl"))
+		include(joinpath("internals","bernoulli_sampler.jl"))
+		include(joinpath("internals","categorical_sampler.jl"))
+		include(joinpath("internals","geometric_sampler.jl"))
+		include(joinpath("internals","discrete_uniform_sampler.jl"))
+		include(joinpath("internals","uniform_sampler.jl"))
+		include(joinpath("internals","normal_sampler.jl"))
+		include(joinpath("internals","mixture_sampler.jl"))
 	    # # include(joinpath("02internals","test_220_adjust_parameters_to_support_sampler.jl"))
 	    # # include(joinpath("02internals","test_230_align_minimum_support_sampler.jl"))
 	    # # include(joinpath("02internals","test_240_truncate_to_support_sampler.jl"))

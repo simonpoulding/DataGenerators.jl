@@ -1,4 +1,4 @@
-@testset "Discrete Uniform Sampler" begin
+@testset "discrete uniform sampler" begin
 
 	cc = dummyChoiceContext()
 

@@ -109,4 +109,12 @@ using Distributions
 		@mtest_distributed_as rand(DiscreteUniform(0,30)) Binomial(30, p) alpha
 	end
 
+	@mtestset "@mtest macros inside if statements case: $case PASS (case1) & FAIL (case2)" for case in [:case1, :case2]
+		x = rand(1:6)
+		if case == :case1
+			@mtest_values_include x [1,3,4]
+		else
+			@mtest_values_include x [0,2,6]
+		end			
+	end
 end

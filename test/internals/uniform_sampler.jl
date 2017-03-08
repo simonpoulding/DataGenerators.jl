@@ -1,5 +1,4 @@
-
-@testset "Discrete Uniform Sampler" begin
+@testset "uniform sampler" begin
 
 	cc = dummyChoiceContext()
 
@@ -83,7 +82,7 @@
 			params = [-realmax(Float64), realmax(Float64)]
 			DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
 		        @mtest_distributed_as x Uniform(-realmax(Float64), realmax(Float64)) Main.ALPHA
 			end
@@ -100,7 +99,7 @@
 	            params[pidx] = pr[bidx] 
 		        DataGenerators.setparams(s, params)
 				
-				@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+				@mtestset "consistent with uniform" reps=Main.REPS begin
 		        	x, trace = DataGenerators.sample(s, (0,1), cc)
 					sortedparams = sort(params)
 			        @mtest_distributed_as x Uniform(sortedparams[1],sortedparams[2]) Main.ALPHA
