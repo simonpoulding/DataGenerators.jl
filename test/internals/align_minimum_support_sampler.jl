@@ -29,10 +29,10 @@
 		subsA = DataGenerators.GeometricSampler([0.3])
 		s = DataGenerators.AlignMinimumSupportSampler(subsA)
 
-		@mtestset "support is applied for support $cpsupport" reps=Main.REPS for cpsupport in [(17, typemax(Int)), (-4, -4), (0, 10),]
+		@mtestset "support is applied for support $cpsupport" reps=Main.REPS alpha=Main.ALPHA for cpsupport in [(17, typemax(Int)), (-4, -4), (0, 10),]
 			x, trace = DataGenerators.sample(s, cpsupport, cc)
 			@test cpsupport[1] <= x # this sampler does not guarantee x <= cpsupport[2]
-			@mtest_distributed_as x-cpsupport[1] Geometric(0.3) Main.ALPHA
+			@mtest_distributed_as Geometric(0.3) x-cpsupport[1]
 		end
 		
 	end
@@ -59,9 +59,9 @@
 
 			estimateparams(s2, traces)
 
-			@mtestset "consistent with geometric" reps=Main.REPS begin
+			@mtestset "consistent with geometric" reps=Main.REPS alpha=Main.ALPHA begin
 				x, trace = DataGenerators.sample(s2, (0,1), cc)
-				@mtest_distributed_as x Geometric(params[1]) Main.ALPHA
+				@mtest_distributed_as Geometric(params[1]) x
 			end
 
 	end

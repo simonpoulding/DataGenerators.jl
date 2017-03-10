@@ -34,11 +34,11 @@
 		subsA = DataGenerators.DiscreteUniformSampler([-1000.0, 214455.0])
 		s = DataGenerators.AdjustParametersToSupportSampler(subsA)
 
-		@mtestset "support is applied" reps=Main.REPS for cpsupport in [(188, 199), (-4, -4),]
+		@mtestset "support is applied" reps=Main.REPS alpha=Main.ALPHA for cpsupport in [(188, 199), (-4, -4),]
 			# note: includes case where lower bound = upper bound
 			x, trace = DataGenerators.sample(s, cpsupport, cc)
 			@test cpsupport[1] <= x <= cpsupport[2]
-			@mtest_distributed_as x DiscreteUniform(cpsupport[1], cpsupport[2]) Main.ALPHA
+			@mtest_distributed_as DiscreteUniform(cpsupport[1],cpsupport[2]) x 
 		end
 		
 	end

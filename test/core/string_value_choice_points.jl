@@ -36,7 +36,7 @@ end
 
 		gn = SCWildcardGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^.$", td)
@@ -49,17 +49,17 @@ end
 
 		gn = SCQuantifiersGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^a?b+c*d{4}e{5,6}f{7,}g{8,8}$", td)
-		    @mtest_values_include count(x->x=='a',td) [0,1]
-		    @mtest_values_include count(x->x=='b',td) [1,2,3]
-		    @mtest_values_include count(x->x=='c',td) [0,1,2]
-		    @mtest_values_include count(x->x=='d',td) [4,]
-		    @mtest_values_include count(x->x=='e',td) [5,6]
-		    @mtest_values_include count(x->x=='f',td) [7,8,9]
-		    @mtest_values_are count(x->x=='g',td) [8]
+		    @mtest_values_include [0,1] count(x->x=='a',td)
+		    @mtest_values_include [1,2,3] count(x->x=='b',td)
+		    @mtest_values_include [0,1,2] count(x->x=='c',td)
+		    @mtest_values_include [4,] count(x->x=='d',td)
+		    @mtest_values_include [5,6] count(x->x=='e',td)
+		    @mtest_values_include [7,8,9] count(x->x=='f',td)
+		    @mtest_values_are [8] count(x->x=='g',td)
 		end
 	
 	end
@@ -68,11 +68,11 @@ end
 
 		gn = SCAlternationGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^foo|bar|baz$", td)
-		    @mtest_values_are td ["foo","bar","baz"]
+		    @mtest_values_are ["foo","bar","baz"] td
 		end
 	
 	end
@@ -81,12 +81,12 @@ end
 
 		gn = SCBracketsGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^a[uvw][x-z0-3]b$", td)
-		    @mtest_values_are td[2] ['u','v','w']
-		    @mtest_values_are td[3] ['x','y','z','0','1','2','3']
+		    @mtest_values_are ['u','v','w'] td[2]
+		    @mtest_values_are ['x','y','z','0','1','2','3'] td[3]
 		end
 	
 	end
@@ -95,12 +95,12 @@ end
 
 		gn = SCParenthesesGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^a(bc+|de+)$", td)
-		    @mtest_values_are td[2] ['b','d']
-		    @mtest_values_are td[3] ['c','e']
+		    @mtest_values_are ['b','d'] td[2]
+		    @mtest_values_are ['c','e'] td[3]
 		end
 	
 	end
@@ -109,7 +109,7 @@ end
 
 		gn = SCClassesGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^\s\S\d\D\w\W$", td)
@@ -122,7 +122,7 @@ end
 
 		gn = SCEscapesGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == String
 		    @test ismatch(r"^\.\[\]\|\?\+\*\\$", td)

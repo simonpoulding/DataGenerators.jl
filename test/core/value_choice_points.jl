@@ -81,7 +81,7 @@ end
 
 	    gn = VCBoolGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Bool
 		    @mtest_values_vary td
@@ -93,7 +93,7 @@ end
 
 		gn = VCIntGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -106,7 +106,7 @@ end
 
 		gn = VCIntNonLiteralGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -119,7 +119,7 @@ end
 
 		gn = VCIntVariableGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -132,7 +132,7 @@ end
 
 		gn = VCIntNoMaxGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td
@@ -145,7 +145,7 @@ end
 
 		gn = VCIntNoRangeGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @mtest_values_vary td
@@ -157,7 +157,7 @@ end
 
 		gn = VCInt64Gen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test -1000 <= td <= 2000
@@ -170,7 +170,7 @@ end
 
 		gn = VCInt32Gen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int32
 		    @test -1000 <= td <= 2000
@@ -183,7 +183,7 @@ end
 
 		gn = VCUIntGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == UInt
 		    @test 4 <= td <= 420
@@ -196,7 +196,7 @@ end
 
 		gn = VCFloat64Gen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td <= 32.7
@@ -209,7 +209,7 @@ end
 
 		gn = VCFloat64NoMaxGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td
@@ -222,7 +222,7 @@ end
 
 		gn = VCFloat64NoRangeGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @mtest_values_vary td
@@ -234,7 +234,7 @@ end
 
 		gn = VCFloat64NonLiteralGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td <= 32.7
@@ -247,7 +247,7 @@ end
 
 		gn = VCFloat64VariableGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Float64
 		    @test -4.2 <= td <= 32.7
@@ -260,7 +260,7 @@ end
 
 		gn = VCFloat32Gen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Float32
 		    @test -4.2 <= td <= 32.7

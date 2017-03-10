@@ -78,13 +78,13 @@ end
 
 		gn = SCRepsGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 	    	td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
 		    @test all(map(x->typeof(x),td) .== Symbol)
 		    @test td[1] != td[2]
-		    @mtest_values_include length(td) [2,3,4]
+		    @mtest_values_include [2,3,4] length(td)
 		end
 	
 	end
@@ -93,12 +93,12 @@ end
 
 		gn = SCRepsNoMaxGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td)
 		    @test all(td .== 'a')
-		    @mtest_values_include length(td) [2,3,4]
+		    @mtest_values_include [2,3,4] length(td)
 		end
 	
 	end
@@ -107,12 +107,12 @@ end
 
 		gn = SCRepsNoMinGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 0 <= length(td)
 		    @test all(td .== 'a')
-		    @mtest_values_include length(td) [0,1,2]
+		    @mtest_values_include [0,1,2] length(td)
 		end
 	
 	end
@@ -121,12 +121,12 @@ end
 
 		gn = SCRepsNonLiteralMinMaxGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 4 <= length(td) <= 6
 		    @test all(td .== 'a')
-		    @mtest_values_are length(td) [4,5,6]
+		    @mtest_values_are [4,5,6] length(td)
 		end
 
 	end
@@ -135,12 +135,12 @@ end
 
 		gn = SCRepsRuleNonLiteralMinMaxGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 4 <= length(td) <= 6
 		    @test all(td .== 'a')
-		    @mtest_values_are length(td) [4,5,6]
+		    @mtest_values_are [4,5,6] length(td)
 		end
 
 	end
@@ -149,13 +149,13 @@ end
 
 		gn = SCRepsShortFormParenGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
 		    @test all(map(x->typeof(x),td) .== Symbol)
 		    @test td[1] != td[2]
-		    @mtest_values_are length(td) [2,3,4]
+		    @mtest_values_are [2,3,4] length(td)
 		end
 
 	end
@@ -164,7 +164,7 @@ end
 
 		gn = SCRepsRuleParamGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
@@ -173,7 +173,7 @@ end
 		    @test all(map(x->typeof(x),td1) .== Symbol)
 		    @test td1[1] != td1[2]
 		    @test all(td2 .== 72)
-		    @mtest_values_are length(td) [2,3,4]
+		    @mtest_values_are [2,3,4] length(td)
 		end
 
 	end
@@ -182,13 +182,13 @@ end
 
 		gn = SCRepsNonRuleGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
 		    @test all(map(x->typeof(x),td) .== Symbol)
 		    @test td[1] != td[2]
-		    @mtest_values_are length(td) [2,3,4]
+		    @mtest_values_are [2,3,4] length(td)
 		end
 
 	end
@@ -198,13 +198,13 @@ end
 		sg = SCSubGen()
 		gn = SCRepsSubGenGen(sg)
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 2 <= length(td) <= 4
 		    @test all(map(x->typeof(x),td) .== Symbol)
 		    @test td[1] != td[2]
-		    @mtest_values_are length(td) [2,3,4]
+		    @mtest_values_are [2,3,4] length(td)
 		end
 
 	end
@@ -217,12 +217,12 @@ end
 
 		gn = SCMultGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 0 <= length(td)
 		    @test all(td .== 'a')
-		    @mtest_values_include length(td) [0,1,2]
+		    @mtest_values_include [0,1,2] length(td)
 		end
 	
 	end
@@ -235,12 +235,12 @@ end
 
 		gn = SCPlusGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test 1 <= length(td)
 		    @test all(td .== 'a')
-		    @mtest_values_include length(td) [1,2,3]
+		    @mtest_values_include [1,2,3] length(td)
 		end
 
 	end

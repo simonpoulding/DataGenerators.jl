@@ -19,11 +19,11 @@
 				@test DataGenerators.getparams(s) == [-1.0, 1.0]
 			end
 	
-			@mtestset "default sampling" reps=Main.REPS begin
+			@mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 				x, trace = DataGenerators.sample(s, (0,1), cc)
 				@test typeof(x) <: Float64
 				@test -1.0 <= x <= 1.0
-		        @mtest_distributed_as x Uniform(-1.0, 1.0) Main.ALPHA
+		        @mtest_distributed_as Uniform(-1.0,1.0) x 
 			end
 	
 		end
@@ -37,9 +37,9 @@
 		
 				@test DataGenerators.getparams(s) == [-100.7,129.3762]
 
-				@mtestset "is consistent with uniform" reps=Main.REPS begin
+				@mtestset "is consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 					x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x Uniform(-100.7,129.3762) Main.ALPHA
+			        @mtest_distributed_as Uniform(-100.7,129.3762) x
 				end
 			
 			end
@@ -59,9 +59,9 @@
 
 	        DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Uniform(params[1], params[2]) Main.ALPHA
+		        @mtest_distributed_as Uniform(params[1],params[2]) x 
 			end
 
 	    end
@@ -71,9 +71,9 @@
 			DataGenerators.setparams(s, [50.77,8.3])
 			@test DataGenerators.getparams(s) == [8.3,50.77]
 
-			@mtestset "consistent with uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Uniform(8.3, 50.77) Main.ALPHA
+		        @mtest_distributed_as Uniform(8.3,50.77) x 
 			end
 
 		end
@@ -82,9 +82,9 @@
 			params = [-realmax(Float64), realmax(Float64)]
 			DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Uniform(-realmax(Float64), realmax(Float64)) Main.ALPHA
+		        @mtest_distributed_as Uniform(-realmax(Float64),realmax(Float64)) x 
 			end
 
 		end
@@ -99,10 +99,10 @@
 	            params[pidx] = pr[bidx] 
 		        DataGenerators.setparams(s, params)
 				
-				@mtestset "consistent with uniform" reps=Main.REPS begin
+				@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 		        	x, trace = DataGenerators.sample(s, (0,1), cc)
 					sortedparams = sort(params)
-			        @mtest_distributed_as x Uniform(sortedparams[1],sortedparams[2]) Main.ALPHA
+			        @mtest_distributed_as Uniform(sortedparams[1],sortedparams[2]) x
 				end
 				
 				@testset "range check exception" begin
@@ -120,7 +120,7 @@
 			
 			@test DataGenerators.getparams(s) == [0.712, 0.712]
 
-			@mtestset "consistent with uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
 				@test x == 0.712
 			end
@@ -131,9 +131,9 @@
 		
 			DataGenerators.setparams(s, [87.23, nextfloat(nextfloat(87.23))])
 			
-			@mtestset "consistent with uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-				@mtest_values_are x [87.23, nextfloat(87.23), nextfloat(nextfloat(87.23))]
+				@mtest_values_are [87.23,nextfloat(87.23),nextfloat(nextfloat(87.23))] x 
 			end
 
 		end
@@ -163,9 +163,9 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Uniform(params[1], params[2]) Main.ALPHA
+		        @mtest_distributed_as Uniform(params[1],params[2]) x 
 			end
 			
 	    end
@@ -181,9 +181,9 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with uniform" reps=Main.REPS begin
+			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Uniform(-42.9, 42.2) Main.ALPHA
+		        @mtest_distributed_as Uniform(-42.9,42.2) x 
 			end
 
 	    end

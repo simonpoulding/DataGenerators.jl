@@ -19,14 +19,14 @@
 		        @test DataGenerators.getparams(s) == [0.0, 1.0]
 		    end
 
-		    @mtestset "default sampling" reps=Main.REPS begin
+		    @mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 		        x, trace = DataGenerators.sample(s, (0,1), cc)
 		        @test typeof(x) <: Float64
 				@mtest_that_sometimes x < -1.0
 				@mtest_that_sometimes -1.0 <= x < 0.0
 				@mtest_that_sometimes 0.0 < x <= 1.0
 				@mtest_that_sometimes 1.0 < x
-		        @mtest_distributed_as x Normal(0.0, 1.0) Main.ALPHA
+		        @mtest_distributed_as Normal(0.0,1.0) x 
 			end
 		
 		end
@@ -36,9 +36,9 @@
 		    s = DataGenerators.NormalSampler([-949.88, 123.4])
 		    @test DataGenerators.getparams(s) == [-949.88, 123.4]
 
-		    @mtestset "consistent with normal" reps=Main.REPS begin
+		    @mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 		    	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Normal(-949.88, 123.4) Main.ALPHA
+		        @mtest_distributed_as Normal(-949.88,123.4) x 
 		    end
 
 		end
@@ -56,11 +56,11 @@
 
 	        DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with normal" reps=Main.REPS begin
+			@mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
 				mu = params[1]
 				sigma = params[2] == 0.0 ? eps(params[2]) : params[2]
-		        @mtest_distributed_as x Normal(mu, sigma) Main.ALPHA
+		        @mtest_distributed_as Normal(mu,sigma) x 
 			end
 
 	    end
@@ -75,11 +75,11 @@
 	            params[pidx] = pr[bidx]
 	            DataGenerators.setparams(s, params)
 
-				@mtestset "consistent with normal" reps=Main.REPS begin
+				@mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 	            	x, trace = DataGenerators.sample(s, (0,1), cc)
 					mu = params[1]
 					sigma = params[2] == 0.0 ? eps(params[2]) : params[2]
-			        @mtest_distributed_as x Normal(mu, sigma) Main.ALPHA
+			        @mtest_distributed_as Normal(mu,sigma) x 
 				end
 
 				@testset "range check exception" begin
@@ -117,10 +117,10 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with normal" reps=Main.REPS begin
+			@mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
 				if params[2] > 0.0
-					@mtest_distributed_as x Normal(params[1], params[2]) Main.ALPHA
+					@mtest_distributed_as Normal(params[1],params[2]) x 
 				else
 					@test isapprox(x, params[1])
 					# necessary since above distributed_as fails when sigma=0.0 owing to rounding errors 
@@ -139,9 +139,9 @@
 	            trace
 	        end
 
-			@mtestset "consistent with normal" reps=Main.REPS begin
+			@mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Normal(otherparams[1], otherparams[2]) Main.ALPHA
+		        @mtest_distributed_as Normal(otherparams[1],otherparams[2]) x 
 			end
 
 	    end

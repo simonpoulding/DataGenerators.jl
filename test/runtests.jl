@@ -1,30 +1,7 @@
 using DataGenerators
 using Base.Test
-include(joinpath("multitest","MultiTest.jl"))
-using MultiTest
+using BaseTestMulti
 using Distributions
-
-
-#
-# Temporarily stub out BaseTestAuto features
-#
-NumReps = 1
-macro mcheck_values_include(params...)
-  quote warn("Skipping mcheck_values_include") end
-end
-macro mcheck_values_are(params...)
-  quote warn("Skipping mcheck_values_are") end
-end
-macro mcheck_values_vary(params...)
-  quote warn("Skipping mcheck_values_are") end
-end
-# macro mcheck_values_sometimes(params...)
-#   quote warn("Skipping mcheck_values_sometimes") end
-# end
-macro mcheck_that_sometimes(params...)
-  quote warn("Skipping mcheck_that_sometimes") end
-end
-#
 
 # note that owing to scoping bug (?) in option passing to TestSets, this must be explicitly prefixed by module (e.g. Main.REPS) in that context
 const REPS = 30 # number of repetitions in MultiTestSet test sets

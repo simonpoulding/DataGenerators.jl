@@ -35,7 +35,7 @@ end
 		ign = SGIntGen()
 		gn = SGMain1SGGen(ign)
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test 5 <= td <= 9
@@ -50,7 +50,7 @@ end
 		ign = SGIntGen()
 		gn = SGMain2SGGen(bgn, ign)
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Vector{Bool}
 		    @test 5 <= length(td) <= 9
@@ -65,7 +65,7 @@ end
 		ign = SGIntGen()
 		gn = SGNoParamFormGen(ign)
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) == Int
 		    @test 5 <= td <= 9
@@ -79,7 +79,7 @@ end
 		ign = SGIntGen()
 		gn = SGRepsGen(ign)
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
 		    @test typeof(td) <: Array
 		    @test all(5 .<= td .<= 9)

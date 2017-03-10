@@ -19,14 +19,14 @@
 			@test DataGenerators.getparams(s) == [0.5; 0.5; DataGenerators.getparams(subsA); DataGenerators.getparams(subsB)]
 	    end
 
-	    @mtestset "default sampling" reps=Main.REPS begin
+	    @mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 	        x, trace = DataGenerators.sample(s, (0,1), cc)
 	        @test typeof(x) <: Int
- 			@mtest_values_are x [0,1,7,8,9]
+ 			@mtest_values_are [0,1,7,8,9] x
 			if x <= 1
-				@mtest_distributed_as x Bernoulli(0.5) Main.ALPHA
+				@mtest_distributed_as Bernoulli(0.5) x
 			else
-				@mtest_distributed_as x DiscreteUniform(7,9) Main.ALPHA
+				@mtest_distributed_as DiscreteUniform(7,9) x
 			end
 	    end
 					
@@ -49,9 +49,9 @@
 			@test DataGenerators.getparams(subsB) == [1.0, 6.0]
 			@test DataGenerators.getparams(subsC) == [0.3]
 
-			@mtestset "consistent with mixture" reps=Main.REPS begin
+			@mtestset "consistent with mixture" reps=Main.REPS alpha=Main.ALPHA begin
             	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x MixtureModel([Bernoulli(0.4), DiscreteUniform(1,6), Geometric(0.3)],[0.1, 0.2, 0.7]) Main.ALPHA
+		        @mtest_distributed_as MixtureModel([Bernoulli(0.4),DiscreteUniform(1,6),Geometric(0.3)],[0.1,0.2,0.7]) x
 			end
 
 		end
@@ -60,14 +60,14 @@
 
             DataGenerators.setparams(s, [choiceparams; [0.4, 1.0, 6.0, 0.3]])
 
-			@mtestset "consistent with mixture" reps=Main.REPS begin
+			@mtestset "consistent with mixture" reps=Main.REPS alpha=Main.ALPHA begin
             	x, trace = DataGenerators.sample(s, (0,1), cc)
 				if choiceparams[1] == 1.0
-					@mtest_distributed_as x Bernoulli(0.4) Main.ALPHA
+					@mtest_distributed_as Bernoulli(0.4) x
 				elseif choiceparams[2] == 1.0
-					@mtest_distributed_as x DiscreteUniform(1,6) Main.ALPHA
+					@mtest_distributed_as DiscreteUniform(1,6) x
 				elseif choiceparams[3] == 1.0
-					@mtest_distributed_as x Geometric(0.3) Main.ALPHA
+					@mtest_distributed_as Geometric(0.3) x
 				end
 			end
 			
@@ -108,9 +108,9 @@
 			end
 			estimateparams(s2, traces)
 
-			@mtestset "consistent with mixture" reps=Main.REPS begin
+			@mtestset "consistent with mixture" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x MixtureModel([Bernoulli(params[3]), DiscreteUniform(Int(params[4]),Int(params[5]))], params[1:2]) Main.ALPHA
+		        @mtest_distributed_as MixtureModel([Bernoulli(params[3]),DiscreteUniform(Int(params[4]),Int(params[5]))],params[1:2]) x 
 			end
 		
 		end
@@ -132,9 +132,9 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with mixture" reps=Main.REPS begin
+			@mtestset "consistent with mixture" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x MixtureModel([Bernoulli(otherparams[3]), DiscreteUniform(Int(otherparams[4]),Int(otherparams[5]))], otherparams[1:2]) Main.ALPHA
+		        @mtest_distributed_as MixtureModel([Bernoulli(otherparams[3]),DiscreteUniform(Int(otherparams[4]),Int(otherparams[5]))],otherparams[1:2]) x 
 			end
 
 	    end

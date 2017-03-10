@@ -19,11 +19,11 @@
 				@test DataGenerators.getparams(s) == [Float64(typemin(Int16)), Float64(typemax(Int16))]
 			end
 	
-			@mtestset "default sampling" reps=Main.REPS begin
+			@mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 				x, trace = DataGenerators.sample(s, (0,1), cc)
 				@test typeof(x) <: Int
 				@test typemin(Int16) <= x <= typemax(Int16)
-		        @mtest_distributed_as x DiscreteUniform(typemin(Int16), typemax(Int16)) Main.ALPHA
+		        @mtest_distributed_as DiscreteUniform(typemin(Int16),typemax(Int16)) x 
 			end
 	
 		end
@@ -37,9 +37,9 @@
 		
 				@test DataGenerators.getparams(s) == [-100.0,129.0]
 
-				@mtestset "is consistent with discrete uniform" reps=Main.REPS begin
+				@mtestset "is consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 					x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x DiscreteUniform(-100,129) Main.ALPHA
+			        @mtest_distributed_as DiscreteUniform(-100,129) x
 				end
 			
 			end
@@ -59,9 +59,9 @@
 
 	        DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x DiscreteUniform(Int(params[1]), Int(params[2])) Main.ALPHA
+		        @mtest_distributed_as DiscreteUniform(Int(params[1]),Int(params[2])) x 
 			end
 
 	    end
@@ -71,9 +71,9 @@
 			DataGenerators.setparams(s, [50.0,8.0])
 			@test DataGenerators.getparams(s) == [8.0,50.0]
 
-			@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x DiscreteUniform(8, 50) Main.ALPHA
+		        @mtest_distributed_as DiscreteUniform(8,50) x 
 			end
 
 		end
@@ -82,9 +82,9 @@
 			params = [Float64(typemin(Int)), Float64(typemax(Int))]
 			DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x DiscreteUniform(typemin(Int),typemax(Int)) Main.ALPHA
+		        @mtest_distributed_as DiscreteUniform(typemin(Int),typemax(Int)) x
 			end
 
 		end
@@ -99,10 +99,10 @@
 	            params[pidx] = pr[bidx] 
 		        DataGenerators.setparams(s, params)
 				
-				@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+				@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 		        	x, trace = DataGenerators.sample(s, (0,1), cc)
 					sortedparams = sort(params)
-			        @mtest_distributed_as x DiscreteUniform(Int(sortedparams[1]),Int(sortedparams[2])) Main.ALPHA
+			        @mtest_distributed_as DiscreteUniform(Int(sortedparams[1]),Int(sortedparams[2])) x
 				end
 				
 				@testset "range check exception" begin
@@ -118,9 +118,9 @@
 
 	        DataGenerators.setparams(s, [-2.9, 8.4])
 			
-			@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x DiscreteUniform(-3,8) Main.ALPHA
+		        @mtest_distributed_as DiscreteUniform(-3,8) x
 			end
 			
 		end
@@ -149,9 +149,9 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x DiscreteUniform(Int(params[1]), Int(params[2])) Main.ALPHA
+		        @mtest_distributed_as DiscreteUniform(Int(params[1]),Int(params[2])) x 
 			end
 			
 	    end
@@ -167,9 +167,9 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with discrete uniform" reps=Main.REPS begin
+			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x DiscreteUniform(-42, 42) Main.ALPHA
+		        @mtest_distributed_as DiscreteUniform(-42,42) x 
 			end
 
 	    end

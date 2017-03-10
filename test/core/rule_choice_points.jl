@@ -35,9 +35,9 @@ end
 	
 	    gn = RCShortGen()
 	
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
         	td = choose(gn)
-			@mtest_values_are td ['a','b','c']
+			@mtest_values_are ['a','b','c'] td
 		end
 
 	end
@@ -46,9 +46,9 @@ end
 
 	    gn = RCLongGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
         	td = choose(gn)
-			@mtest_values_are td ['a','b','c']
+			@mtest_values_are ['a','b','c'] td
 		end
 
 	end
@@ -57,9 +57,9 @@ end
 
 	    gn = RCMixedGen()
 
-		@mtestset reps=Main.REPS begin
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
         	td = choose(gn)
-			@mtest_values_are td ['a','b','c']
+			@mtest_values_are ['a','b','c'] td
 		end
 	
 	end

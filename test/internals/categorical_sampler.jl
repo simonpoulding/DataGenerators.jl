@@ -19,11 +19,11 @@
 			    @test DataGenerators.getparams(s) == [0.25, 0.25, 0.25, 0.25]
 			end
 	
-			@mtestset "default sampling" reps=Main.REPS begin
+			@mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 			    x, trace = DataGenerators.sample(s, (0,1), cc)
 			    @test typeof(x) <: Int
-			    @mtest_values_are x [1,2,3,4]
-		        @mtest_distributed_as x Categorical([0.25, 0.25, 0.25, 0.25]) Main.ALPHA
+			    @mtest_values_are [1,2,3,4] x
+		        @mtest_distributed_as Categorical([0.25,0.25,0.25,0.25]) x 
 			end
 
 		end
@@ -36,9 +36,9 @@
 
 			    @test getparams(s) == [0.3,0.2,0.1,0.2,0.2]
 
-			    @mtestset "consistent with categorical" reps=Main.REPS begin
+			    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	            	x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x Categorical([0.3,0.2,0.1,0.2,0.2]) Main.ALPHA
+			        @mtest_distributed_as Categorical([0.3,0.2,0.1,0.2,0.2]) x
 			    end
 
 			end
@@ -57,9 +57,9 @@
 
 		    DataGenerators.setparams(s, params)
 
-		    @mtestset "consistent with categorical" reps=Main.REPS begin
+		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Categorical(params) Main.ALPHA
+		        @mtest_distributed_as Categorical(params) x
 			end
 
 		end
@@ -74,9 +74,9 @@
 		        params[pidx] = pr[bidx] 
 		        DataGenerators.setparams(s, params)
 	
-			    @mtestset "consistent with categorical" reps=Main.REPS begin
+			    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 		        	x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x Categorical(params ./ sum(params)) Main.ALPHA
+			        @mtest_distributed_as  Categorical(params./sum(params)) x
 				end
 
 				@testset "range check exception" begin
@@ -93,9 +93,9 @@
 		    DataGenerators.setparams(s, [0.4, 0.6, 0.7, 0.3])
 		    @test getparams(s) == [0.2, 0.3, 0.35, 0.15]
 
-		    @mtestset "consistent with categorical" reps=Main.REPS begin
+		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Categorical([0.2, 0.3, 0.35, 0.15]) Main.ALPHA
+		        @mtest_distributed_as Categorical([0.2,0.3,0.35,0.15]) x 
 			end
 
 		end
@@ -105,9 +105,9 @@
 		    DataGenerators.setparams(s, [0.0, 0.0, 0.0, 0.0])
 		    @test getparams(s) == [0.25, 0.25, 0.25, 0.25]
 		
-		    @mtestset "consistent with categorical" reps=Main.REPS begin
+		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Categorical([0.25, 0.25, 0.25, 0.25]) Main.ALPHA
+		        @mtest_distributed_as Categorical([0.25,0.25,0.25,0.25]) x 
 			end
 		
 		end
@@ -136,9 +136,9 @@
 		    end
 		    estimateparams(s2, traces)
 
-		    @mtestset "consistent with categorical" reps=Main.REPS begin
+		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Categorical(params) Main.ALPHA
+		        @mtest_distributed_as Categorical(params) x
 			end
 
 		end
@@ -154,9 +154,9 @@
 		    end
 		    estimateparams(s2, traces)
 
-		    @mtestset "consistent with categorical" reps=Main.REPS begin
+		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Categorical(params) Main.ALPHA
+		        @mtest_distributed_as Categorical(params) x
 			end
 
 		end
@@ -172,9 +172,9 @@
 		    end
 		    estimateparams(s2, traces)
 
-		    @mtestset "consistent with categorical" reps=Main.REPS begin
+		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Categorical(otherparams) Main.ALPHA
+		        @mtest_distributed_as Categorical(otherparams) x
 			end
 
 		end

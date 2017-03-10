@@ -15,7 +15,7 @@ module GenDefinedInModuleThatIncludesDataGenerators
 end
 
 @testset "generator defined outside of a module" begin
-    @testset "use generator defined outside module" for i in 1:NumReps 
+    @testset "use generator defined outside module" begin 
         g = GenOutsideModule()
         @test typeof(g) <: DataGenerators.Generator
         @test typeof(choose(g)) <: Integer

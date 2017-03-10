@@ -19,11 +19,11 @@
 		        @test DataGenerators.getparams(s) == [0.5]
 		    end
 
-		    @mtestset "default sampling" reps=Main.REPS begin
+		    @mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 		        x, trace = DataGenerators.sample(s, (0,1), cc)
 		        @test typeof(x) <: Int
-				@mtest_values_include x [0,1,2,3]
-		        @mtest_distributed_as x Geometric(0.5) Main.ALPHA
+				@mtest_values_include [0,1,2] x
+		        @mtest_distributed_as Geometric(0.5) x
 			end
 		
 		end
@@ -33,9 +33,9 @@
 		    s = DataGenerators.GeometricSampler([0.3])
 		    @test DataGenerators.getparams(s) == [0.3]
 
-		    @mtestset "consistent with geometric" reps=Main.REPS begin
+		    @mtestset "consistent with geometric" reps=Main.REPS alpha=Main.ALPHA begin
 		    	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Geometric(0.3) Main.ALPHA
+		        @mtest_distributed_as Geometric(0.3) x
 		    end
 
 		end
@@ -52,9 +52,9 @@
 	 
 	        DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with geometric" reps=Main.REPS begin
+			@mtestset "consistent with geometric" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Geometric(params[1]) Main.ALPHA			
+		        @mtest_distributed_as Geometric(params[1]) x
 			end
 
 	    end
@@ -73,9 +73,9 @@
 				
 	            DataGenerators.setparams(s, params)
 			
-				@mtestset "consistent with geometric" reps=Main.REPS begin
+				@mtestset "consistent with geometric" reps=Main.REPS alpha=Main.ALPHA begin
 	            	x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x Geometric(adjusttoopeninterval(params[1], 0.0, 1.0)) Main.ALPHA
+			        @mtest_distributed_as Geometric(adjusttoopeninterval(params[1],0.0,1.0)) x 
 				end
 	
 				@testset "range check exception" begin
@@ -112,9 +112,9 @@
 	        end
 	        estimateparams(s2, traces)
 			
-			@mtestset "consistent with geometric" reps=Main.REPS begin
+			@mtestset "consistent with geometric" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Geometric(adjusttoopeninterval(params[1], 0.0, 1.0)) Main.ALPHA
+		        @mtest_distributed_as Geometric(adjusttoopeninterval(params[1],0.0,1.0)) x 
 			end
 
 	    end
@@ -129,9 +129,9 @@
 	            trace
 	        end
 
-			@mtestset "consistent with geometric" reps=Main.REPS begin
+			@mtestset "consistent with geometric" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Geometric(otherparams[1]) Main.ALPHA
+		        @mtest_distributed_as Geometric(otherparams[1]) x
 			end
 
 	    end

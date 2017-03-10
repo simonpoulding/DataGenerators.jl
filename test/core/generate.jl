@@ -58,14 +58,14 @@ end
 
 		gn = GNChoiceModelGen()
 	
-		@mtestset "default choice model" reps=Main.REPS begin
+		@mtestset "default choice model" reps=Main.REPS alpha=Main.ALPHA begin
 	    	td = choose(gn)
-			@mtest_values_include length(td) [1,2,3]
+			@mtest_values_include [1,2,3] length(td)
 		end
 
-		@mtestset "non-default choice model" reps=Main.REPS begin
+		@mtestset "non-default choice model" reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn, choicemodel=MinimumValueChoiceModel())
-			@mtest_values_are length(td) [1,]	
+			@mtest_values_are [1,] length(td)
 		end
 	
 	end
@@ -76,14 +76,14 @@ end
 		ign = GNIntGen()
 		gn = GNMainGen(ign)
 	
-		@mtestset "default choice model" reps=Main.REPS begin
+		@mtestset "default choice model" reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)
-		    @mtest_values_include first(td) [5,6,7]
+		    @mtest_values_include [5,6,7] first(td)
 		end
 
-		@mtestset "non-default choice model" reps=Main.REPS begin
+		@mtestset "non-default choice model" reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn, choicemodel=MinimumValueChoiceModel())
-		    @mtest_values_are first(td) [5,]
+		    @mtest_values_are [5,] first(td)
 		end
 	
 	end
@@ -168,7 +168,7 @@ end
 		# set this to a value close to zero so that median length is much larger than the default maxseqreps
 		setparams(scm, [0.000001])
 		
-		@mtestset "sequence are no longer than the default limit" reps=Main.REPS begin
+		@mtestset "sequence are no longer than the default limit" reps=Main.REPS alpha=Main.ALPHA begin
 		    exc = nothing
 		    td = nothing
 		    try
@@ -189,7 +189,7 @@ end
 		    end
 		end
 
-		@mtestset "sequence are no longer than the specified limit" reps=Main.REPS begin
+		@mtestset "sequence are no longer than the specified limit" reps=Main.REPS alpha=Main.ALPHA begin
 		    exc = nothing
 		    td = nothing
 		    try

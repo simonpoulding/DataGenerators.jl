@@ -19,11 +19,11 @@
 		        @test DataGenerators.getparams(s) == [0.5]
 		    end
 
-		    @mtestset "default sampling" reps=Main.REPS begin
+		    @mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 		        x, trace = DataGenerators.sample(s, (0,1), cc)
 		        @test typeof(x) <: Int
-		        @mtest_values_are x [0,1]
-				@mtest_distributed_as x Bernoulli(0.5) Main.ALPHA
+		        @mtest_values_are [0,1] x
+				@mtest_distributed_as Bernoulli(0.5) x
 		    end
 		
 		end
@@ -33,9 +33,9 @@
 		    s = DataGenerators.BernoulliSampler([0.3])
 		    @test DataGenerators.getparams(s) == [0.3]
 
-		    @mtestset "consistent with Bernoulli" reps=Main.REPS begin
+		    @mtestset "consistent with Bernoulli" reps=Main.REPS alpha=Main.ALPHA begin
 		    	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(0.3) Main.ALPHA
+		        @mtest_distributed_as Bernoulli(0.3) x
 		    end
 
 		end
@@ -52,9 +52,9 @@
 	 
 	        DataGenerators.setparams(s, params)
 
-			@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+			@mtestset "consistent with Bernoulli" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(params[1]) Main.ALPHA			
+		        @mtest_distributed_as Bernoulli(params[1]) x
 			end
 
 	    end
@@ -69,9 +69,9 @@
 	            params[pidx] = pr[bidx] 
 	            DataGenerators.setparams(s, params)
 			
-				@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+				@mtestset "consistent with Bernoulli" reps=Main.REPS alpha=Main.ALPHA begin
 	            	x, trace = DataGenerators.sample(s, (0,1), cc)
-			        @mtest_distributed_as x Bernoulli(params[1]) Main.ALPHA
+			        @mtest_distributed_as Bernoulli(params[1]) x
 				end
 	
 				@testset "range check exception" begin
@@ -108,9 +108,9 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+			@mtestset "consistent with Bernoulli" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(params[1]) Main.ALPHA
+		        @mtest_distributed_as Bernoulli(params[1]) x
 			end
 
 	    end
@@ -126,9 +126,9 @@
 	        end
 	        estimateparams(s2, traces)
 
-			@mtestset "consistent with Bernoulli" reps=Main.REPS begin
+			@mtestset "consistent with Bernoulli" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
-		        @mtest_distributed_as x Bernoulli(otherparams[1]) Main.ALPHA
+		        @mtest_distributed_as Bernoulli(otherparams[1]) x
 			end
 
 	    end
