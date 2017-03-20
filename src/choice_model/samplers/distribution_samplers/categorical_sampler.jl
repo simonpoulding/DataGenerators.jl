@@ -15,12 +15,12 @@ type CategoricalSampler <: DiscreteDistributionSampler
 		# Note: could parameterise using number of parameters that is one less than the domain size
 		# but there is not an obvious way to do this in a symmetrical way so as not bias any optimisation
 		# of the parameters
-		setparams(s, isempty(params) ? fill(1.0, numcategories) : params)
+		setparams!(s, isempty(params) ? fill(1.0, numcategories) : params)
 		s
 	end
 end
 
-function setparams(s::CategoricalSampler, params)
+function setparams!(s::CategoricalSampler, params)
 	checkparamranges(s, params)
 	totalweight = sum(params)
 	if totalweight == 0.0
@@ -35,7 +35,7 @@ end
 
 getparams(s::CategoricalSampler) = copy(s.distribution.p)
 
-function estimateparams(s::CategoricalSampler, traces)
+function estimateparams!(s::CategoricalSampler, traces)
 	samples = extractsamplesfromtraces(s, traces)
 	if length(samples) >= 1
 		s.distribution = fit(primarydistributiontype(s.distribution), samples)

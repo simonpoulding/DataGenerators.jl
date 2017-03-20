@@ -48,3 +48,6 @@ function godelnumber(cm::MinimumValueChoiceModel, cc::DataGenerators.ChoiceConte
 	return cc.lowerbound, Dict()
 end
 
+function setminimumvaluechoicemodel!(g::DataGenerators.Generator)
+	DataGenerators.setchoicemodel!(g, MinimumValueChoiceModel())
+end

@@ -19,8 +19,8 @@
 	    end
 
 		@testset "setparams"  begin
-			DataGenerators.setparams(s, Float64[])
-			@test_throws ErrorException DataGenerators.setparams(s, [0.0])
+			DataGenerators.setparams!(s, Float64[])
+			@test_throws ErrorException DataGenerators.setparams!(s, [0.0])
 		end
 
 		@testset "validates subsampler to supported types" begin
@@ -58,7 +58,7 @@
 			trace
 		end
 
-		estimateparams(s2, traces)
+		estimateparams!(s2, traces)
 			
 		@test DataGenerators.getparams(s2) == Float64[]
 		@test DataGenerators.getparams(subs2A) == othersubsparams

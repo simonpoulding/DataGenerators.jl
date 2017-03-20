@@ -14,12 +14,12 @@ type DiscreteUniformSampler <: DiscreteDistributionSampler
 	function DiscreteUniformSampler(params=Float64[])
 		intbounds = (Float64(typemin(Int)), Float64(typemax(Int)))
 		s = new([intbounds, intbounds])
-		setparams(s, isempty(params) ? [Float64(typemin(Int)), Float64(typemax(Int))] : params)
+		setparams!(s, isempty(params) ? [Float64(typemin(Int)), Float64(typemax(Int))] : params)
 		s
 	end
 end
 
-function setparams(s::DiscreteUniformSampler, params)
+function setparams!(s::DiscreteUniformSampler, params)
 	checkparamranges(s, params)
 	# note the paramranges check will trap an attempt to sample from the entire UInt range: this cannot be supported
 	# since Distributions.Uniform currently only supports Int range (and then only with the workaround below using a Mixture Model)
@@ -54,4 +54,4 @@ end
 
 getparams(s::DiscreteUniformSampler) = s.params
 
-estimateparams(s::DiscreteUniformSampler, traces) = estimateparams(s, traces, 2)
+estimateparams!(s::DiscreteUniformSampler, traces) = estimateparams!(s, traces, 2)

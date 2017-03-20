@@ -19,7 +19,7 @@ type RecursionDepthSampler <: ModifyingSampler
 		for d in 1:maxdepth
 			depthsampler = deepcopy(basesampler)
 			if d <= length(depthparams)
-				setparams(depthsampler, depthparams[d])
+				setparams!(depthsampler, depthparams[d])
 			end
 			push!(depthsamplers, depthsampler)
 		end
@@ -39,7 +39,7 @@ function paramranges(s::RecursionDepthSampler)
 	pr
 end
 
-function setparams(s::RecursionDepthSampler, params)
+function setparams!(s::RecursionDepthSampler, params)
 	nparams = numparams(s)
 	length(params) == nparams || error("expected $(nparams) parameters but got $(length(params))")
 	paramstart = 1
@@ -47,7 +47,7 @@ function setparams(s::RecursionDepthSampler, params)
 	for depthsampler in s.depthsamplers
 		paramstart += paramcount
 		paramcount = numparams(depthsampler)
-		setparams(depthsampler, params[paramstart:(paramstart+paramcount-1)])
+		setparams!(depthsampler, params[paramstart:(paramstart+paramcount-1)])
 	end
 end
 
@@ -72,7 +72,7 @@ end
 # subsamplers, if we can tell then have too few (or no) traces here: we let the sub-sampler decide what
 # to do in this situation.  This may be a (small?) performance overhead
 #
-function estimateparams(s::RecursionDepthSampler, traces)
+function estimateparams!(s::RecursionDepthSampler, traces)
 	# first divide out the traces according to the depth used
 	depthsamplertraces = Vector{Vector{Dict}}()
 
@@ -87,13 +87,13 @@ function estimateparams(s::RecursionDepthSampler, traces)
 	end
 	
 	for d in 1:length(s.depthsamplers)
-		estimateparams(s.depthsamplers[d], depthsamplertraces[d])
+		estimateparams!(s.depthsamplers[d], depthsamplertraces[d])
 	end
 	
 end
 
 
-function estimateconditionalmodel(s::RecursionDepthSampler, cplabels, gnhistories, traces)
+function estimateconditionalmodel!(s::RecursionDepthSampler, cplabels, gnhistories, traces)
 
 	# we approach this in a different way from estimateparams since we will change the maxdepth
 	# thus we build a vector of depth that can be used to create a mask for gnhistories and traces
@@ -111,9 +111,9 @@ function estimateconditionalmodel(s::RecursionDepthSampler, cplabels, gnhistorie
 		depthmask = convert(Vector{Bool},map(depth->depth==d, depths))
 		depthtraces = map(trace->trace[:sub], traces[depthmask])
 		if supportsconditionalmodelestimation(currentsampler)
-			estimateconditionalmodel(currentsampler, cplabels, gnhistories[depthmask], depthtraces)
+			estimateconditionalmodel!(currentsampler, cplabels, gnhistories[depthmask], depthtraces)
 		else
-			estimateparams(currentsampler, depthtraces)
+			estimateparams!(currentsampler, depthtraces)
 		end
 		push!(s.depthsamplers, deepcopy(currentsampler))
 	end

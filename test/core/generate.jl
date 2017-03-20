@@ -63,8 +63,10 @@ end
 			@mtest_values_include [1,2,3] length(td)
 		end
 
+		setminimumvaluechoicemodel!(gn)
+
 		@mtestset "non-default choice model" reps=Main.REPS alpha=Main.ALPHA begin
-		    td = choose(gn, choicemodel=MinimumValueChoiceModel())
+		    td = choose(gn)
 			@mtest_values_are [1,] length(td)
 		end
 	
@@ -81,8 +83,10 @@ end
 		    @mtest_values_include [5,6,7] first(td)
 		end
 
+		setminimumvaluechoicemodel!(gn)
+
 		@mtestset "non-default choice model" reps=Main.REPS alpha=Main.ALPHA begin
-		    td = choose(gn, choicemodel=MinimumValueChoiceModel())
+		    td = choose(gn)
 		    @mtest_values_are [5,] first(td)
 		end
 	
@@ -163,16 +167,17 @@ end
 		# note that to force sufficiently long sequences to reach the default limit
 		# we need to use the sampler choice model rather than a default choice model
 		# (but sampler choice model itself is only tested later)
-		scm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+		
 		# sampler choice model should have a single parameter that controls the geometric distribution
 		# set this to a value close to zero so that median length is much larger than the default maxseqreps
-		setparams(scm, [0.000001])
+		setparams!(choicemodel(gn), [0.000001])
 		
 		@mtestset "sequence are no longer than the default limit" reps=Main.REPS alpha=Main.ALPHA begin
 		    exc = nothing
 		    td = nothing
 		    try
-		        td = choose(gn, choicemodel = scm)
+		        td = choose(gn)
 		    catch e
 		        if isa(e,GenerationTerminatedException)
 		            exc = e
@@ -193,7 +198,7 @@ end
 		    exc = nothing
 		    td = nothing
 		    try
-		        td = choose(gn, choicemodel = scm, maxseqreps = 87)
+		        td = choose(gn, maxseqreps = 87)
 		    catch e
 		        if isa(e,GenerationTerminatedException)
 		            exc = e

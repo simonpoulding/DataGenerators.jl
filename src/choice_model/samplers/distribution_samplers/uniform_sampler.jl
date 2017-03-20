@@ -14,12 +14,12 @@ type UniformSampler <: ContinuousDistributionSampler
 	function UniformSampler(params=Float64[])
 		s = new( [(-realmax(Float64), realmax(Float64)), (-realmax(Float64), realmax(Float64))] )
 		# rather than defaulting to entire float range, we use a 'pragmatic' (and arbitrary) range of [-1.0, 1.0]
-		setparams(s, isempty(params) ? [-1.0, 1.0] : params)
+		setparams!(s, isempty(params) ? [-1.0, 1.0] : params)
 		s
 	end
 end
 
-function setparams(s::UniformSampler, params)
+function setparams!(s::UniformSampler, params)
 	checkparamranges(s, params)
 	# swap parameters if necessary (as a silent repair during search)
 	if params[1] <= params[2]
@@ -50,7 +50,7 @@ function sample(s::UniformSampler, support, cc::ChoiceContext)
 	x, Dict{Symbol, Any}(:rnd=>x)
 end
 
-function estimateparams(s::UniformSampler, traces)
+function estimateparams!(s::UniformSampler, traces)
 	samples = extractsamplesfromtraces(s, traces)
 	if length(samples) >= 2 # minsamples
 		if all(samples.==samples[1])

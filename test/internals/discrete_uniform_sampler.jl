@@ -62,7 +62,7 @@
 
 	    @testset "valid parameters $params" for params in [[8.0,50.0], [-3113.0, -2889.0],  [-6.0, 6.0],]
 
-	        DataGenerators.setparams(s, params)
+	        DataGenerators.setparams!(s, params)
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -73,7 +73,7 @@
 
 		@testset "setparams adjusts order of parameters" begin
 
-			DataGenerators.setparams(s, [50.0,8.0])
+			DataGenerators.setparams!(s, [50.0,8.0])
 			@test DataGenerators.getparams(s) == [8.0,50.0]
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
@@ -85,7 +85,7 @@
 
 		@testset "handles full Int range" begin
 			params = [Float64(typemin(Int)), Float64(typemax(Int))]
-			DataGenerators.setparams(s, params)
+			DataGenerators.setparams!(s, params)
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -107,7 +107,7 @@
 			@testset "bound index $bidx" for bidx in 1:2
 
 	            params[pidx] = pr[bidx] 
-		        DataGenerators.setparams(s, params)
+		        DataGenerators.setparams!(s, params)
 
 				sortedparams = sort(params)
 				q1 = 0.75 * sortedparams[1] + 0.25 * sortedparams[2]
@@ -126,7 +126,7 @@
 				
 				@testset "range check exception" begin
 		            params[pidx] = bidx == 1 ? prevfloat(pr[bidx]) : nextfloat(pr[bidx])
-		            @test_throws ErrorException DataGenerators.setparams(s, params)
+		            @test_throws ErrorException DataGenerators.setparams!(s, params)
 				end
 				
 			end
@@ -135,7 +135,7 @@
 
 		@testset "handles non-integer parameters sensibly" begin
 
-	        DataGenerators.setparams(s, [-2.9, 8.6])
+	        DataGenerators.setparams!(s, [-2.9, 8.6])
 			
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -146,8 +146,8 @@
 		end
 		
 	    @testset "wrong number of parameters" begin
-	        @test_throws ErrorException DataGenerators.setparams(s, midparams[1:end-1])
-	        @test_throws ErrorException DataGenerators.setparams(s, [midparams; 0.5])
+	        @test_throws ErrorException DataGenerators.setparams!(s, midparams[1:end-1])
+	        @test_throws ErrorException DataGenerators.setparams!(s, [midparams; 0.5])
 	    end
 
 	end
@@ -165,7 +165,7 @@
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
-	        estimateparams(s2, traces)
+	        estimateparams!(s2, traces)
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
@@ -183,7 +183,7 @@
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
-	        estimateparams(s2, traces)
+	        estimateparams!(s2, traces)
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)

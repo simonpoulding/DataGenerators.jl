@@ -5,11 +5,8 @@ abstract Generator
 # a derivation with a generator. A choice model only returns godel numbers, nothing more.
 abstract ChoiceModel
 
-# A DerivationState is created for every unique generation/derivation process. It
-# collects info about the godel numbers (choices) and choice points
-# as they are generated/taken. It can also provide information to the choice model
-# for more complex time/state/depth related choices.
-abstract DerivationState
+choicemodel(g::Generator) = g.choicemodel
+setchoicemodel!(g::Generator, cm::ChoiceModel) = g.choicemodel = cm
 
 
 # Return the choice point info associated with a generator. This includes both the choicepointinfo for
@@ -23,13 +20,20 @@ function choicepointinfo(g::Generator)
 end
 
 
+# A DerivationState is created for every unique generation/derivation process. It
+# collects info about the godel numbers (choices) and choice points
+# as they are generated/taken. It can also provide information to the choice model
+# for more complex time/state/depth related choices.
+abstract DerivationState
+
+
 #
 # Assumed interface to all subtypes of DerivationState. Override to implement more specific
 # behavior.
 #
 generator(s::DerivationState) = s.generator
 
-choicemodel(s::DerivationState) = s.choicemodel
+choicemodel(s::DerivationState) = choicemodel(generator(s))
 
 
 # custom exception thrown when terminating generation
@@ -64,7 +68,6 @@ end
 # something more specific.
 type DefaultDerivationState <: DerivationState
 	generator::Generator
-	choicemodel::ChoiceModel
 	godelsequence::Vector{Real} 		# Can be integers or floats
 	cmtrace::Vector{Tuple{Integer,Dict}}	# choice point plus trace info returned from the choice model
 	maxchoices::Int # upper limit on the size of the Godel sequence
@@ -74,9 +77,9 @@ type DefaultDerivationState <: DerivationState
 	cpseqnumberstack::Vector{Vector{Int}} # corresponding to the rule name stack, the seq numbers of the encountered choice points
 	# executiontreecoords::Vector{Int} # during the execution of a generator, this uniquely identifies the current rule in the execution tree
 	# nextchildcoord::Int
-	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int, maxseqreps::Int, maxruledepth::Int)
+	function DefaultDerivationState(g::Generator, maxchoices::Int, maxseqreps::Int, maxruledepth::Int)
 		# new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, maxruledepth, Vector{Symbol}(), Vector{Int}(), 1)
-		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, maxruledepth, Vector{Symbol}(), Vector{Vector{Int}}())
+		new(g, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, maxruledepth, Vector{Symbol}(), Vector{Vector{Int}}())
 	end
 end
 
@@ -182,7 +185,6 @@ end
 # default parameters that can be overriden by user parameters to generate etc.
 const defaultgenerateparams = Dict(
 		:state => nothing,
-		:choicemodel => nothing,
 		:resetchoicemodelstate => true,
 		:startrule => :start,
 		:maxchoices => 10017,
@@ -193,10 +195,9 @@ const defaultgenerateparams = Dict(
 # Uses the default choice model and creates a new state object unless one is given.
 function generate(g::Generator; kwparams...)
 	params = merge(defaultgenerateparams, Dict(p[1]=>p[2] for p in kwparams)) # kwparams takes priority
-	choicemodel = (params[:choicemodel] == nothing) ? DefaultChoiceModel(g) : params[:choicemodel]
-	state = (params[:state]  == nothing) ? newstate(g, choicemodel, params[:maxchoices], params[:maxseqreps], params[:maxruledepth]) : params[:state]
+	state = (params[:state]  == nothing) ? newstate(g, params[:maxchoices], params[:maxseqreps], params[:maxruledepth]) : params[:state]
 	if params[:resetchoicemodelstate]
-		resetstate!(choicemodel)
+		resetstate!(choicemodel(g))
 	end
 	startfunc = methodforrulenamed(g, params[:startrule])
 	# important: we evaluate in the module that owns the type and since this (rather than DataGenerators) will be where rule functions are defined
@@ -327,7 +328,7 @@ function querychoicemodel(s::DerivationState, cptype, cpid, datatype, lowerbound
 	# choicecontext = ChoiceContext(s, cptype, cpid, datatype, lowerbound, upperbound, 0)
 	choicecontext = ChoiceContext(s, cptype, cpid, datatype, lowerbound, upperbound)
 	# TODO recursiondepth
-	gn, trace = godelnumber(s.choicemodel, choicecontext)
+	gn, trace = godelnumber(choicemodel(s), choicecontext)
 	@assert lowerbound <= gn <= upperbound
 	logchoicepoint(s, cpid, gn, trace)
 	# convert the godel number to the specified type
@@ -355,7 +356,7 @@ function methodforrulenamed(g::Generator, rulename::Symbol)
 end
 
 # Create a new derivation state object for a given generator and choice model.
-function newstate(g::Generator, choicemodel::ChoiceModel, maxchoices::Int, maxseqreps::Int, maxruledepth::Int)
+function newstate(g::Generator, maxchoices::Int, maxseqreps::Int, maxruledepth::Int)
 	st = statetype(g)
-	st(g, choicemodel, maxchoices, maxseqreps, maxruledepth)
+	st(g, maxchoices, maxseqreps, maxruledepth)
 end

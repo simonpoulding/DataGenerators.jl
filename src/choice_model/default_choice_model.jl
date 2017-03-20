@@ -4,10 +4,8 @@
 # for it to be useful.
 type DefaultChoiceModel <: ChoiceModel; end
 	
-# for consistency with other choice models, constructor that is passed a generator instance
-# here nothing is done
-function DefaultChoiceModel(g::Generator)
-	DefaultChoiceModel()
+function setdefaultchoicemodel!(g::Generator)
+	setchoicemodel!(g, DefaultChoiceModel())
 end
 
 #
@@ -60,7 +58,7 @@ end
 paramranges(cm::DefaultChoiceModel) = Tuple{Float64,Float64}[]
 
 # set parameters using the passed vector of values
-setparams(cm::DefaultChoiceModel, params) = nothing
+setparams!(cm::DefaultChoiceModel, params) = nothing
 
 # get parameters as a vector of values
 getparams(cm::DefaultChoiceModel) = Float64[]

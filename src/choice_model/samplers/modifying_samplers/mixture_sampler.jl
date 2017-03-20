@@ -26,16 +26,16 @@ function paramranges(s::MixtureSampler)
 	pr
 end
 
-function setparams(s::MixtureSampler, params)
+function setparams!(s::MixtureSampler, params)
 	nparams = numparams(s)
 	length(params) == nparams || error("expected $(nparams) parameters but got $(length(params))")
 	paramstart = 1
 	paramcount = numparams(s.selectionsampler)
-	setparams(s.selectionsampler, params[paramstart:(paramstart+paramcount-1)])
+	setparams!(s.selectionsampler, params[paramstart:(paramstart+paramcount-1)])
 	for subsampler in s.subsamplers
 		paramstart += paramcount
 		paramcount = numparams(subsampler)
-		setparams(subsampler, params[paramstart:(paramstart+paramcount-1)])
+		setparams!(subsampler, params[paramstart:(paramstart+paramcount-1)])
 	end
 end
 
@@ -53,15 +53,15 @@ function sample(s::MixtureSampler, support, cc::ChoiceContext)
 	x, Dict{Symbol, Any}(:idx=>selectionindex, :sel=>selectiontrace, :sub=>trace)
 end
 
-function estimateparams(s::MixtureSampler, traces)
-	estimateparams(s.selectionsampler, map(trace->trace[:sel], traces))
+function estimateparams!(s::MixtureSampler, traces)
+	estimateparams!(s.selectionsampler, map(trace->trace[:sel], traces))
 	subsamplertraces = map(i->[], 1:length(s.subsamplers))
 	for trace in traces
 		selectionindex = trace[:idx]
 		push!(subsamplertraces[selectionindex], trace[:sub])
 	end
 	for i in 1:length(s.subsamplers)
-		estimateparams(s.subsamplers[i], subsamplertraces[i])		
+		estimateparams!(s.subsamplers[i], subsamplertraces[i])		
 	end
 end
 

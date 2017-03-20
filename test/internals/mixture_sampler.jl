@@ -44,7 +44,7 @@
 		@testset "parameters of subsamplers" begin
 		
 			params = [0.1, 0.2, 0.7, 0.4, 1.0, 6.0, 0.3]
-			DataGenerators.setparams(s, params)
+			DataGenerators.setparams!(s, params)
 			@test DataGenerators.getparams(subsA) == [0.4]
 			@test DataGenerators.getparams(subsB) == [1.0, 6.0]
 			@test DataGenerators.getparams(subsC) == [0.3]
@@ -58,7 +58,7 @@
 
 		@testset "boundary values choice params $choiceparams" for choiceparams in [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0],]
 
-            DataGenerators.setparams(s, [choiceparams; [0.4, 1.0, 6.0, 0.3]])
+            DataGenerators.setparams!(s, [choiceparams; [0.4, 1.0, 6.0, 0.3]])
 
 			@mtestset "consistent with mixture" reps=Main.REPS alpha=Main.ALPHA begin
             	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -76,12 +76,12 @@
 		@testset "range check exception choice params $pidx bound $bidx" for pidx in 1:3, bidx in 1:2
 			choiceparams = [0.5, 0.4, 0.1]
             choiceparams[pidx] = bidx == 1 ? prevfloat(prs[pidx][bidx]) : nextfloat(prs[pidx][bidx])
-            @test_throws ErrorException DataGenerators.setparams(s, [choiceparams, [0.4, 1.0, 6.0, 0.3]])
+            @test_throws ErrorException DataGenerators.setparams!(s, [choiceparams, [0.4, 1.0, 6.0, 0.3]])
 		end
 
 	    @testset "wrong number of parameters" begin
-	        @test_throws ErrorException DataGenerators.setparams(s, midparams[1:end-1])
-	        @test_throws ErrorException DataGenerators.setparams(s, [midparams; 0.5])
+	        @test_throws ErrorException DataGenerators.setparams!(s, midparams[1:end-1])
+	        @test_throws ErrorException DataGenerators.setparams!(s, [midparams; 0.5])
 	    end
 
 	end
@@ -94,19 +94,19 @@
 
 		@testset "from parameters $params" for params in [[0.6, 0.4, 0.7, 10.0, 13.0],]
 
-			DataGenerators.setparams(s1, params)
+			DataGenerators.setparams!(s1, params)
 
 			subs2A = DataGenerators.BernoulliSampler()
 			subs2B = DataGenerators.DiscreteUniformSampler()
 			s2 = DataGenerators.MixtureSampler(subs2A,subs2B)
 			otherparams = [0.3, 0.7, 0.3, -40.0, -27.0]
-			DataGenerators.setparams(s2, otherparams)
+			DataGenerators.setparams!(s2, otherparams)
 
 			traces = map(1:100) do i
 				x, trace = DataGenerators.sample(s1, (0,1), cc)
 				trace
 			end
-			estimateparams(s2, traces)
+			estimateparams!(s2, traces)
 
 			@mtestset "consistent with mixture" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
@@ -118,19 +118,19 @@
 	    @testset "too few traces" begin
 	
 	        params = [0.2, 0.8, 0.5, 1.0, 6.0]
-			DataGenerators.setparams(s1, params)
+			DataGenerators.setparams!(s1, params)
 
 			subs2A = DataGenerators.BernoulliSampler()
 			subs2B = DataGenerators.DiscreteUniformSampler()
 			s2 = DataGenerators.MixtureSampler(subs2A,subs2B)
 			otherparams = [0.3, 0.7, 0.3, -40.0, -27.0]
-			DataGenerators.setparams(s2, otherparams)
+			DataGenerators.setparams!(s2, otherparams)
 
 	        traces = map(1:0) do i
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
-	        estimateparams(s2, traces)
+	        estimateparams!(s2, traces)
 
 			@mtestset "consistent with mixture" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)

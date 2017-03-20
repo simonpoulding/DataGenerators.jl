@@ -46,9 +46,14 @@ type MCTSChoiceModel <: ChoiceModel
 	cp::Real										# the constant C_p in the calculation of UCB1
 	rootgodelsequence::Vector{Real} 				# defines the state of the current "root" node
 	rootnode::MCTSNode 								# current root node
-	function MCTSChoiceModel(policychoicemodel::ChoiceModel, rewardfunction::Function, visitbudget::Int=1, samplesize::Int=1, cp::Real=1/sqrt(2.0))
+	function MCTSChoiceModel(policychoicemodel::ChoiceModel, rewardfunction::Function, visitbudget::Int, samplesize::Int, cp::Real)
 		new(deepcopy(policychoicemodel), rewardfunction, visitbudget, samplesize, cp, (Real)[], MCTSNode(Dict()))
 	end
+end
+
+
+function mctschoicemodel!(g::Generator, rewardfunction::Function, visitbudget::Int=1, samplesize::Int=1, cp::Real=1/sqrt(2.0))
+	setchoicemodel!(g, MCTSChoiceModel(choicemodel(g), rewardfunction, visitbudget, samplesize, cp))
 end
 
 # reset any state 
@@ -269,7 +274,7 @@ function godelnumber(cm::MCTSChoiceModel, cc::ChoiceContext)
 
 end
 
-setparams(cm::MCTSChoiceModel, params) = setparams(cm.policychoicemodel, params)
+setparams!(cm::MCTSChoiceModel, params) = setparams!(cm.policychoicemodel, params)
 getparams(cm::MCTSChoiceModel) = getparams(cm.policychoicemodel)
 paramranges(cm::MCTSChoiceModel) = paramranges(cm.policychoicemodel)
 

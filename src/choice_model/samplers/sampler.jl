@@ -6,7 +6,7 @@ abstract Sampler
 #
 # numparams(s::Sampler)
 #		- the number parameters (including those of any samplers this sampler modifies)
-# setparams(s::Sampler, params::Vector{Real})
+# setparams!(s::Sampler, params::Vector{Real})
 #		- updates the parameters of the sampler (if the sampler modifies another, this sets the parameter of both)
 #		- if parameters pass checks on their number and ranges (e.g. using the checkparamranges function below), then
 #		  the values should be accommodated in a sensible way even if they break other constraints (a warning may
@@ -20,7 +20,7 @@ abstract Sampler
 # sample(s::Sampler, support, cc::ChoiceContext)
 #		- sample a Gödel number from the sampler
 #		- samplers need not honour the support constraints; they are provided only to samplers that do take this into account 
-# estimateparams(s::Sampler, traces)
+# estimateparams!(s::Sampler, traces)
 #		- estiamte the parameters of the sampler from the passed traces
 #
 #

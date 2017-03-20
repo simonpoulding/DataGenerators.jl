@@ -17,7 +17,7 @@
 	    end
 
 		@testset "setparams"  begin
-			DataGenerators.setparams(s, [0.4])
+			DataGenerators.setparams!(s, [0.4])
 			@test DataGenerators.getparams(subsA) == [0.4]
 			@test DataGenerators.getparams(s) == [0.4]
 		end
@@ -42,12 +42,12 @@
  			subs1A = DataGenerators.GeometricSampler()
 			s1 = DataGenerators.AlignMinimumSupportSampler(subs1A)
 			params = [0.6]
-			DataGenerators.setparams(s1, params)
+			DataGenerators.setparams!(s1, params)
 
 			subs2A = DataGenerators.GeometricSampler()
 			s2 = DataGenerators.AlignMinimumSupportSampler(subs2A)
 			otherparams = [0.3]
-			DataGenerators.setparams(s2, otherparams)
+			DataGenerators.setparams!(s2, otherparams)
 
 			traces = map(1:100) do i
 				cpsupport =[rand(-100:100) for j in 1:2] 
@@ -57,7 +57,7 @@
 			# note: varying support in traces - to check if re-estimation is based on underlying sample from distribution
 			# and not the adjustment
 
-			estimateparams(s2, traces)
+			estimateparams!(s2, traces)
 
 			@mtestset "consistent with geometric" reps=Main.REPS alpha=Main.ALPHA begin
 				x, trace = DataGenerators.sample(s2, (0,1), cc)

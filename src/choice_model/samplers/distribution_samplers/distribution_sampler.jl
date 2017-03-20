@@ -21,7 +21,7 @@ end
 primarydistributiontype(d::Distribution) = typeof(d).name.primary
 
 # for Normal, Uniform, and DiscreteUniform, there is a type-specific version that calls this with minsamples of 2
-function estimateparams(s::DistributionSampler, traces, minsamples::Int = 1)
+function estimateparams!(s::DistributionSampler, traces, minsamples::Int = 1)
 	samples = extractsamplesfromtraces(s, traces)
 	if length(samples) >= minsamples
 		s.distribution = fit(primarydistributiontype(s.distribution), samples)

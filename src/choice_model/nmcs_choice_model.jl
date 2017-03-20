@@ -37,13 +37,18 @@ type NMCSChoiceModel <: ChoiceModel
 	bestfitness::Real 									# lower is better
 	bestgodelsequence::Vector{Real} 					# the best godel sequence found so far
 	besttracesequence::Vector{Dict}						# the traces for that sequence from the underlying choice model
-	function NMCSChoiceModel(policychoicemodel::ChoiceModel, fitnessfunction::Function, samplesize::Int=1; minimumsamplesize::Int=0, totalsamplelimit::Int=typemax(Int), ruledepthlimit::Int=typemax(Int))
+	function NMCSChoiceModel(policychoicemodel::ChoiceModel, fitnessfunction::Function, samplesize::Int,  minimumsamplesize::Int, totalsamplelimit::Int, ruledepthlimit::Int)
 		(minimumsamplesize >= 0) || error("Minimum sample size must be 0 or more")
 		(minimumsamplesize <= samplesize) || error("Minimum sample size must be less or equal to the sample size")
 		(totalsamplelimit >= 0) || error("Total sample count must be 0 or more")
 		(ruledepthlimit >= 0) || error("Rule depth limit must be 0 or more")
 		new(deepcopy(policychoicemodel), fitnessfunction, samplesize, minimumsamplesize, totalsamplelimit, ruledepthlimit, 0, +Inf, Real[], Dict[])
 	end
+end
+
+
+function setnmcschoicemodel!(g::Generator, fitnessfunction::Function, samplesize::Int=1; minimumsamplesize::Int=0, totalsamplelimit::Int=typemax(Int), ruledepthlimit::Int=typemax(Int))
+	setchoicemodel!(g, NMCSChoiceModel(choicemodel(g), fitnessfunction, samplesize, minimumsamplesize, totalsamplelimit, ruledepthlimit))
 end
 
 # reset any state 
@@ -94,7 +99,7 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 	gn, trace
 end
 
-setparams(cm::NMCSChoiceModel, params) = setparams(cm.policychoicemodel, params)
+setparams!(cm::NMCSChoiceModel, params) = setparams!(cm.policychoicemodel, params)
 getparams(cm::NMCSChoiceModel) = getparams(cm.policychoicemodel)
 paramranges(cm::NMCSChoiceModel) = paramranges(cm.policychoicemodel)
 

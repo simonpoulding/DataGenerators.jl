@@ -17,7 +17,7 @@ describe("Transform Sampler") do
 		end
 
 		test("set params") do
-			DataGenerators.setparams(s, [-5.11, -3.22])
+			DataGenerators.setparams!(s, [-5.11, -3.22])
 			@check DataGenerators.getparams(subsA) == [-5.11, -3.22]
 			@check DataGenerators.getparams(s) == [-5.11, -3.22]
 		end
@@ -57,19 +57,19 @@ describe("Transform Sampler") do
 			subs1A = DataGenerators.GeometricSampler()
 			s1 = DataGenerators.TransformSampler(subs1A, x->x+10.0, x->x-10.0)
 			params = [0.7]
-			DataGenerators.setparams(s1, params)
+			DataGenerators.setparams!(s1, params)
 			
 			subs2A = DataGenerators.GeometricSampler()
 			s2 = DataGenerators.TransformSampler(subs2A, x->x+10.0, x->x-10.0)
 			otherparams = [0.3]
-			DataGenerators.setparams(s2, otherparams)
+			DataGenerators.setparams!(s2, otherparams)
 
 			traces = map(1:100) do i
 				x, trace = DataGenerators.sample(s1, (0, 1))
 				trace
 			end
 
-			estimateparams(s2, traces)
+			estimateparams!(s2, traces)
 			
 			@check isconsistentgeometric(subs2A, params[1:1])
 

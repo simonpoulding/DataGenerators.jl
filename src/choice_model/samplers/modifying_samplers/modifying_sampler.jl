@@ -7,14 +7,14 @@ paramranges(s::ModifyingSampler) = paramranges(s.subsampler)
 
 getparams(s::ModifyingSampler) = getparams(s.subsampler)
 
-setparams(s::ModifyingSampler, params) = setparams(s.subsampler, params)
+setparams!(s::ModifyingSampler, params) = setparams!(s.subsampler, params)
 
 function sample(s::ModifyingSampler, support, cc::ChoiceContext)
 	x, trace = sample(s.subsampler, support, cc)
 	x, Dict{Symbol, Any}(:sub=>trace)
 end
 
-estimateparams(s::ModifyingSampler, traces) = estimateparams(s.subsampler, map(trace->trace[:sub], traces))
+estimateparams!(s::ModifyingSampler, traces) = estimateparams!(s.subsampler, map(trace->trace[:sub], traces))
 
 amendtrace(s::ModifyingSampler, trace, x) = amendtrace(s.subsampler, trace[:sub], x)
 

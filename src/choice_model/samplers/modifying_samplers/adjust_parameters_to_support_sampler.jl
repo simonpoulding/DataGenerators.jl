@@ -29,7 +29,7 @@ function getparams(s::AdjustParametersToSupportSampler)
 	end
 end
 
-function setparams(s::AdjustParametersToSupportSampler, params)
+function setparams!(s::AdjustParametersToSupportSampler, params)
 	nparams = length(paramranges(s))
 	length(params) == nparams || error("expected $(nparams) parameters but got $(length(params))")
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
@@ -41,7 +41,7 @@ end
 
 function sample(s::AdjustParametersToSupportSampler, support, cc::ChoiceContext)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
-		setparams(s.subsampler, [Float64(support[1]), Float64(support[2])])
+		setparams!(s.subsampler, [Float64(support[1]), Float64(support[2])])
 	else
 		@assert false
 	end
@@ -50,7 +50,7 @@ function sample(s::AdjustParametersToSupportSampler, support, cc::ChoiceContext)
 end
 
 
-function estimateparams(s::AdjustParametersToSupportSampler, traces)
+function estimateparams!(s::AdjustParametersToSupportSampler, traces)
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		nothing
 	else

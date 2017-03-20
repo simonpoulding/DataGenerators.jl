@@ -10,11 +10,11 @@ numparams(cm::ChoiceModel) = length(paramranges(cm::ChoiceModel))
 resetstate!(cm::ChoiceModel) = nothing
 
 
-# setparams(cm::ChoiceModel, params) = nothing
+# setparams!(cm::ChoiceModel, params) = nothing
 
 # getparams(cm::ChoiceModel) = (Float64)[]
 
-# estimateparams(cm::ChoiceModel, cptraces) = nothing
+# estimateparams!(cm::ChoiceModel, cptraces) = nothing
 
 include("default_choice_model.jl")
 include("sampler_choice_model.jl")

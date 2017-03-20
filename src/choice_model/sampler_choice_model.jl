@@ -10,15 +10,19 @@ include(joinpath("samplers", "sampler.jl"))
 type SamplerChoiceModel <: ChoiceModel
 	samplers::Dict{UInt, Sampler}
 	maxresamplings::Int
+	function SamplerChoiceModel(g::Generator, choicepointmapping::Function, maxresamplings)
+		samplers = Dict{UInt, Sampler}()
+		for (cpid, info) in choicepointinfo(g) # gets info from sub-generators also
+			samplers[cpid] = choicepointmapping(info)
+		end
+		maxresamplings >= 0 || error("maxresamplings cannot be negative")
+		new(samplers, maxresamplings)
+	end
 end
 
-function SamplerChoiceModel(g::Generator; choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
-	samplers = Dict{UInt, Sampler}()
-	for (cpid, info) in choicepointinfo(g) # gets info from sub-generators also
-		samplers[cpid] = choicepointmapping(info)
-	end
-	maxresamplings >= 0 || error("maxresamplings cannot be negative")
-	SamplerChoiceModel(samplers, maxresamplings)
+
+function setsamplerchoicemodel!(g::Generator; choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
+	setchoicemodel!(g, SamplerChoiceModel(g, choicepointmapping, maxresamplings))
 end
 
 
@@ -109,7 +113,7 @@ function paramranges(cm::SamplerChoiceModel)
 end
 
 # set parameters of all samplers
-function setparams(cm::SamplerChoiceModel, params)
+function setparams!(cm::SamplerChoiceModel, params)
 	params = convert(Vector{Float64},params)
 	if length(params) != numparams(cm)
 		error("expected $(numparams(cm)) model parameter(s), but got $(length(params))")
@@ -119,7 +123,7 @@ function setparams(cm::SamplerChoiceModel, params)
 		nparams = numparams(sampler)
 		# TODO replace this with a check on getnummodelparams
 		@assert (idx+nparams-1)<=length(params)
-		setparams(sampler, params[idx:(idx+nparams-1)])
+		setparams!(sampler, params[idx:(idx+nparams-1)])
 		# note: it is important here that sampler works on a copy of the parameters (which is ensured by [range] syntax)
 		# as the sampler may adjust its parameters
 		idx += nparams
@@ -150,10 +154,10 @@ function extractsamplertracesbycp(cm::SamplerChoiceModel, cmtraces)
 end
 
 # estimate the parameters of each sampler based on vector of traces from generation states
-function estimateparams(cm::SamplerChoiceModel, cmtraces)
+function estimateparams!(cm::SamplerChoiceModel, cmtraces)
 	samplertracesbycp = extractsamplertracesbycp(cm, cmtraces)
 	for cpid in keys(samplertracesbycp)
-		estimateparams(cm.samplers[cpid], samplertracesbycp[cpid])
+		estimateparams!(cm.samplers[cpid], samplertracesbycp[cpid])
 	end
 end
 
@@ -318,7 +322,7 @@ function extractgnhistoriesbycp(cm::SamplerChoiceModel, cmtraces, recencywindow:
 end
 
 
-function estimateconditionalmodel(cm::SamplerChoiceModel, cmtraces; recencywindow::Int = 1, distinguishparentsbyrecursiondepth::Bool = false, restricttoancestors::Bool=false)
+function estimateconditionalmodel!(cm::SamplerChoiceModel, cmtraces; recencywindow::Int = 1, distinguishparentsbyrecursiondepth::Bool = false, restricttoancestors::Bool=false)
 	
 	recencywindow >= 1 || error("recency window cannot be less than 1")
 	
@@ -330,9 +334,9 @@ function estimateconditionalmodel(cm::SamplerChoiceModel, cmtraces; recencywindo
 	for cpid in keys(samplertracesbycp)
 		# note: if samplertracsbycp has an entry for cpid, then so will gnhistoriesbycp
 		if supportsconditionalmodelestimation(cm.samplers[cpid])
-			estimateconditionalmodel(cm.samplers[cpid], cplabels, gnhistoriesbycp[cpid], samplertracesbycp[cpid])
+			estimateconditionalmodel!(cm.samplers[cpid], cplabels, gnhistoriesbycp[cpid], samplertracesbycp[cpid])
 		else
-			estimateparams(cm.samplers[cpid], samplertracesbycp[cpid])
+			estimateparams!(cm.samplers[cpid], samplertracesbycp[cpid])
 		end
 	end
 		

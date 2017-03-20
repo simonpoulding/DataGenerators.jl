@@ -54,7 +54,7 @@
 	    @testset "valid parameters $params" for params in [[0.8, 19.3], [87.4, 0.0],]
 		# note special case of sigma = 0
 
-	        DataGenerators.setparams(s, params)
+	        DataGenerators.setparams!(s, params)
 
 			@mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -73,7 +73,7 @@
 			@testset "bound index $bidx" for bidx in 1:2
 
 	            params[pidx] = pr[bidx]
-	            DataGenerators.setparams(s, params)
+	            DataGenerators.setparams!(s, params)
 
 				@mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 	            	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -84,7 +84,7 @@
 
 				@testset "range check exception" begin
 		            params[pidx] = bidx == 1 ? prevfloat(pr[bidx]) : nextfloat(pr[bidx])
-		            @test_throws ErrorException DataGenerators.setparams(s, params)
+		            @test_throws ErrorException DataGenerators.setparams!(s, params)
 				end
 
 			end
@@ -93,8 +93,8 @@
 
 	    @testset "wrong number of parameters" begin
 
-	        @test_throws ErrorException DataGenerators.setparams(s, midparams[1:end-1])
-	        @test_throws ErrorException DataGenerators.setparams(s, [midparams; 0.5])
+	        @test_throws ErrorException DataGenerators.setparams!(s, midparams[1:end-1])
+	        @test_throws ErrorException DataGenerators.setparams!(s, [midparams; 0.5])
 
 	    end
 
@@ -113,7 +113,7 @@
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
-	        estimateparams(s2, traces)
+	        estimateparams!(s2, traces)
 
 			@mtestset "consistent with normal" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)

@@ -49,15 +49,17 @@ end
 	@testset "constructor" begin
 
 	    gn = SCMGen()
-	    cm = SamplerChoiceModel(gn)
-	    @test typeof(cm) == SamplerChoiceModel
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
+	    @test typeof(cm) == DataGenerators.SamplerChoiceModel
 
 	end
 
 	@testset "set/get parameters and ranges" begin
 
 		gn = SCMGen()
-		cm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
 
 		@testset "paramranges" begin
 		    ranges = paramranges(cm)
@@ -73,7 +75,7 @@ end
 
 		@testset "setparams" begin
 		    newparams = [(paramrange[1]+paramrange[2])/2 for paramrange in paramranges(cm)]
-		    setparams(cm, newparams)
+		    setparams!(cm, newparams)
 		    @test length(getparams(cm)) == 5 # can't check equality of params since some adjustment can be made by the cm
 		end
 
@@ -82,7 +84,8 @@ end
 	@testset "rule choice point" begin
 
 		gn = SCMRuleGen()
-		cm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -114,7 +117,7 @@ end
 				sampler = first(values(cm.samplers))
 				@test getparams(cm) == [0.25,0.25,0.25,0.25,]
 				@test paramranges(cm) == [(0.0,1.0),(0.0,1.0),(0.0,1.0),(0.0,1.0),]
-				setparams(cm,[0.03,0.03,0.01,0.01])
+				setparams!(cm,[0.03,0.03,0.01,0.01])
 				@test round(getparams(cm),4) == [0.375,0.375,0.125,0.125,] # round to avoid precision errors
 			end
 			
@@ -125,7 +128,8 @@ end
 	@testset "sequence choice point" begin
 
 		gn = SCMRepsGen()
-		cm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -181,7 +185,7 @@ end
 				sampler = first(values(cm.samplers))
 				@test getparams(cm) == [0.5,]
 				@test paramranges(cm) == [(0.0,1.0),]
-				setparams(cm,[0.6])
+				setparams!(cm,[0.6])
 				@test getparams(cm) == [0.6,]
 			end
 
@@ -192,7 +196,8 @@ end
 	@testset "Bool value choice point" begin
 
 		gn = SCMChooseBoolGen()
-		cm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 
@@ -215,7 +220,7 @@ end
 				sampler = first(values(cm.samplers))
 				@test getparams(cm) == [0.5,]
 				@test paramranges(cm) == [(0.0,1.0),]
-				setparams(cm,[0.6])
+				setparams!(cm,[0.6])
 				@test getparams(cm) == [0.6,]
 			end
 
@@ -227,7 +232,8 @@ end
 	@testset "Int value choice point" begin
 
 		gn = SCMChooseIntGen()
-		cm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -319,7 +325,8 @@ end
 	@testset "Float64 value choice point" begin
 
 		gn = SCMChooseFloat64Gen()
-		cm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -397,7 +404,8 @@ end
 	@testset "generate for model with multiple choice points" begin
 
 		gn = SCMChooseStringGen()
-		cm = SamplerChoiceModel(gn)
+		setsamplerchoicemodel!(gn)
+	    cm = choicemodel(gn)
 	
 		@mtestset "full range of values generated using choice model" reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn, choicemodel=cm)
@@ -433,7 +441,8 @@ end
 			end
 		end
 
-		cm = SamplerChoiceModel(gn, choicepointmapping=nondefaultmapping)
+		setsamplerchoicemodel!(gn, choicepointmapping=nondefaultmapping)
+	    cm = choicemodel(gn)
 	
 		@test length(cm.samplers) == 1
 		sampler = first(values(cm.samplers))
@@ -444,22 +453,23 @@ end
 	@testset "estimate parameters" begin
 	
 		gn = SCMEstimateParamsGen()
+		setsamplerchoicemodel!(gn)
+	    scm1 = choicemodel(gn)
+		scm2 = deepcopy(scm1)
 
-		scm1 = SamplerChoiceModel(gn)
 		# parameters should be: 1:2 categorical for rule choice; 3: bernoulli for choose(Bool); 4: geometric for mult()
 		params = [0.3, 0.7, 0.33, 0.45]
-		setparams(scm1, params)
+		setparams!(scm1, params)
 
-		scm2 = SamplerChoiceModel(gn)
 		otherparams = [0.6, 0.4, 0.58, 0.77]
-		setparams(scm2, otherparams)
+		setparams!(scm2, otherparams)
 	
 		cmtraces = map(1:100) do i
-			result, state = generate(gn, choicemodel=scm1)
+			result, state = generate(gn)
 			state.cmtrace
 		end
 
-		estimateparams(scm2, cmtraces)
+		estimateparams!(scm2, cmtraces)
 	
 		# to check, we create samplers from the groups of parameters
 		# (could also simply 'look inside' the choice model, but this would be less robust to code changes)

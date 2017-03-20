@@ -192,8 +192,8 @@ function constructtype(genname, subgenargs, metaInfo, gencontext::GeneratorConte
 			choicepointinfo::Dict{UInt, Dict{Symbol, Any}}
 			rulemethodnames::Dict{Symbol,Symbol}
 			subgens::Vector{$(THIS_MODULE).Generator}
+			choicemodel::$(THIS_MODULE).ChoiceModel
 			evalfn::Function
-
 			function $(genname)(subgens::Vector = [])
 				if length(subgens) != $(length(subgenargs))
 					error("Incorrect number of sub generators $(length(subgens))")
@@ -202,8 +202,8 @@ function constructtype(genname, subgenargs, metaInfo, gencontext::GeneratorConte
 				if !all([typeof(sg) <: $(THIS_MODULE).Generator for sg in subgens])
 					error("Not all subgenerators are of type $(THIS_MODULE).Generator $(subgens)")
 				end
-				new($metaInfo, $(gencontext.choicepointinfo), $(gencontext.rulemethodnames), subgens,
-				 ex->eval($(current_module()),ex))
+				new($metaInfo, $(gencontext.choicepointinfo), $(gencontext.rulemethodnames), subgens, $(THIS_MODULE).DefaultChoiceModel(),
+				 		ex->eval($(current_module()),ex))
 			end
 
 			$(genname)(subgens...) = $(genname)(collect(subgens))

@@ -57,7 +57,7 @@
 
 	    @testset "valid parameters $params" for params in [[8.2,50.78], [-3113.10, -228.99],  [-6.198, 6.23],]
 
-	        DataGenerators.setparams(s, params)
+	        DataGenerators.setparams!(s, params)
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -68,7 +68,7 @@
 
 		@testset "setparams adjusts order of parameters" begin
 
-			DataGenerators.setparams(s, [50.77,8.3])
+			DataGenerators.setparams!(s, [50.77,8.3])
 			@test DataGenerators.getparams(s) == [8.3,50.77]
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
@@ -80,7 +80,7 @@
 
 		@testset "handles full Float64 range" begin
 			params = [-realmax(Float64), realmax(Float64)]
-			DataGenerators.setparams(s, params)
+			DataGenerators.setparams!(s, params)
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -103,7 +103,7 @@
 			@testset "bound index $bidx" for bidx in 1:2
 
 	            params[pidx] = pr[bidx] 
-		        DataGenerators.setparams(s, params)
+		        DataGenerators.setparams!(s, params)
 				
 				@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 		        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -113,7 +113,7 @@
 				
 				@testset "range check exception" begin
 		            params[pidx] = bidx == 1 ? prevfloat(pr[bidx]) : nextfloat(pr[bidx])
-		            @test_throws ErrorException DataGenerators.setparams(s, params)
+		            @test_throws ErrorException DataGenerators.setparams!(s, params)
 				end
 
 			end
@@ -122,7 +122,7 @@
 
 		@testset "lower bound equals upper bound" begin
 
-			DataGenerators.setparams(s, [0.712, 0.712])
+			DataGenerators.setparams!(s, [0.712, 0.712])
 			
 			@test DataGenerators.getparams(s) == [0.712, 0.712]
 
@@ -135,7 +135,7 @@
 
 		@testset "samples boundaries of support" begin
 		
-			DataGenerators.setparams(s, [87.23, nextfloat(nextfloat(87.23))])
+			DataGenerators.setparams!(s, [87.23, nextfloat(nextfloat(87.23))])
 			
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -145,8 +145,8 @@
 		end
 		
 	    @testset "wrong number of parameters" begin
-	        @test_throws ErrorException DataGenerators.setparams(s, midparams[1:end-1])
-	        @test_throws ErrorException DataGenerators.setparams(s, [midparams; 0.5])
+	        @test_throws ErrorException DataGenerators.setparams!(s, midparams[1:end-1])
+	        @test_throws ErrorException DataGenerators.setparams!(s, [midparams; 0.5])
 	    end
 
 	end
@@ -165,7 +165,7 @@
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
-	        estimateparams(s2, traces)
+	        estimateparams!(s2, traces)
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
@@ -187,7 +187,7 @@
 	            x, trace = DataGenerators.sample(s1, (0,1), cc)
 	            trace
 	        end
-	        estimateparams(s2, traces)
+	        estimateparams!(s2, traces)
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)

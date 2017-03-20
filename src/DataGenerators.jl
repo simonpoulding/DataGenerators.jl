@@ -4,16 +4,16 @@ module DataGenerators
 export @generator
 
 # exported functions that are used to generate objects from a generator
-export choose, robustchoose, generate, gen, many, meta, choicepointinfo, robustgen, GenerationTerminatedException
+export choose, robustchoose, generate, meta, choicepointinfo, choicemodel, setchoicemodel!, GenerationTerminatedException
 
 # exported functions that are used to register and match generators
 export register, generatorfor
 
-# exported Choice Models
-export DefaultChoiceModel, SamplerChoiceModel, NMCSChoiceModel, MCTSChoiceModel
+# exported choice models application function
+export setdefaultchoicemodel!, setsamplerchoicemodel!, setnmcschoicemodel!, mctschoicemodel!
 
 # exported Choice Model functions
-export paramranges, setparams, getparams, numparams, estimateparams, estimateconditionalmodel
+export paramranges, setparams!, getparams, numparams, estimateparams!, estimateconditionalmodel!
 
 using DataGeneratorTranslators
 using Distributions

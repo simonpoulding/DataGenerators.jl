@@ -17,7 +17,7 @@ describe("Truncate to Support Sampler") do
 		end
 
 		test("set params") do
-			DataGenerators.setparams(s, [-9.8, 0.002])
+			DataGenerators.setparams!(s, [-9.8, 0.002])
 			@check DataGenerators.getparams(subsA) == [-9.8, 0.002]
 			@check DataGenerators.getparams(s) == [-9.8, 0.002]
 		end
@@ -92,12 +92,12 @@ describe("Truncate to Support Sampler") do
 			subs1A = DataGenerators.NormalSampler()
 			s1 = DataGenerators.TruncateToSupportSampler(subs1A)
 			params = [94.2, 34.1]
-			DataGenerators.setparams(s1, params)
+			DataGenerators.setparams!(s1, params)
 
 			subs2A = DataGenerators.NormalSampler()
 			s2 = DataGenerators.TruncateToSupportSampler(subs2A)
 			otherparams = [-42.0, 50.1]
-			DataGenerators.setparams(s2, otherparams)
+			DataGenerators.setparams!(s2, otherparams)
 
 			traces = map(1:100) do i
 			 	# note: large support that rarely truncates, otherwise would not be able to estimate subsampler with same params
@@ -105,7 +105,7 @@ describe("Truncate to Support Sampler") do
 				trace
 			end
 
-			estimateparams(s2, traces)
+			estimateparams!(s2, traces)
 			
 			@check isconsistentnormal(subs2A, params[1:2])
 

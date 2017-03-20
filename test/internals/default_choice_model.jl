@@ -43,15 +43,17 @@ end
 	@testset "constructor" begin
 
 	    gn = DCMGen()
-	    cm = DefaultChoiceModel(gn)
-	    @test typeof(cm) == DefaultChoiceModel
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
+	    @test typeof(cm) == DataGenerators.DefaultChoiceModel
 
 	end
 
 	@testset "set/get parameters and ranges" begin
 
 		gn = DCMGen()
-		cm = DefaultChoiceModel(gn)
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
 
 		@testset "paramranges" begin
 		    ranges = paramranges(cm)
@@ -67,7 +69,7 @@ end
 
 		@testset "setparams" begin
 		    newparams = [(paramrange[1]+paramrange[2])/2 for paramrange in paramranges(cm)]
-		    setparams(cm, newparams)
+		    setparams!(cm, newparams)
 		    @test length(getparams(cm)) == 0 # can't check equality of params since some adjustment can be made by the cm
 		end
 
@@ -76,7 +78,8 @@ end
 	@testset "rule choice point" begin
 
 		gn = DCMRuleGen()
-		cm = DefaultChoiceModel(gn)
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -101,7 +104,8 @@ end
 	@testset "sequence choice point" begin
 
 		gn = DCMRepsGen()
-		cm = DefaultChoiceModel(gn)
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -149,7 +153,8 @@ end
 	@testset "Bool value choice point" begin
 
 		gn = DCMChooseBoolGen()
-		cm = DefaultChoiceModel(gn)
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 
@@ -167,7 +172,8 @@ end
 	@testset "Int value choice point" begin
 
 		gn = DCMChooseIntGen()
-		cm = DefaultChoiceModel(gn)
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -242,7 +248,8 @@ end
 	@testset "Float64 value choice point" begin
 
 		gn = DCMChooseFloat64Gen()
-		cm = DefaultChoiceModel(gn)
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 	
@@ -303,7 +310,8 @@ end
 	@testset "generate for model with multiple choice points" begin
 
 		gn = DCMChooseStringGen()
-		cm = DefaultChoiceModel(gn)
+		setdefaultchoicemodel!(gn)
+	    cm = choicemodel(gn)
 	
 		@mtestset "full range of values generated using choice model" reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn, choicemodel=cm)

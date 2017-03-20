@@ -27,9 +27,9 @@ end
 
 paramranges(s::ConstrainParametersSampler) = s.paramranges
 
-function setparams(s::ConstrainParametersSampler, params)
+function setparams!(s::ConstrainParametersSampler, params)
 	checkparamranges(s, params)
-	setparams(s.subsampler, params)
+	setparams!(s.subsampler, params)
 end
 
 minimumsupport(s::ConstrainParametersSampler) = minimumsupport(s.subsampler)

@@ -34,7 +34,7 @@ type ConditionalSampler <: ModifyingSampler
 			conditionalsampler = deepcopy(defaultsampler)
 			# if params are specified, then set them, otherwise use default parameters
 			if i <= length(conditionalparams)
-				setparams(conditionalsampler, conditionalparams[i])
+				setparams!(conditionalsampler, conditionalparams[i])
 			end
 			conditionalsamplers[parentgns[i]] = conditionalsampler
 		end
@@ -58,16 +58,16 @@ function paramranges(s::ConditionalSampler)
 	pr
 end
 
-function setparams(s::ConditionalSampler, params)
+function setparams!(s::ConditionalSampler, params)
 	nparams = numparams(s)
 	length(params) == nparams || error("expected $(nparams) parameters but got $(length(params))")
 	paramstart = 1
 	paramcount = numparams(s.defaultsampler)
-	setparams(s.defaultsampler, params[paramstart:(paramstart+paramcount-1)])
+	setparams!(s.defaultsampler, params[paramstart:(paramstart+paramcount-1)])
 	for conditionalsampler in values(s.conditionalsamplers)
 		paramstart += paramcount
 		paramcount = numparams(conditionalsampler)
-		setparams(conditionalsampler, params[paramstart:(paramstart+paramcount-1)])
+		setparams!(conditionalsampler, params[paramstart:(paramstart+paramcount-1)])
 	end
 end
 
@@ -121,7 +121,7 @@ end
 # NOTE: if model is changed (i.e. a different parent is identified), then traces will be invalid
 # and this method must NOT be used
 #
-function estimateparams(s::ConditionalSampler, traces)
+function estimateparams!(s::ConditionalSampler, traces)
 	# first divide out the traces according to which subsampler was used
 	defaultsamplertraces = Vector{Dict}()
 	conditionalsamplertraces = Dict{Any,Vector{Dict}}()
@@ -137,9 +137,9 @@ function estimateparams(s::ConditionalSampler, traces)
 		end
 	end
 	# then re-estimate the subsamplers
-	estimateparams(s.defaultsampler, defaultsamplertraces)
+	estimateparams!(s.defaultsampler, defaultsamplertraces)
 	for parentgn in keys(s.conditionalsamplers)
-		estimateparams(s.conditionalsamplers[parentgn], conditionalsamplertraces[parentgn])
+		estimateparams!(s.conditionalsamplers[parentgn], conditionalsamplertraces[parentgn])
 	end
 end
 
@@ -233,7 +233,7 @@ function determineparentusingK2(s::ConditionalSampler, gnhistories)
 	
 end
 
-function estimateconditionalmodel(s::ConditionalSampler, cplabels, gnhistories, traces)
+function estimateconditionalmodel!(s::ConditionalSampler, cplabels, gnhistories, traces)
 	
 	# assign new parent
 	parindex = determineparentusingK2(s, gnhistories)
@@ -262,9 +262,9 @@ function estimateconditionalmodel(s::ConditionalSampler, cplabels, gnhistories, 
 	if supportsconditionalmodelestimation(s.defaultsampler)
 		# pass all histories and traces to default sampler
 		defaultgnhistories = map(h->h[historymask], gnhistories)
-		estimateconditionalmodel(s.defaultsampler, cplabels[cplabelmask], defaultgnhistories, defaulttraces)
+		estimateconditionalmodel!(s.defaultsampler, cplabels[cplabelmask], defaultgnhistories, defaulttraces)
 	else
-		estimateparams(s.defaultsampler, defaulttraces)
+		estimateparams!(s.defaultsampler, defaulttraces)
 	end
 
 	# remove existing conditional samplers
@@ -291,10 +291,10 @@ function estimateconditionalmodel(s::ConditionalSampler, cplabels, gnhistories, 
 				# we also filter the histories to remove parent index just chosen
 				conditionalgnhistories = map(h->h[historymask], gnhistories[parentvaluemask])
 				# println("<<<<<<< START nested")
-				estimateconditionalmodel(conditionalsampler, cplabels[cplabelmask], conditionalgnhistories, conditionaltraces)
+				estimateconditionalmodel!(conditionalsampler, cplabels[cplabelmask], conditionalgnhistories, conditionaltraces)
 				# println("<<<<<<< END nested")
 			else
-				estimateparams(conditionalsampler, conditionaltraces)				
+				estimateparams!(conditionalsampler, conditionaltraces)				
 			end
 			
 		end

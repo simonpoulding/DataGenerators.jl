@@ -55,7 +55,7 @@
 
 		@testset "valid parameters $params" for params in [[0.1,0.2,0.3,0.4], [0.4,0.1,0.1,0.4], [0.3,0.2,0.3,0.2],]
 
-		    DataGenerators.setparams(s, params)
+		    DataGenerators.setparams!(s, params)
 
 		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -72,7 +72,7 @@
 			@testset "bound index $bidx" for bidx in 1:2
 
 		        params[pidx] = pr[bidx] 
-		        DataGenerators.setparams(s, params)
+		        DataGenerators.setparams!(s, params)
 	
 			    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 		        	x, trace = DataGenerators.sample(s, (0,1), cc)
@@ -81,7 +81,7 @@
 
 				@testset "range check exception" begin
 		            params[pidx] = bidx == 1 ? prevfloat(pr[bidx]) : nextfloat(pr[bidx])
-		            @test_throws ErrorException DataGenerators.setparams(s, params)
+		            @test_throws ErrorException DataGenerators.setparams!(s, params)
 				end
 	
 			end
@@ -90,7 +90,7 @@
 	
 		@testset "setparams normalises weights" begin
 
-		    DataGenerators.setparams(s, [0.4, 0.6, 0.7, 0.3])
+		    DataGenerators.setparams!(s, [0.4, 0.6, 0.7, 0.3])
 		    @test getparams(s) == [0.2, 0.3, 0.35, 0.15]
 
 		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
@@ -102,7 +102,7 @@
 	
 		@testset "setparams adjusts when all weights are zero" begin
 	
-		    DataGenerators.setparams(s, [0.0, 0.0, 0.0, 0.0])
+		    DataGenerators.setparams!(s, [0.0, 0.0, 0.0, 0.0])
 		    @test getparams(s) == [0.25, 0.25, 0.25, 0.25]
 		
 		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
@@ -113,8 +113,8 @@
 		end
 
 		@testset "setparams with wrong number of parameters" begin
-		    @test_throws ErrorException DataGenerators.setparams(s, midparams[1:end-1])
-		    @test_throws ErrorException DataGenerators.setparams(s, [midparams; 0.5])
+		    @test_throws ErrorException DataGenerators.setparams!(s, midparams[1:end-1])
+		    @test_throws ErrorException DataGenerators.setparams!(s, [midparams; 0.5])
 		end
 		
 	end
@@ -132,7 +132,7 @@
 		        x, trace = DataGenerators.sample(s1, (0,1), cc)
 		        trace
 		    end
-		    estimateparams(s2, traces)
+		    estimateparams!(s2, traces)
 
 		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
@@ -150,7 +150,7 @@
 		        x, trace = DataGenerators.sample(s1, (0,1), cc)
 		        trace
 		    end
-		    estimateparams(s2, traces)
+		    estimateparams!(s2, traces)
 
 		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
@@ -168,7 +168,7 @@
 		        x, trace = DataGenerators.sample(s1, (0,1), cc)
 		        trace
 		    end
-		    estimateparams(s2, traces)
+		    estimateparams!(s2, traces)
 
 		    @mtestset "consistent with categorical" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
