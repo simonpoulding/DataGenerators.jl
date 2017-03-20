@@ -37,7 +37,7 @@ type NMCSChoiceModel <: ChoiceModel
 	bestfitness::Real 									# lower is better
 	bestgodelsequence::Vector{Real} 					# the best godel sequence found so far
 	besttracesequence::Vector{Dict}						# the traces for that sequence from the underlying choice model
-	function NMCSChoiceModel(policychoicemodel::ChoiceModel, fitnessfunction::Function, samplesize::Int,  minimumsamplesize::Int, totalsamplelimit::Int, ruledepthlimit::Int)
+	function NMCSChoiceModel(policychoicemodel::ChoiceModel, fitnessfunction::Function, samplesize::Int=1, minimumsamplesize::Int=0, totalsamplelimit::Int=typemax(Int), ruledepthlimit::Int=typemax(Int))
 		(minimumsamplesize >= 0) || error("Minimum sample size must be 0 or more")
 		(minimumsamplesize <= samplesize) || error("Minimum sample size must be less or equal to the sample size")
 		(totalsamplelimit >= 0) || error("Total sample count must be 0 or more")

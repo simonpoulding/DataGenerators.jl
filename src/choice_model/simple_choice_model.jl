@@ -2,10 +2,10 @@
 # default implementations of the interface.
 # In practice the choice model will typically/always need to be tuned to the specific generator
 # for it to be useful.
-type DefaultChoiceModel <: ChoiceModel; end
+type SimpleChoiceModel <: ChoiceModel; end
 	
-function setdefaultchoicemodel!(g::Generator)
-	setchoicemodel!(g, DefaultChoiceModel())
+function setsimplechoicemodel!(g::Generator)
+	setchoicemodel!(g, SimpleChoiceModel())
 end
 
 #
@@ -24,7 +24,7 @@ end
 #  (2) must be convertible without loss of precision to ChoiceContext.datatype (i.e. does not cause convert to raise an
 #      InexactError), but need not be of the specified datatype
 #
-function godelnumber(cm::DefaultChoiceModel, cc::ChoiceContext)
+function godelnumber(cm::SimpleChoiceModel, cc::ChoiceContext)
 	# finitise infinities to maxintfloat()/10 (approx 9e14 for Float64)
 	# using a range that has a size that is less than maxintfloat ensures that the range is small enough that some of the Godel numbers
 	# are, after conversion back to the datatype, have a non-zero floating point part
@@ -55,11 +55,11 @@ end
 
 # valid ranges for each parameter, return as a vector; each range is a tuple (min,max) where (ironically, given the notation)
 # values are inclusive
-paramranges(cm::DefaultChoiceModel) = Tuple{Float64,Float64}[]
+paramranges(cm::SimpleChoiceModel) = Tuple{Float64,Float64}[]
 
 # set parameters using the passed vector of values
-setparams!(cm::DefaultChoiceModel, params) = nothing
+setparams!(cm::SimpleChoiceModel, params) = nothing
 
 # get parameters as a vector of values
-getparams(cm::DefaultChoiceModel) = Float64[]
+getparams(cm::SimpleChoiceModel) = Float64[]
 

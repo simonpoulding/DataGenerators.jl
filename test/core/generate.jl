@@ -53,10 +53,18 @@ end
 	
 	end
 
+	@testset "default choice model is a sampler choice model" begin
+	
+		gn = GNChoiceModelGen()	
+		@test isa(choicemodel(gn), DataGenerators.SamplerChoiceModel)
+
+	end
 
 	@testset "generate using default and non-default choice models" begin
 
 		gn = GNChoiceModelGen()
+		
+		@test isa(choicemodel(gn), DataGenerators.SamplerChoiceModel)
 	
 		@mtestset "default choice model" reps=Main.REPS alpha=Main.ALPHA begin
 	    	td = choose(gn)
@@ -84,6 +92,7 @@ end
 		end
 
 		setminimumvaluechoicemodel!(gn)
+		setminimumvaluechoicemodel!(ign)
 
 		@mtestset "non-default choice model" reps=Main.REPS alpha=Main.ALPHA begin
 		    td = choose(gn)

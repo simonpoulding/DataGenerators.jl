@@ -46,7 +46,7 @@ type MCTSChoiceModel <: ChoiceModel
 	cp::Real										# the constant C_p in the calculation of UCB1
 	rootgodelsequence::Vector{Real} 				# defines the state of the current "root" node
 	rootnode::MCTSNode 								# current root node
-	function MCTSChoiceModel(policychoicemodel::ChoiceModel, rewardfunction::Function, visitbudget::Int, samplesize::Int, cp::Real)
+	function MCTSChoiceModel(policychoicemodel::ChoiceModel, rewardfunction::Function, visitbudget::Int=1, samplesize::Int=1, cp::Real=1/sqrt(2.0))
 		new(deepcopy(policychoicemodel), rewardfunction, visitbudget, samplesize, cp, (Real)[], MCTSNode(Dict()))
 	end
 end

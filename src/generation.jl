@@ -339,7 +339,7 @@ end
 
 
 # Generate data from the subgenerator with given index.
-subgen(g::Generator, s::DerivationState, index::Integer) = choose(subgenerator(g, index); state = s)
+subgen(g::Generator, s::DerivationState, index::Integer) = choose(subgenerator(g, index))
 
 
 #

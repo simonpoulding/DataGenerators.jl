@@ -25,7 +25,7 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 	
 	@testset "internals" begin
 		include(joinpath("internals","choice_point_info.jl"))
-		include(joinpath("internals","default_choice_model.jl"))
+		include(joinpath("internals","simple_choice_model.jl"))
 		include(joinpath("internals","bernoulli_sampler.jl"))
 		include(joinpath("internals","categorical_sampler.jl"))
 		include(joinpath("internals","geometric_sampler.jl"))
@@ -33,8 +33,8 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 		include(joinpath("internals","uniform_sampler.jl"))
 		include(joinpath("internals","normal_sampler.jl"))
 		include(joinpath("internals","mixture_sampler.jl"))
-			    include(joinpath("internals","adjust_parameters_to_support_sampler.jl"))
-			    include(joinpath("internals","align_minimum_support_sampler.jl"))
+	    include(joinpath("internals","adjust_parameters_to_support_sampler.jl"))
+	    include(joinpath("internals","align_minimum_support_sampler.jl"))
 			# include(joinpath("internals","_truncate_to_support_sampler.jl"))
 			# include(joinpath("internals","_transform_sampler.jl"))
 			# include(joinpath("internals","_constrain_parameters_sampler.jl"))

@@ -10,7 +10,7 @@ export choose, robustchoose, generate, meta, choicepointinfo, choicemodel, setch
 export register, generatorfor
 
 # exported choice models application function
-export setdefaultchoicemodel!, setsamplerchoicemodel!, setnmcschoicemodel!, mctschoicemodel!
+export setsimplechoicemodel!, setsamplerchoicemodel!, setnmcschoicemodel!, mctschoicemodel!
 
 # exported Choice Model functions
 export paramranges, setparams!, getparams, numparams, estimateparams!, estimateconditionalmodel!

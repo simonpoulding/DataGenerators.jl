@@ -16,7 +16,7 @@ resetstate!(cm::ChoiceModel) = nothing
 
 # estimateparams!(cm::ChoiceModel, cptraces) = nothing
 
-include("default_choice_model.jl")
+include("simple_choice_model.jl")
 include("sampler_choice_model.jl")
 include("nmcs_choice_model.jl")
 include("mcts_choice_model.jl")

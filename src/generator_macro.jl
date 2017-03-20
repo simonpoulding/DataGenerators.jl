@@ -202,7 +202,8 @@ function constructtype(genname, subgenargs, metaInfo, gencontext::GeneratorConte
 				if !all([typeof(sg) <: $(THIS_MODULE).Generator for sg in subgens])
 					error("Not all subgenerators are of type $(THIS_MODULE).Generator $(subgens)")
 				end
-				new($metaInfo, $(gencontext.choicepointinfo), $(gencontext.rulemethodnames), subgens, $(THIS_MODULE).DefaultChoiceModel(),
+				cpinfo = $(gencontext.choicepointinfo)
+				new($metaInfo, cpinfo, $(gencontext.rulemethodnames), subgens, $(THIS_MODULE).SamplerChoiceModel(cpinfo),
 				 		ex->eval($(current_module()),ex))
 			end
 

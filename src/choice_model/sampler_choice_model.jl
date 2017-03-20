@@ -10,19 +10,19 @@ include(joinpath("samplers", "sampler.jl"))
 type SamplerChoiceModel <: ChoiceModel
 	samplers::Dict{UInt, Sampler}
 	maxresamplings::Int
-	function SamplerChoiceModel(g::Generator, choicepointmapping::Function, maxresamplings)
+	function SamplerChoiceModel(cpinfo::Dict, choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
+		maxresamplings >= 0 || error("maxresamplings cannot be negative")
 		samplers = Dict{UInt, Sampler}()
-		for (cpid, info) in choicepointinfo(g) # gets info from sub-generators also
+		for (cpid, info) in cpinfo # gets info from sub-generators also
 			samplers[cpid] = choicepointmapping(info)
 		end
-		maxresamplings >= 0 || error("maxresamplings cannot be negative")
 		new(samplers, maxresamplings)
 	end
 end
 
 
 function setsamplerchoicemodel!(g::Generator; choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
-	setchoicemodel!(g, SamplerChoiceModel(g, choicepointmapping, maxresamplings))
+	setchoicemodel!(g, SamplerChoiceModel(choicepointinfo(g), choicepointmapping, maxresamplings))
 end
 
 
