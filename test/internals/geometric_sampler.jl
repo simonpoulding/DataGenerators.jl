@@ -98,8 +98,6 @@
 
 	@testset "estimateparams" begin
 
-	    s = DataGenerators.GeometricSampler()
-	    prs = DataGenerators.paramranges(s)
 	    otherparams = [0.5]
 
 	    @testset "from parameters $params" for params in [[0.2], [0.7], [0.05], [1.0],]

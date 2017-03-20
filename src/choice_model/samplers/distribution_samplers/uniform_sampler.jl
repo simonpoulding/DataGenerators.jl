@@ -8,7 +8,7 @@
 
 type UniformSampler <: ContinuousDistributionSampler
 	paramranges::Vector{Tuple{Float64,Float64}}
-	distribution::Union{Uniform,Float64}
+	distribution::Union{Distribution,Float64}
 	# to handle case where a==b (which raises error in Uniform), we
 	# indicate this case by setting distribution to a fixed value
 	function UniformSampler(params=Float64[])
@@ -32,29 +32,27 @@ function setparams(s::UniformSampler, params)
 		s.distribution = b
 		# see note in type definition: this is workaround for error raised in Uniform constructor when a==b
 	else
-		# adjust a,b to be at most realmax(Float64) apart, otherwise Uniform will always return Inf
 		m = robustmidpoint(a,b) # util function that avoids overflow to Inf
-		if (m-a) > realmax(Float64)/2
-			a = m - realmax(Float64)/2
-			b = m + realmax(Float64)/2
-			# warn("interval of Uniform sampler adjusted to [$a,$b]")
+		if (m-a) < realmax(Float64)/2
+			s.distribution = Uniform(a, b)
+		else
+			# Uniform only seems to support bounds that are at most realmax apart (returns 0 otherwise), so use a mixture model in other cases
+			s.distribution = MixtureModel([Uniform(a,m), Uniform(nextfloat(m),b)])
 		end
-		s.distribution = Uniform(a, b)
 	end
 end
 
 getparams(s::UniformSampler) = typeof(s.distribution) <: Uniform ? [s.distribution.a, s.distribution.b] : [s.distribution, s.distribution]
 
-function sample(s::UniformSampler, support)
- x = typeof(s.distribution) <: Uniform ? rand(s.distribution) : s.distribution
- # we return both the sampled value, and a dict as trace information
- x, Dict{Symbol, Any}(:rnd=>x)
+function sample(s::UniformSampler, support, cc::ChoiceContext)
+	x = isa(s.distribution, Float64) ? s.distribution : rand(s.distribution)
+	# we return both the sampled value, and a dict as trace information
+	x, Dict{Symbol, Any}(:rnd=>x)
 end
 
 function estimateparams(s::UniformSampler, traces)
 	samples = extractsamplesfromtraces(s, traces)
-	minnumsamples = 1
-	if length(samples) >= minnumsamples
+	if length(samples) >= 2 # minsamples
 		if all(samples.==samples[1])
 			# distribution gives error if all samples are the same
 			s.distribution = samples[1]

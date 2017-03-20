@@ -121,8 +121,6 @@
 	
 	@testset "estimateparams" begin
 		
-		s = DataGenerators.CategoricalSampler(5)
-		prs = DataGenerators.paramranges(s)
 		otherparams = [0.35, 0.15, 0.1, 0.25, 0.15]
 		
 		@testset "equal bounds" begin

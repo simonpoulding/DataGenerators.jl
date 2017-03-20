@@ -6,9 +6,9 @@ abstract ContinuousDistributionSampler <: DistributionSampler
 paramranges(s::DistributionSampler) = copy(s.paramranges)
 
 function sample(s::DistributionSampler, support, cc::ChoiceContext)
- x = rand(s.distribution)
- # we return both the sampled value, and a dict as trace information
- x, Dict{Symbol,Any}(:rnd=>x)
+	x = rand(s.distribution)
+	# we return both the sampled value, and a dict as trace information
+	x, Dict{Symbol,Any}(:rnd=>x)
 end
 
 function extractsamplesfromtraces(s::DistributionSampler, traces)
@@ -20,10 +20,10 @@ end
 # otherwise function suffstats raises an error as there isn't a suitable method to use (in Distributions.jl 0.11.0+)
 primarydistributiontype(d::Distribution) = typeof(d).name.primary
 
-function estimateparams(s::DistributionSampler, traces)
+# for Normal, Uniform, and DiscreteUniform, there is a type-specific version that calls this with minsamples of 2
+function estimateparams(s::DistributionSampler, traces, minsamples::Int = 1)
 	samples = extractsamplesfromtraces(s, traces)
-	minnumsamples = typeof(s.distribution) in [Normal,] ? 2 : 1
-	if length(samples) >= minnumsamples
+	if length(samples) >= minsamples
 		s.distribution = fit(primarydistributiontype(s.distribution), samples)
 	end
 end

@@ -22,8 +22,8 @@ using Distributions
 const THIS_MODULE = current_module() # used when creating calls to this module in the macro
 
 # list of number types that are supported directly by generator macro
-# (could do this automatically as leaf subtypes of Integer and AbstractFloat, but some of these we can't really handle directly yet - e.g. BigInt, BigFloat - and it is possible that
-# custom subtypes could have been added)
+# (could do this automatically as leaf subtypes of Integer and AbstractFloat, but some of these we can't really handle directly yet
+# - e.g. BigInt, BigFloat - and it is possible that custom subtypes could have been added)
 const GENERATOR_SUPPORTED_CHOOSE_NUMBER_TYPES = Type[Bool, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64, Float16, Float32, Float64,]
 
 # list of number types that are supported directly by generator macro
@@ -45,7 +45,5 @@ include("registry.jl")
 
 # choice models
 include(joinpath("choice_model","choice_model.jl"))
-
-warn("note: commented out sampler warnings")
 
 end

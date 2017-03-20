@@ -33,11 +33,11 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 		include(joinpath("internals","uniform_sampler.jl"))
 		include(joinpath("internals","normal_sampler.jl"))
 		include(joinpath("internals","mixture_sampler.jl"))
-	    include(joinpath("internals","adjust_parameters_to_support_sampler.jl"))
-	    include(joinpath("internals","align_minimum_support_sampler.jl"))
-	    # include(joinpath("internals","_truncate_to_support_sampler.jl"))
-	    # include(joinpath("internals","_transform_sampler.jl"))
-	    # include(joinpath("internals","_constrain_parameters_sampler.jl"))
+			    include(joinpath("internals","adjust_parameters_to_support_sampler.jl"))
+			    include(joinpath("internals","align_minimum_support_sampler.jl"))
+			# include(joinpath("internals","_truncate_to_support_sampler.jl"))
+			# include(joinpath("internals","_transform_sampler.jl"))
+			# include(joinpath("internals","_constrain_parameters_sampler.jl"))
 		include(joinpath("internals","sampler_choice_model.jl"))
 	end
 

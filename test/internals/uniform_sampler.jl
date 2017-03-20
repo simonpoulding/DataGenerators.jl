@@ -84,7 +84,13 @@
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as Uniform(-realmax(Float64),realmax(Float64)) x 
+		        # @mtest_distributed_as Uniform(-realmax(Float64),realmax(Float64)) x 
+				# Uniform returns Inf for this range, so instead:
+				@test -realmax(Float64) <= x <= realmax(Float64)
+				@mtest_that_sometimes x < -realmax(Float64)/2
+				@mtest_that_sometimes -realmax(Float64)/2 <= x < 0 
+				@mtest_that_sometimes  0 <= x < realmax(Float64)/2
+				@mtest_that_sometimes  realmax(Float64)/2 <= x
 			end
 
 		end
@@ -148,8 +154,6 @@
 	
 	@testset "estimateparams" begin
 
-	    s = DataGenerators.UniformSampler()
-	    prs = DataGenerators.paramranges(s)
 	   	otherparams = [-42.9, 42.2]
 
 	    @testset "from parameters $params" for params in [[20.55, 29.12], [50.22, 50.22],]
@@ -164,15 +168,19 @@
 	        estimateparams(s2, traces)
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
-	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as Uniform(params[1],params[2]) x 
+	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
+				if params[1] != params[2]
+					@mtest_distributed_as Uniform(params[1],params[2]) x 
+				else
+					@test x == params[1]
+				end			
 			end
 			
 	    end
 
 	    @testset "too few traces" begin
 
-	        params = [1.0, 6.0]
+	        params = [101.0, 106.0]
 	        s1 = DataGenerators.UniformSampler(params)
 	        s2 = DataGenerators.UniformSampler(otherparams)
 	        traces = map(1:1) do i
@@ -182,7 +190,7 @@
 	        estimateparams(s2, traces)
 
 			@mtestset "consistent with uniform" reps=Main.REPS alpha=Main.ALPHA begin
-	        	x, trace = DataGenerators.sample(s, (0,1), cc)
+	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
 		        @mtest_distributed_as Uniform(-42.9,42.2) x 
 			end
 

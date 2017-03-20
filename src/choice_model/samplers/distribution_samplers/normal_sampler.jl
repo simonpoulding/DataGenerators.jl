@@ -29,3 +29,5 @@ end
 getparams(s::NormalSampler) = [s.distribution.μ, s.distribution.σ]
 # TODO should sample actually sample Inf?
 
+estimateparams(s::NormalSampler, traces) = estimateparams(s, traces, 2)
+

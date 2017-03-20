@@ -30,7 +30,8 @@ function getparams(s::AdjustParametersToSupportSampler)
 end
 
 function setparams(s::AdjustParametersToSupportSampler, params)
-	length(params) == length(paramranges(s)) || error("expected $(length(pranges)) parameters but got $(length(params))")
+	nparams = length(paramranges(s))
+	length(params) == nparams || error("expected $(nparams) parameters but got $(length(params))")
 	if typeof(s.subsampler) in (UniformSampler, DiscreteUniformSampler,)
 		nothing
 	else

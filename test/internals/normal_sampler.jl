@@ -102,8 +102,6 @@
 
 	@testset "estimateparams" begin
 
-	    s = DataGenerators.NormalSampler()
-	    prs = DataGenerators.paramranges(s)
 	    otherparams = [155.6, 13.7]
 
 	    @testset "from parameters $params" for params in [[-56.0, 18.9], [3.44, 0.0],]

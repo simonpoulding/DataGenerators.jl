@@ -16,14 +16,19 @@
 			end
 	
 			@testset "default params" begin
-				@test DataGenerators.getparams(s) == [Float64(typemin(Int16)), Float64(typemax(Int16))]
+				@test DataGenerators.getparams(s) == [Float64(typemin(Int)), Float64(typemax(Int))]
 			end
 	
 			@mtestset "default sampling" reps=Main.REPS alpha=Main.ALPHA begin
 				x, trace = DataGenerators.sample(s, (0,1), cc)
 				@test typeof(x) <: Int
-				@test typemin(Int16) <= x <= typemax(Int16)
-		        @mtest_distributed_as DiscreteUniform(typemin(Int16),typemax(Int16)) x 
+				# @test typemin(Int) <= x <= typemax(Int)
+				# @mtest_distributed_as DiscreteUniform(typemin(Int),typemax(Int)) x
+				# can't do above owing to problems with DiscreteUniform and large ranges, so instead:
+				@mtest_that_sometimes x < (typemin(Int)>>1)
+				@mtest_that_sometimes (typemin(Int)>>1) <= x < 0
+				@mtest_that_sometimes 0 <= x < (typemax(Int)>>1)
+				@mtest_that_sometimes (typemax(Int)>>1) <= x
 			end
 	
 		end
@@ -84,7 +89,12 @@
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as DiscreteUniform(typemin(Int),typemax(Int)) x
+		        # @mtest_distributed_as DiscreteUniform(typemin(Int),typemax(Int)) x
+				# can't do above owing to problems with DiscreteUniform and large ranges, so instead:
+				@mtest_that_sometimes x < (typemin(Int)>>1)
+				@mtest_that_sometimes (typemin(Int)>>1) <= x < 0
+				@mtest_that_sometimes 0 <= x < (typemax(Int)>>1)
+				@mtest_that_sometimes (typemax(Int)>>1) <= x
 			end
 
 		end
@@ -98,11 +108,20 @@
 
 	            params[pidx] = pr[bidx] 
 		        DataGenerators.setparams(s, params)
-				
+
+				sortedparams = sort(params)
+				q1 = 0.75 * sortedparams[1] + 0.25 * sortedparams[2]
+				q2 = 0.5 * sortedparams[1] + 0.5 * sortedparams[2]
+				q3 = 0.25 * sortedparams[1] + 0.75 * sortedparams[2]
 				@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 		        	x, trace = DataGenerators.sample(s, (0,1), cc)
-					sortedparams = sort(params)
-			        @mtest_distributed_as DiscreteUniform(Int(sortedparams[1]),Int(sortedparams[2])) x
+					@test sortedparams[1] <= x <= sortedparams[2]
+			        # @mtest_distributed_as DiscreteUniform(Int(sortedparams[1]),Int(sortedparams[2])) x
+					# can't do above owing to problems with DiscreteUniform and large ranges, so instead:
+					@mtest_that_sometimes x < q1
+					@mtest_that_sometimes q1 <= x < q2
+					@mtest_that_sometimes q2 <= x < q3
+					@mtest_that_sometimes q3 <= x
 				end
 				
 				@testset "range check exception" begin
@@ -116,11 +135,12 @@
 
 		@testset "handles non-integer parameters sensibly" begin
 
-	        DataGenerators.setparams(s, [-2.9, 8.4])
+	        DataGenerators.setparams(s, [-2.9, 8.6])
 			
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
 	        	x, trace = DataGenerators.sample(s, (0,1), cc)
-		        @mtest_distributed_as DiscreteUniform(-3,8) x
+				@test -2.9 <= x <= 8.6 # lower bound rounded up, upper bound rounded down
+		        @mtest_distributed_as DiscreteUniform(-2,8) x 
 			end
 			
 		end
@@ -135,8 +155,6 @@
 	
 	@testset "estimateparams" begin
 
-	    s = DataGenerators.DiscreteUniformSampler()
-	    prs = DataGenerators.paramranges(s)
 	   	otherparams = [-42.0, 42.0]
 
 	    @testset "from parameters $params" for params in [[20.0, 29.0], [50.0, 50.0],]
@@ -150,7 +168,7 @@
 	        estimateparams(s2, traces)
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
-	        	x, trace = DataGenerators.sample(s, (0,1), cc)
+	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
 		        @mtest_distributed_as DiscreteUniform(Int(params[1]),Int(params[2])) x 
 			end
 			
@@ -168,7 +186,7 @@
 	        estimateparams(s2, traces)
 
 			@mtestset "consistent with discrete uniform" reps=Main.REPS alpha=Main.ALPHA begin
-	        	x, trace = DataGenerators.sample(s, (0,1), cc)
+	        	x, trace = DataGenerators.sample(s2, (0,1), cc)
 		        @mtest_distributed_as DiscreteUniform(-42,42) x 
 			end
 
