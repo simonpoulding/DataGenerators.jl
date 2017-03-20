@@ -109,7 +109,7 @@ end
 		    # check for sensible reason that specifies the limit
 		    @test match(r"choices", exc.reason) != nothing
 		    @test match(r"exceeded", exc.reason) != nothing
-		    @test match(Regex("$(DataGenerators.MAX_CHOICES_DEFAULT)"), exc.reason) != nothing 
+		    @test match(Regex("$(DataGenerators.defaultgenerateparams[:maxchoices])"), exc.reason) != nothing 
 		end
 	
 		c100gn = GN100ChoicesGen()
@@ -180,12 +180,12 @@ end
 		            throw(e)
 		        end
 		    end
-		    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+		    @test (exc != nothing) || (length(td) <= DataGenerators.defaultgenerateparams[:maxseqreps]) # check that limit applies
 		    @mtest_that_sometimes typeof(exc) == GenerationTerminatedException
 		    if (exc != nothing)
 		        @test match(r"repetitions", exc.reason) != nothing
 		        @test match(r"exceeded", exc.reason) != nothing
-		        @test match(Regex("$(DataGenerators.MAX_SEQ_REPS_DEFAULT)"), exc.reason) != nothing
+		        @test match(Regex("$(DataGenerators.defaultgenerateparams[:maxseqreps])"), exc.reason) != nothing
 		    end
 		end
 
@@ -201,7 +201,7 @@ end
 		            throw(e)
 		        end
 		    end
-		    @test (exc != nothing) || (length(td) <= DataGenerators.MAX_SEQ_REPS_DEFAULT) # check that limit applies
+		    @test (exc != nothing) || (length(td) <= DataGenerators.defaultgenerateparams[:maxseqreps]) # check that limit applies
 		    @mtest_that_sometimes typeof(exc) == GenerationTerminatedException
 		    if (exc != nothing)
 		        @test match(r"repetitions", exc.reason) != nothing

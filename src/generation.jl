@@ -11,11 +11,6 @@ abstract ChoiceModel
 # for more complex time/state/depth related choices.
 abstract DerivationState
 
-# default generation limits (declared as constants to ensure consistency since they are specified multiple times)
-const MAX_CHOICES_DEFAULT = 10017
-const MAX_SEQ_REPS_DEFAULT = 4868
-const MAX_RULE_DEPTH = 11765
-
 
 # Return the choice point info associated with a generator. This includes both the choicepointinfo for
 # the generator itself plus any subgenerators
@@ -64,6 +59,7 @@ function logchoicepoint(s::DerivationState, cpid::Integer, godelnumber::Real, tr
 	pushcpseqnumber(s, length(s.godelsequence)) # sequence number is the new length of the godelsequence
 end
 
+	
 # A default derivation state that generators can use unless they need
 # something more specific.
 type DefaultDerivationState <: DerivationState
@@ -78,7 +74,7 @@ type DefaultDerivationState <: DerivationState
 	cpseqnumberstack::Vector{Vector{Int}} # corresponding to the rule name stack, the seq numbers of the encountered choice points
 	# executiontreecoords::Vector{Int} # during the execution of a generator, this uniquely identifies the current rule in the execution tree
 	# nextchildcoord::Int
-	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int = MAX_CHOICES_DEFAULT, maxseqreps::Int = MAX_SEQ_REPS_DEFAULT, maxruledepth::Int = MAX_RULE_DEPTH)
+	function DefaultDerivationState(g::Generator, cm::ChoiceModel, maxchoices::Int, maxseqreps::Int, maxruledepth::Int)
 		# new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, maxruledepth, Vector{Symbol}(), Vector{Int}(), 1)
 		new(g, cm, Vector{Real}[], Vector{Integer}[], maxchoices, maxseqreps, maxruledepth, Vector{Symbol}(), Vector{Vector{Int}}())
 	end
@@ -183,37 +179,48 @@ end
 # Core functions to use generators once they have been defined.
 #
 
+# default parameters that can be overriden by user parameters to generate etc.
+const defaultgenerateparams = Dict(
+		:state => nothing,
+		:choicemodel => nothing,
+		:resetchoicemodelstate => true,
+		:startrule => :start,
+		:maxchoices => 10017,
+		:maxseqreps => 4868, 
+		:maxruledepth => 11765)
 
 # Generate an object from the generator using the startrule as entry point. 
 # Uses the default choice model and creates a new state object unless one is given.
-function generate(g::Generator; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, startrule = :start, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT, maxruledepth = MAX_RULE_DEPTH)
-	choicemodel = (choicemodel == nothing) ? DefaultChoiceModel(g) : choicemodel
-	state = (state == nothing) ? newstate(g, choicemodel, maxchoices, maxseqreps, maxruledepth) : state
-	if resetchoicemodelstate
+function generate(g::Generator; kwparams...)
+	params = merge(defaultgenerateparams, Dict(p[1]=>p[2] for p in kwparams)) # kwparams takes priority
+	choicemodel = (params[:choicemodel] == nothing) ? DefaultChoiceModel(g) : params[:choicemodel]
+	state = (params[:state]  == nothing) ? newstate(g, choicemodel, params[:maxchoices], params[:maxseqreps], params[:maxruledepth]) : params[:state]
+	if params[:resetchoicemodelstate]
 		resetstate!(choicemodel)
 	end
-	startfunc = methodforrulenamed(g, startrule)
+	startfunc = methodforrulenamed(g, params[:startrule])
 	# important: we evaluate in the module that owns the type and since this (rather than DataGenerators) will be where rule functions are defined
 	# the correct eval function is set in the generator on creation
 	result = g.evalfn(Expr(:call, startfunc, g, state))
-	return (result, state)
+	(result, state)
 end
 
-#
-# Derived helper/convenience functions based on the core...
-#
 
-function gen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT, maxruledepth = MAX_RULE_DEPTH)
-	warn("gen() is deprecated: use choose() instead")
-	first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps, maxruledepth = maxruledepth))
-end
+choose(g::Generator; kwparams...) = first(generate(g; kwparams...))
+
+# function choose(gt::DataType, userparams::Dict = Dict{Symbol, Any}())
+# 	if !(super(gt) == Generator)
+# 		error("choose(::DataType) is currently supported outside of generator code only when the datatype is a generator type")
+# 	end
+# 	g = gt()
+# 	first(generate(g, userparams))
+# end
 
 # call generator and handle termination exception
 # if termination occurs, return nothing as the object
-function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceModel(), resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT, maxruledepth = MAX_RULE_DEPTH)
-	warn("robustgen() is deprecated: use robustchoose() instead")
+function robustchoose(g::Generator; kwparams...)
 	try
-		return first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps, maxruledepth = maxruledepth))
+		return choose(g; kwparams...)
 	catch e
 		if isa(e, GenerationTerminatedException)
 			return nothing
@@ -222,33 +229,6 @@ function robustgen(g::Generator; state = nothing, choicemodel = DefaultChoiceMod
 		end
 	end
 end
-
-choose(g::Generator; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT, maxruledepth = MAX_RULE_DEPTH) = 
-		first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps, maxruledepth = maxruledepth))
-
-function choose(gt::DataType; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT , maxseqreps = MAX_SEQ_REPS_DEFAULT, maxruledepth = MAX_RULE_DEPTH)
-	if !(super(gt) == Generator)
-		error("choose(::DataType) is currently supported outside of generator code only when the datatype is a generator type")
-	end
-	g = gt()
-	first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps, maxruledepth = maxruledepth))
-end
-
-# call generator and handle termination exception
-# if termination occurs, return nothing as the object
-function robustchoose(g::Generator; state = nothing, choicemodel = nothing, resetchoicemodelstate = true, maxchoices = MAX_CHOICES_DEFAULT, maxseqreps = MAX_SEQ_REPS_DEFAULT, maxruledepth = MAX_RULE_DEPTH)
-	try
-		return first(generate(g; state = state, choicemodel = choicemodel, resetchoicemodelstate = resetchoicemodelstate, maxchoices = maxchoices, maxseqreps = maxseqreps, maxruledepth = maxruledepth))
-	catch e
-		if isa(e, GenerationTerminatedException)
-			return nothing
-		else
-			throw(e) # rethrow other types of error
-		end
-	end
-end
-
-many(g, num = int(floor(rand() * 10))) = [choose(g) for i in 1:num]
 
 # This enables a rule to be called indirectly by specifying its name as a symbol (plus any parameters)
 # It is used by the type generators to workaround slow compilation times that appear to be a result of recursive type inference by "hiding" the call from the type inference algorithm
@@ -259,15 +239,6 @@ function indirectrulecall(g::Generator, s::DerivationState, rulename::Symbol, ru
 	g.evalfn(Expr(:call, g.rulemethodnames[rulename], g, s, ruleparams...))
 end
 
-#
-# Choice point types
-# These may be used by the choice model (for example, to determine a suitable marginal probability distribution for the choice point)
-# They are passed BOTH in the call to querychoicemodel AND stored in as the :type in choicepointinfo.  To reduce the chance
-# discrepancies, the types are defined globally here.
-#
-const RULE_CP = :rule
-const VALUE_CP = :value
-const SEQUENCE_CP = :sequence
 
 
 #
@@ -292,7 +263,7 @@ function choosenumber(s::DerivationState, cpid, datatype, minval, maxval, params
 			error("maximum value is less than minimum in choose_number")
 		end
 	end
-	querychoicemodel(s, VALUE_CP, cpid, datatype, minval, maxval)
+	querychoicemodel(s, :value, cpid, datatype, minval, maxval)
 end
 
 
@@ -316,7 +287,7 @@ function choosereps(s::DerivationState, cpid, minreps, maxreps, paramsliteral)
 			error("maximum repetitions is less than minimum in choose_reps")
 		end
 	end
-	reps = querychoicemodel(s, SEQUENCE_CP, cpid, Int, minreps, maxreps)
+	reps = querychoicemodel(s, :sequence, cpid, Int, minreps, maxreps)
 	if reps > s.maxseqreps
 		throw(GenerationTerminatedException("a sequence choice point made more than $(reps) repetitions and so exceeded the limit of $(s.maxseqreps): specify a larger value of maxseqrep as a parameter to generate"))
 		# warn("choice model specified $(reps) repetitions for a sequence choice point, but this is being reduced to the maximum of $(s.maxseqreps) - specify a larger value of maxseqreps as a parameter to generate if this is not the required behaviour")
@@ -328,7 +299,7 @@ end
 # The (implicit) rule choice is implemented with this function. The short form is that
 # the user writes rulename() at least two times in the generator code.
 function chooserule(s::DerivationState, cpid, numrules)
-	querychoicemodel(s, RULE_CP, cpid, Int, 1, numrules)
+	querychoicemodel(s, :rule, cpid, Int, 1, numrules)
 end
 
 

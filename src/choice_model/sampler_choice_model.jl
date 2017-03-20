@@ -24,15 +24,15 @@ end
 
 function defaultchoicepointmapping(info::Dict)
 	cptype = info[:type]
-	if cptype == RULE_CP
+	if cptype == :rule
 		sampler = CategoricalSampler(info[:max])
 		# justification: expected be a small range, is guaranteed to be closed, and no meaning is attached to order
 		# varying support: not possible
-	elseif cptype == SEQUENCE_CP
+	elseif cptype == :sequence
 		sampler = AlignMinimumSupportSampler(GeometricSampler())
 		# justification: often builds recursive structures, so smaller number of repetitions should be more likely
 		# varying support: lower handled by AlignMinimumSupportSampler; upper by rejection sampling
-	elseif cptype == VALUE_CP
+	elseif cptype == :value
 		datatype = info[:datatype]
 		if datatype <: Bool
 			sampler = BernoulliSampler()
@@ -351,11 +351,11 @@ function show(io::IO, cm::SamplerChoiceModel)
 	# 	cpinfo = cpinfos[cpid]
 	# 	cpname = "($(cpid))"
 	# 	cptype = cpinfo[:type]
-	# 	if cptype == RULE_CP
+	# 	if cptype == :rule
 	# 		cpname = "Rule $(cpinfo[:rulename]) " * cpname
-	# 	elseif cptype == SEQUENCE_CP
+	# 	elseif cptype == :sequence
 	# 		cpname = "Sequence " * cpname
-	# 	elseif cptype == VALUE_CP
+	# 	elseif cptype == :value
 	# 		cpname = "Value $(cpinfo[:datatype]) " * cpname
 	# 	end
 	# 	cpnames[cpid] = cpname

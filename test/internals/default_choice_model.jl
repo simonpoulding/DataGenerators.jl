@@ -88,7 +88,7 @@ end
 		# 	lowerbound::Real
 		# 	upperbound::Real
 		# end
-		cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.RULE_CP, cpids[1], Int, 1, 4)
+		cc = DataGenerators.ChoiceContext(DummyDerivationState(), :rule, cpids[1], Int, 1, 4)
 
 		@mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		    gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -107,7 +107,7 @@ end
 	
 		@testset "small finite range" begin 
 	
-			cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.SEQUENCE_CP, cpids[1], Int, 0, 2)
+			cc = DataGenerators.ChoiceContext(DummyDerivationState(), :sequence, cpids[1], Int, 0, 2)
 		
 			@mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 			    gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -120,7 +120,7 @@ end
 
 		@testset "large finite range" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.SEQUENCE_CP, cpids[1], Int, 11, 16)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :sequence, cpids[1], Int, 11, 16)
 		
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -133,7 +133,7 @@ end
 
 		@testset "semi-finite range" begin
 
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.SEQUENCE_CP, cpids[1], Int, 1, typemax(Int))
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :sequence, cpids[1], Int, 1, typemax(Int))
 
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -153,7 +153,7 @@ end
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
 
-		cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Bool, false, true)
+		cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Bool, false, true)
 	
 		@mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		    gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -173,7 +173,7 @@ end
 	
 		@testset "small finite range" begin
 
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, -1, 2)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Int, -1, 2)
 
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -186,7 +186,7 @@ end
 
 		@testset "large finite range" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, 11, 16)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Int, 11, 16)
 		
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -199,7 +199,7 @@ end
 
 		@testset "semi-finite range (upper)" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, 128, typemax(Int))
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Int, 128, typemax(Int))
 		
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -212,7 +212,7 @@ end
 
 		@testset "semi-finite range (lower)" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, typemin(Int), 128)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Int, typemin(Int), 128)
 		
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -225,7 +225,7 @@ end
 
 		@testset "infinite range" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Int, typemin(Int), typemax(Int))
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Int, typemin(Int), typemax(Int))
 		
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -248,7 +248,7 @@ end
 	
 		@testset "finite range" begin
 
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, -42.2, -8.7)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Float64, -42.2, -8.7)
 
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -262,7 +262,7 @@ end
 
 		@testset "semi-finite range (upper)" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, 450001.6, Inf)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Float64, 450001.6, Inf)
 		
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -275,7 +275,7 @@ end
 
 		@testset "semi-finite range (lower)" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, -Inf, 450001.6)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Float64, -Inf, 450001.6)
 		
 		    @mtestset "valid Godel numbers returned" begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)
@@ -288,7 +288,7 @@ end
 
 		@testset "infinite range" begin
 	
-		    cc = DataGenerators.ChoiceContext(DataGenerators.DefaultDerivationState(gn, cm, 10000), DataGenerators.VALUE_CP, cpids[1], Float64, -Inf, Inf)
+		    cc = DataGenerators.ChoiceContext(DummyDerivationState(), :value, cpids[1], Float64, -Inf, Inf)
 		
 		    @mtestset "valid Godel numbers returned" reps=Main.REPS alpha=Main.ALPHA begin
 		        gnum, trace = DataGenerators.godelnumber(cm, cc)

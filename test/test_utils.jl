@@ -38,7 +38,7 @@ end
 getcurrentrecursiondepth(st::DummyDerivationState) = 1
 getimmediateancestorcpseqnumber(st::DummyDerivationState) = 0
 
-dummyChoiceContext() = DataGenerators.ChoiceContext(DummyDerivationState(), DataGenerators.RULE_CP, 0, Int, 0, 0)
+dummyChoiceContext() = DataGenerators.ChoiceContext(DummyDerivationState(), :rule, 0, Int, 0, 0)
 
 
 

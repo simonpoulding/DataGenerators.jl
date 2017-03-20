@@ -417,7 +417,7 @@ function transformchoosenumber(callname, callparams, genrules, gencontext, match
 		maxval = true
 		rangeisliteral = true
 		cpinfo = Dict{Symbol,Any}(:datatype=>datatype, :min=>minval, :max=>maxval)
-		cpid = recordchoicepoint(gencontext, VALUE_CP, cpinfo)
+		cpid = recordchoicepoint(gencontext, :value, cpinfo)
 		chooseexpr = :( $(THIS_MODULE).choosenumber($(gencontext.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
 
 	else
@@ -460,7 +460,7 @@ function transformchoosenumber(callname, callparams, genrules, gencontext, match
 		# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
 		rangeisliteral = minisliteral && maxisliteral
 
-		cpid = recordchoicepoint(gencontext, VALUE_CP, cpinfo)
+		cpid = recordchoicepoint(gencontext, :value, cpinfo)
 		chooseexpr = :( $(THIS_MODULE).choosenumber($(gencontext.stateparam), $(cpid), $(datatype), $(minval), $(maxval), $(rangeisliteral)) )
 
 	end
@@ -581,7 +581,7 @@ function transformsequencechoicepoint(callname, callparams, genrules, gencontext
 	# rangeisliteral parameter will avoid a further runtime check on type validity if both limits are literal
 	rangeisliteral = minisliteral && maxisliteral
 
-	cpid = recordchoicepoint(gencontext, SEQUENCE_CP, cpinfo)
+	cpid = recordchoicepoint(gencontext, :sequence, cpinfo)
 	idxvar = gensym("idx")
 	:( [ $(functocallexpr) for $(idxvar) in 1:($(THIS_MODULE).choosereps($(gencontext.stateparam), $(cpid), $(minreps), $(maxreps), $(rangeisliteral))) ] )
 
@@ -672,7 +672,7 @@ function createumbrellamethods!(genrules::Vector{GeneratorRule}, gencontext::Gen
 			end
 
 			cpinfo = Dict{Symbol,Any}(:rulename => rulename, :min => 1, :max => length(rules))
-			cpid = recordchoicepoint(gencontext, RULE_CP, cpinfo)
+			cpid = recordchoicepoint(gencontext, :rule, cpinfo)
 
 			umbrellabody = Expr(:block, :( $(chosenidxvar) = $(THIS_MODULE).chooserule($(gencontext.stateparam), $(cpid), $(length(rules))) ), condexpr)
 			

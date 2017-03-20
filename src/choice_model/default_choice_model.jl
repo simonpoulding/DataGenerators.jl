@@ -36,7 +36,7 @@ function godelnumber(cm::DefaultChoiceModel, cc::ChoiceContext)
 	if cc.datatype <: Integer
 		rangelen += 1.0 # since the random value will be later floor'ed
 	end
-	if cc.cptype == SEQUENCE_CP
+	if cc.cptype == :sequence
 		# Default is to use maxReps of max 2 regardless of what the actual max is 
 		# This is to limit the size of generated data for recursively defined generators.
 		rangelen = min(rangelen, 3.0) # 3 because 1 is added to the rangelen above
