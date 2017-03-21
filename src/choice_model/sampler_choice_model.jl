@@ -1,7 +1,6 @@
 #
 # SamplerChoiceModel
 #
-import Base.show
 
 # define abstract sampler type, the type tree of which it is a root, and concrete implementations of these types
 include(joinpath("samplers", "sampler.jl"))
@@ -345,6 +344,8 @@ end
 # pretty print the model
 
 function show(io::IO, cm::SamplerChoiceModel)
+	
+	print(io, "sampler choice model")
 
 	# now changed this method to override show, can no longer pass generator (TODO: could include ref to generator in cm)
 	# # first build slightly more informative names for choice points
@@ -366,9 +367,9 @@ function show(io::IO, cm::SamplerChoiceModel)
 	# end
 	
 	# now print samplers in id order (which should (roughly) be lexical order of choice points?)
-	for cpid in sort(collect(keys(cm.samplers)))
-		print(io, "$(hex(cpid)): ")
-		show(io, cm.samplers[cpid])
-	end
+	# for cpid in sort(collect(keys(cm.samplers)))
+	# 	print(io, "$(hex(cpid)): ")
+	# 	show(io, cm.samplers[cpid])
+	# end
 	
 end

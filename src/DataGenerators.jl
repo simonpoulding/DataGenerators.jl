@@ -17,6 +17,7 @@ export paramranges, setparams!, getparams, numparams, estimateparams!, estimatec
 
 using DataGeneratorTranslators
 using Distributions
+import Base.show
 
 
 const THIS_MODULE = current_module() # used when creating calls to this module in the macro

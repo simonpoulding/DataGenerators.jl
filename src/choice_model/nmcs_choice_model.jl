@@ -123,3 +123,5 @@ end
 function resetstate!(cm::NMCSSimulationChoiceModel)
 	resetstate!(cm.policychoicemodel)
 end
+
+show(io::IO, cm::NMCSChoiceModel) = print(io, "NMCS choice model (policy: ", cm.policychoicemodel, ")")

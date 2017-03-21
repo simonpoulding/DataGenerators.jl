@@ -55,8 +55,12 @@ macro generator(gensig, genbody)
 	# construct and return code for generator type and methods that implement the rules
 	typeblock = constructtype(genname, subgenargs, metadata, gencontext)
 	methodsblock = constructmethods(generatorrules)
+	
+	tidyfinish = quote $(genname); end # avoid outputting the last method's name as result of macro; output type instead
 
-	esc(mergeexprs(typeblock, methodsblock))
+	typeandmethods = mergeexprs(typeblock, methodsblock)
+	
+	esc(mergeexprs(typeandmethods, tidyfinish))
 	
 end
 

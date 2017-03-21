@@ -63,3 +63,4 @@ setparams!(cm::SimpleChoiceModel, params) = nothing
 # get parameters as a vector of values
 getparams(cm::SimpleChoiceModel) = Float64[]
 
+show(io::IO, cm::SimpleChoiceModel) = print(io, "simple choice model")

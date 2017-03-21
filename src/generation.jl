@@ -6,8 +6,14 @@ abstract Generator
 abstract ChoiceModel
 
 choicemodel(g::Generator) = g.choicemodel
-setchoicemodel!(g::Generator, cm::ChoiceModel) = g.choicemodel = cm
+function setchoicemodel!(g::Generator, cm::ChoiceModel)
+	g.choicemodel = cm
+	g # output g to give useful confirmation message
+end
 
+function show(io::IO, g::Generator)
+	print(io, "data generator ", typeof(g), " with ", length(choicepointinfo(g)), " choice points using ", choicemodel(g))
+end
 
 # Return the choice point info associated with a generator. This includes both the choicepointinfo for
 # the generator itself plus any subgenerators
