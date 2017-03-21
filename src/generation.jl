@@ -17,13 +17,15 @@ end
 
 # Return the choice point info associated with a generator. This includes both the choicepointinfo for
 # the generator itself plus any subgenerators
-function choicepointinfo(g::Generator)
-	cpi = g.choicepointinfo
-	for subgen in g.subgens
-		merge!(cpi, subgen.choicepointinfo)
-	end
-	cpi
-end
+# function choicepointinfo(g::Generator)
+# 	cpi = g.choicepointinfo
+# 	for subgen in g.subgens
+# 		merge!(cpi, subgen.choicepointinfo)
+# 	end
+# 	cpi
+# end
+# no longer accumulate choice point info from subgenerators
+choicepointinfo(g::Generator) = g.choicepointinfo
 
 
 # A DerivationState is created for every unique generation/derivation process. It
@@ -215,13 +217,13 @@ end
 
 choose(g::Generator; kwparams...) = first(generate(g; kwparams...))
 
-# function choose(gt::DataType, userparams::Dict = Dict{Symbol, Any}())
-# 	if !(super(gt) == Generator)
-# 		error("choose(::DataType) is currently supported outside of generator code only when the datatype is a generator type")
-# 	end
-# 	g = gt()
-# 	first(generate(g, userparams))
-# end
+function choose(gt::DataType; kwparams...)
+	if !(supertype(gt) == Generator)
+		error("choose(::DataType) is currently supported outside of generator code only when the datatype is a generator type")
+	end
+	g = gt()
+	first(generate(g; kwparams...))
+end
 
 # call generator and handle termination exception
 # if termination occurs, return nothing as the object

@@ -319,14 +319,14 @@ end
 		    @test choicepointinfo(gn) == cpi
 		end
 
-		@testset "returns info for the generator and the subgenerators when one or more subgenerators" begin
+		@testset "returns info for the generator itself only even where there are subgenerators" begin
 		    bgn = CPBoolGen()
 		    ign = CPIntGen()
 		    gn = CPMainGen(bgn,ign)
 		    bcpi = bgn.choicepointinfo
 		    icpi = ign.choicepointinfo
 		    cpi = gn.choicepointinfo
-		    @test choicepointinfo(gn) == merge(cpi,bcpi,icpi)
+		    @test choicepointinfo(gn) == cpi
 		end
 
 	end
