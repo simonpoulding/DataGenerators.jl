@@ -157,15 +157,16 @@ function godelnumber(cm::MCTSChoiceModel, cc::ChoiceContext)
 		#DEBUG println("- START simulation")
 
 		policychoicemodel = deepcopy(cm.policychoicemodel)
-		generator = deepcopy(cc.derivationstate.generator)
+		simulationgenerator = deepcopy(cc.derivationstate.generator)
 		presetgodelsequence = deepcopy(currentgodelsequence)
 		simulationcm = MCTSSimulationChoiceModel(policychoicemodel, presetgodelsequence)
+		setchoicemodel!(simulationgeneration, simulationcm)
 		result, state = nothing, nothing
 
 		#DEBUG println("simulation using sequence: $(godelsequenceasstring(presetgodelsequence))")
 
 		try
-			result, state = generate(generator; choicemodel=simulationcm, maxchoices=cc.derivationstate.maxchoices)
+			result, state = generate(simulationgenerator; maxchoices=cc.derivationstate.maxchoices)
 			reward = cm.rewardfunction(result)
 		catch e
   			if !isa(e, GenerationTerminatedException)

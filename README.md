@@ -1,6 +1,6 @@
 # DataGenerators
 
-DataGenerators is a data generation package for [Julia](http://julialang.org/). It can use search and optimization techniques to find data that, for example, can improve testing by generating more effective test data.
+DataGenerators is a data generation package for [Julia](http://julialang.org/). It can use search and optimisation techniques to find data that, for example, can improve software testing by generating more effective test data.
 
 You can write your own data generators utilizing the full power of Julia, or use the [DataGeneratorTranslators](https://github.com/simonpoulding/DataGeneratorTranslators.jl) package to automatically create data generators from specifications such as Backus-Naur Form (BNF), XML Schema Definition (XSD), and regular expressions.
 
@@ -209,9 +209,9 @@ Each type choice model provided by `DataGenerators` supplies a function that set
 	julia> setnmcschoicemodel!(g, x->length(x))
 	data generator SmallIntGen with 1 choice points using NMCS choice model (policy: sampler choice model)
 
-The *simple choice model* is a naive stochastic choice model that is used mainly for testing the `DataGenerators` package.  The *NMCS choice model* is described below in the section 'Optimising the Generation Process' below.
+The *simple choice model* is a naive stochastic choice model that is used mainly for testing the `DataGenerators` package.  The *NMCS choice model* is described below in the section 'Optimising the Generation Process'.
 
-Further choice models, such as deterministic choice models, will be provided in future versions of the `DataGenerators` package.  Currently, the *sampler choice model* is recommended for generating random data.
+Further choice models, such as deterministic choice models, will be provided in future versions of the `DataGenerators` package.  Currently, the default *sampler choice model* is recommended for generating random data.
 
 
 #### Optimising the Choice Model
@@ -227,12 +227,13 @@ If we wish to optimise the probability distribution defined by the choice model 
 
 To facilitate optimisation by metaheuristic algorithms, the sampler choice model accepts *any* vector of parameters that satisfy the ranges specified by `paramranges`. Any constraints between subsets of parameter values in the Vector that are not met are handled sensibly by `setparams!' instead of raising an exception, and so such constraints need not be considered by the algorithm.
 
-The following example uses Different Evolution algorithm to optimise the parameters of the model to return arithmetic expressions with a length of approximately 100.  (To install the `BlackBoxOptim` package, use `Pkg.add("BlackBoxOptim")`.)
+The following example uses Different Evolution algorithm to optimise the parameters of the model to return arithmetic expressions with a length of approximately 100.  (To install the `BlackBoxOptim` package used in this example, use `Pkg.add("BlackBoxOptim")`.)
 
-	julia> using BlackBoxOptim
+	using DataGenerators
+	using BlackBoxOptim
 	
 	# generator for arithmetic expressions
-	julia> @generator ExprGen begin
+	@generator ExprGen begin
 	  start() = expression()
 	  expression() = operand() *  operator() * operand()
 	  operand() = "(" * expression() * ")"
@@ -245,27 +246,22 @@ The following example uses Different Evolution algorithm to optimise the paramet
 	end
 	
 	# function to return length of the expression, or a penalty value of 1000 if a limit was reached in the generator
-	julia> exprlength(g) = begin
+	exprlength(g) = begin
 		expr = robustchoose(g)
 		expr == nothing ? 1000 : length(expr)
 	end
 	
 	# mean length of 200 expressions sampled for the generator
-	julia> meanexprlength(g) = mean([exprlength(g) for i in 1:200])
+	meanexprlength(g) = mean([exprlength(g) for i in 1:200])
 		
 	# function to return a closure that acts as a fitness function (lower is better) for the generator
-	julia> fitnessfn(g) = params -> begin
+	fitnessfn(g) = params -> begin
 		setparams!(choicemodel(g), params)
 		abs(100 - meanexprlength(g))
 	end
 	
 	# create a generator instance
-	julia> eg = ExprGen()
-	data generator ExprGen with 5 choice points using sampler choice model
-	
-	# check mean expression length for default choice model parameters
-	julia> meanexprlength(eg)
-	281.125
+	eg = ExprGen()
 	
 	# optimise for a maximum of 60 seconds
 	optimresult = bboptimize(fitnessfn(eg); SearchRange=paramranges(choicemodel(eg)), MaxTime=60.0)
@@ -273,18 +269,58 @@ The following example uses Different Evolution algorithm to optimise the paramet
 	# set the parameter of the choice model to the best candidate found
 	setparams!(choicemodel(eg), best_candidate(optimresult))
 	
-	# check mean expression length for optimised choice model parameters
-	julia> meanexprlength(eg)
-	109.745
+	# generate using the optimised choice model
+	choose(eg)
+
 
 See our paper "[Finding Test Data with Specific Properties via Metaheuristic Search](http://www.robertfeldt.net/publications/feldt_2013_godeltest.html)" [1] for an example of this technique applied to generating trees of a specified size and depth.
 
+#### Optimising the Generation Process
+
+An alternative to optimising the choice model parameters is to optimise each choice made by the generator as it is made.  One such approach is to 'look ahead' to estimate the effect of each choice using Nested Monte-Carlo Search (NMCS), a form of Monte-Carlo Tree Search.  We implement this as the NMCS choice model as the following example, using the same expression generator as above, demonstrates:
+
+	using DataGenerators
+	
+	@generator ExprGen begin
+	  start() = expression()
+	  expression() = operand() *  operator() * operand()
+	  operand() = "(" * expression() * ")"
+	  operand() = (choose(Bool) ? "-" : "") * join(plus(digit))
+	  digit() = choose(Int,0,9)
+	  operator() = "+"
+	  operator() = "-"
+	  operator() = "/"
+	  operator() = "*"
+	end
+		
+	# define fitness function for a single datum (penalty value of 1000 if a limit was reached in the generator)
+	# target is expression of length 100
+	fitness(expr) = expr == nothing ? 1000 : abs(100 - length(expr))
+		
+	# create a generator instance
+	eg = ExprGen()
+	
+	# set NMCS choice model: the second parameter is a fitness function applied to the generated datum,
+	# and the third number of choices to evaluate at each choice point: higher numbers improve accuracy 
+	# at the cost of time taken to generate
+	# note that the original choice model is retained as the policy used by NMCS
+	setnmcschoicemodel!(eg, fitness, 2)
+	
+	# generate using the NMCS choice model
+	choose(eg)
+
+
+See our papers "[Generating Structured Test Data with Specific Properties using Nested Monte-Carlo Search](http://www.robertfeldt.net/publications/poulding_2014_godeltest_with_nmcs.html)" [2] and "[The Automated Generation of Human-Comprehensible XML Test Sets](http://www.simonpoulding.net/papers/nasbase_2015_preprint.pdf) [3] for examples of this technique applied to generating trees and XML respectively.
+
+
 #### Re-estimating the Choice Model
 
-A second approach for optimising choice model parameters is to re-estimate these parameters from choices made when generating those data which have characteristics closest to those desired.  This approach uses *generation traces* -- records of the choices made -- that can be obtained by using `generate` instead of `choose` to execute the generator.  In the following example, this technique is applied to the same expression generator as above:
+A second approach for optimising choice model parameters is to re-estimate these parameters from choices made when generating data that has the desired characteristics.  This approach uses *generation traces* -- records of the choices made -- that can be obtained by using `generate` instead of `choose` to execute the generator.  In the following example, this technique is applied to the same expression generator as in the two examples above:
 
+	using DataGenerators
+	
 	# generator for arithmetic expressions
-	julia> @generator ExprGen begin
+	@generator ExprGen begin
 	  start() = expression()
 	  expression() = operand() *  operator() * operand()
 	  operand() = "(" * expression() * ")"
@@ -297,12 +333,11 @@ A second approach for optimising choice model parameters is to re-estimate these
 	end
 	
 	# create a generator instance
-	julia> eg = ExprGen()
-	data generator ExprGen with 5 choice points using sampler choice model
+	eg = ExprGen()
 	
-	# execute the generator 200 times, keeping traces where the expression length is within 20% of the target
-	julia> besttraces = Vector{Any}()
-	julia> for i in 1:200
+	# execute the generator 200 times, keeping traces where the expression length is within 20% of the target length
+	besttraces = Vector{Any}()
+	for i in 1:200
 		try
 			expr, state = generate(eg)
 			if 80 <= length(expr) <= 120
@@ -310,7 +345,7 @@ A second approach for optimising choice model parameters is to re-estimate these
 			end
 		catch _e
 			if !isa(_e, GenerationTerminatedException)
-				rethrow(_e)
+				throw(_e)
 			end
 		end
 	end
@@ -318,50 +353,12 @@ A second approach for optimising choice model parameters is to re-estimate these
 	# re-estimate choice model parameters from the best traces
 	estimateparams!(choicemodel(eg), besttraces)
 	
-	# now use the updated choice model
-	julia> length(choose(eg))
-	166	
+	# generate using the optimised choice model
+	choose(eg)
 
 
-See our paper "[Automated Random Testing in Multiple Dispatch Languages](http://www.simonpoulding.net/papers/icst_2017_preprint.pdf)" [7] for an example of this technique applied to the automated generation of data to test Julia functions.
+See our paper "[Automated Random Testing in Multiple Dispatch Languages](http://www.simonpoulding.net/papers/icst_2017_preprint.pdf)" [7] for an example of this technique applied to the automated generation of typed data for testing Julia functions.
 
-#### Optimising the Generation Process
-
-An alternative to optimising the choice model parameters is to optimise each choice made by the generator.  One method to do this is to 'look ahead' to estimate the effect of each choice using Nested Monte-Carlo Search (NMCS), a form of Monte-Carlo Tree Search.  We implement this as the NMCS choice model as the following example, using the same expression generator as above, demonstrates:
-
-**Note that there is currently a bug in the NMCS choice model: avoid this example**
-
-	# generator for arithmetic expressions
-	julia> @generator ExprGen begin
-	  start() = expression()
-	  expression() = operand() *  operator() * operand()
-	  operand() = "(" * expression() * ")"
-	  operand() = (choose(Bool) ? "-" : "") * join(plus(digit))
-	  digit() = choose(Int,0,9)
-	  operator() = "+"
-	  operator() = "-"
-	  operator() = "/"
-	  operator() = "*"
-	end
-		
-	# define fitness function for a single expression (penalty value of 1000 if a limit was reached in the generator)
-	julia> fitness(expr) = expr == nothing ? 1000 : abs(100 - length(expr))
-		
-	# create a generator instance
-	julia> eg = ExprGen()
-	data generator ExprGen with 5 choice points using sampler choice model
-	
-	# set NMCS choice model: the second parameter is a fitness function applied to the generated datum, and the number of choices
-	# to evaluate at each choice point
-	julia> setnmcschoicemodel!(eg, fitness, 4)
-	data generator ExprGen with 5 choice points using NMCS choice model (policy: sampler choice model)
-	# note that the original choice model is retained as the policy used by NMCS
-	
-	# generate using the NMCS choice model
-	julia> length(choose(eg))
-
-
-See our paper "[Generating Structured Test Data with Specific Properties using Nested Monte-Carlo Search](http://www.robertfeldt.net/publications/poulding_2014_godeltest_with_nmcs.html)" [1] for an example of this technique applied to generating trees of a specified size and depth.
 
 
 ## References
@@ -372,11 +369,13 @@ DataGenerators is based in a number of research articles describing our approach
 
 [2] S. Poulding and R. Feldt, "[Generating Structured Test Data with Specific Properties using Nested Monte-Carlo Search](http://www.robertfeldt.net/publications/poulding_2014_godeltest_with_nmcs.html)", GECCO 2014
 
-[3] S. Poulding and R. Feldt, "[Re-using Generators of Complex Test Data](http://www.robertfeldt.net/publications/poulding_2015_reusing_generators_complex_test_data.html)", ICST 2015
+[3] S. Poulding and R. Feldt, "[The Automated Generation of Human-Comprehensible XML Test Sets](http://www.simonpoulding.net/papers/nasbase_2015_preprint.pdf), NasBASE, 2015
 
-[4] R. Feldt and S. Poulding, "[Broadening the Search in Search-Based Software Testing: It Need Not Be Evolutionary](http://www.robertfeldt.net/publications/feldt_2015_broadening_the_sbst_search.html)", SBST 2015
+[4] S. Poulding and R. Feldt, "[Re-using Generators of Complex Test Data](http://www.robertfeldt.net/publications/poulding_2015_reusing_generators_complex_test_data.html)", ICST 2015 
 
-[5] R. Feldt, S. Poulding, D. Clark and S. Yoo, "[Test Set Diameter: Quantifying the Diversity of Sets of Test Cases](http://www.robertfeldt.net/publications/feldt_2015_test_set_diameter.html)", ICST 2016
+[5] R. Feldt and S. Poulding, "[Broadening the Search in Search-Based Software Testing: It Need Not Be Evolutionary](http://www.robertfeldt.net/publications/feldt_2015_broadening_the_sbst_search.html)", SBST 2015
 
-[6] S. Poulding and R. Feldt, "[Automated Random Testing in Multiple Dispatch Languages](http://www.simonpoulding.net/papers/icst_2017_preprint.pdf)", ICST 2017
+[6] R. Feldt, S. Poulding, D. Clark and S. Yoo, "[Test Set Diameter: Quantifying the Diversity of Sets of Test Cases](http://www.robertfeldt.net/publications/feldt_2015_test_set_diameter.html)", ICST 2016
+
+[7] S. Poulding and R. Feldt, "[Automated Random Testing in Multiple Dispatch Languages](http://www.simonpoulding.net/papers/icst_2017_preprint.pdf)", ICST 2017
 

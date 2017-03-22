@@ -70,11 +70,12 @@ function godelnumber(cm::NMCSChoiceModel, cc::ChoiceContext)
 	while (s < cm.samplesize) && ((s < cm.minimumsamplesize) || ((validruledepth) && (cm.totalsamplecount < cm.totalsamplelimit)))
 		s += 1
 		cm.totalsamplecount += 1
-		generator = deepcopy(cc.derivationstate.generator)
+		simulationgenerator = deepcopy(cc.derivationstate.generator)
 		simulationcm = NMCSSimulationChoiceModel(deepcopy(cm.policychoicemodel), deepcopy(existinggodelsequence), deepcopy(existingtracesequence))
+		setchoicemodel!(simulationgenerator, simulationcm)
 		result, state = nothing, nothing
 		try
-			result, state = generate(generator; choicemodel=simulationcm, maxchoices=cc.derivationstate.maxchoices)
+			result, state = generate(simulationgenerator; maxchoices=cc.derivationstate.maxchoices)
 		catch e
 		  if isa(e,GenerationTerminatedException)
 				continue # skip the remainder of this loop iteration
