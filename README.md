@@ -1,6 +1,12 @@
 # DataGenerators
 
-DataGenerators is a data generation package for [Julia](http://julialang.org/). It can use search and optimisation techniques to find data that, for example, can improve software testing by generating more effective test data.
+[![Build Status](https://travis-ci.org/simonpoulding/DataGenerators.jl.svg?branch=master)](https://travis-ci.org/simonpoulding/DataGenerator.jl)
+
+[![Coverage Status](https://coveralls.io/repos/simonpoulding/DataGenerators.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/simonpoulding/DataGenerators.jl?branch=master)
+
+[![codecov.io](http://codecov.io/github/simonpoulding/DataGenerators.jl/coverage.svg?branch=master)](http://codecov.io/github/simonpoulding/DataGenerators.jl?branch=master)
+
+DataGenerators is a data generation package. It enables the generators for structured data to be defined in a natural manner as Julia functions.  It can apply search and optimisation techniques to find data that, for example, can improve software testing by generating more effective test data.
 
 You can write your own data generators utilizing the full power of Julia, or use the [DataGeneratorTranslators](https://github.com/simonpoulding/DataGeneratorTranslators.jl) package to automatically create data generators from specifications such as Backus-Naur Form (BNF), XML Schema Definition (XSD), and regular expressions.
 
@@ -93,7 +99,6 @@ The Julia built-in function `rand` could be used instead of `choose` when random
 Although generator rule-functions resemble the production rules of a formal grammar, they differ in that they are functions written in a Turing complete language, here Julia.  This is one of the distinguising features of `DataGenerators`.  It enables rule-functions to be much expressive and compact than formal production rules since, like any other Julia functions, rule-functions can use all the features of the Julia standard library and installed packages.  For example, the `NumXStrGen` generator above uses the function `join` from the standard library to concenate the items in a list to form a string.
 
 The rule-functions need not be limited to short-form function syntax such as `item() = choose(Int,0,9)`. Longer-form syntax may also be used in generators, including functions with local variables:
-
 
 	julia> @generator FibStrGen begin
 		start() = begin
