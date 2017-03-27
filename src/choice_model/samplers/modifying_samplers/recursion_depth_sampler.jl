@@ -15,15 +15,11 @@ type RecursionDepthSampler <: ModifyingSampler
 	depthsamplers::Vector{Sampler}
 	function RecursionDepthSampler(basesampler::Sampler, maxdepth::Int=1, depthparams=Vector{Float64}[])
 		(maxdepth > 0) || error("Max depth must be 1 or more")
-		depthsamplers = Sampler[]
-		for d in 1:maxdepth
-			depthsampler = deepcopy(basesampler)
-			if d <= length(depthparams)
-				setparams!(depthsampler, depthparams[d])
-			end
-			push!(depthsamplers, depthsampler)
+		s = new([deepcopy(basesampler) for d in 1:maxdepth])
+		if !isempty(depthparams)
+			setparams!(s, depthparams)
 		end
-		new(depthsamplers)
+		s
 	end
 end
 

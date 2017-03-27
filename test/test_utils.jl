@@ -32,10 +32,14 @@ import DataGenerators: getcurrentrecursiondepth, getimmediateancestorcpseqnumber
 
 # for all apart from the ConditionalSampler, the choice context is not required
 type DummyDerivationState <: DataGenerators.DerivationState
+	currentrecursiondepth::Int
+	function DummyDerivationState()
+		new(1)
+	end
 end
 
 # required for sampler choice model
-getcurrentrecursiondepth(st::DummyDerivationState) = 1
+getcurrentrecursiondepth(st::DummyDerivationState) = st.currentrecursiondepth
 getimmediateancestorcpseqnumber(st::DummyDerivationState) = 0
 
 dummyChoiceContext() = DataGenerators.ChoiceContext(DummyDerivationState(), :rule, 0, Int, 0, 0)
