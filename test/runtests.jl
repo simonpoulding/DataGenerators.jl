@@ -12,15 +12,15 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 	include("test_utils.jl")
 
 	@testset "core" begin
-	    include(joinpath("core","generator_methods.jl"))
-	    include(joinpath("core","sequence_choice_points.jl"))
-	    include(joinpath("core","rule_choice_points.jl"))
-	    include(joinpath("core","value_choice_points.jl"))
-	    include(joinpath("core","string_value_choice_points.jl"))
-	    include(joinpath("core","subgenerators.jl"))
-	    include(joinpath("core","metadata.jl"))
-	    include(joinpath("core","generate.jl"))
-	    include(joinpath("core","generator_scope.jl"))
+	    # include(joinpath("core","generator_methods.jl"))
+	    # include(joinpath("core","sequence_choice_points.jl"))
+	    # include(joinpath("core","rule_choice_points.jl"))
+	    # include(joinpath("core","value_choice_points.jl"))
+	    # include(joinpath("core","string_value_choice_points.jl"))
+	    # include(joinpath("core","subgenerators.jl"))
+	    # include(joinpath("core","metadata.jl"))
+	    # include(joinpath("core","generate.jl"))
+	    # include(joinpath("core","generator_scope.jl"))
 	end
 	
 	@testset "internals" begin
@@ -33,13 +33,14 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 		include(joinpath("internals","uniform_sampler.jl"))
 		include(joinpath("internals","normal_sampler.jl"))
 		include(joinpath("internals","mixture_sampler.jl"))
-	    include(joinpath("internals","adjust_parameters_to_support_sampler.jl"))
-	    include(joinpath("internals","align_minimum_support_sampler.jl"))
+		include(joinpath("internals","adjust_parameters_to_support_sampler.jl"))
+		include(joinpath("internals","align_minimum_support_sampler.jl"))
 		include(joinpath("internals","recursion_depth_sampler.jl"))
 			# include(joinpath("internals","_truncate_to_support_sampler.jl"))
 			# include(joinpath("internals","_transform_sampler.jl"))
 			# include(joinpath("internals","_constrain_parameters_sampler.jl"))
 		include(joinpath("internals","sampler_choice_model.jl"))
+		include(joinpath("internals","nmcs_choice_model.jl"))
 	end
 
 	@testset "examples" begin
