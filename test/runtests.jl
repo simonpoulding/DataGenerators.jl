@@ -12,15 +12,15 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 	include("test_utils.jl")
 
 	@testset "core" begin
-	    # include(joinpath("core","generator_methods.jl"))
-	    # include(joinpath("core","sequence_choice_points.jl"))
-	    # include(joinpath("core","rule_choice_points.jl"))
-	    # include(joinpath("core","value_choice_points.jl"))
-	    # include(joinpath("core","string_value_choice_points.jl"))
-	    # include(joinpath("core","subgenerators.jl"))
-	    # include(joinpath("core","metadata.jl"))
-	    # include(joinpath("core","generate.jl"))
-	    # include(joinpath("core","generator_scope.jl"))
+	    include(joinpath("core","generator_methods.jl"))
+	    include(joinpath("core","sequence_choice_points.jl"))
+	    include(joinpath("core","rule_choice_points.jl"))
+	    include(joinpath("core","value_choice_points.jl"))
+	    include(joinpath("core","string_value_choice_points.jl"))
+	    include(joinpath("core","subgenerators.jl"))
+	    include(joinpath("core","metadata.jl"))
+	    include(joinpath("core","generate.jl"))
+	    include(joinpath("core","generator_scope.jl"))
 	end
 	
 	@testset "internals" begin
