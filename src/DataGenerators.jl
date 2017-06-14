@@ -11,6 +11,7 @@ export register, generatorfor
 
 # exported choice models application function
 export setsimplechoicemodel!, setsamplerchoicemodel!, setnmcschoicemodel!, mctschoicemodel!
+export GEChoiceModel
 
 # exported Choice Model functions
 export paramranges, setparams!, getparams, numparams, estimateparams!, estimateconditionalmodel!

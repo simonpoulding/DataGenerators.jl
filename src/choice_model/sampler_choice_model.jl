@@ -99,13 +99,15 @@ function godelnumber(cm::SamplerChoiceModel, cc::ChoiceContext)
 end
 
 
-# Note: paramranges, setparams and getparams the following assumption: the iteration order of values from
-# the samplers dictionary remains consistent (it need not be the order in which entries are initially specified)
+# Note: paramranges, setparams and getparams the following assumption: to guarantee the ordering both within a session, 
+# and across all uses of the same generator, the samplers are accessed in sort order of the key.
+# (Currently the key is a UInt that is assigned in a deterministic order in the generator macro.)
 
 # get parameter ranges for all samplers
 function paramranges(cm::SamplerChoiceModel)
 	ranges = Tuple{Float64,Float64}[]
-	for sampler in values(cm.samplers)
+	for k in sort(collect(keys(cm.samplers))) # guarantees ordering
+		sampler = cm.samplers[k]
 		ranges = [ranges; paramranges(sampler)]
 	end
 	ranges
@@ -118,7 +120,8 @@ function setparams!(cm::SamplerChoiceModel, params)
 		error("expected $(numparams(cm)) model parameter(s), but got $(length(params))")
 	end
 	idx = 1
-	for sampler in values(cm.samplers)
+	for k in sort(collect(keys(cm.samplers))) # guarantees ordering
+		sampler = cm.samplers[k]
 		nparams = numparams(sampler)
 		# TODO replace this with a check on getnummodelparams
 		@assert (idx+nparams-1)<=length(params)
@@ -132,7 +135,8 @@ end
 # get parameters of all samplers
 function getparams(cm::SamplerChoiceModel)
 	params = (Float64)[]
-	for sampler in values(cm.samplers)
+	for k in sort(collect(keys(cm.samplers))) # guarantees ordering
+		sampler = cm.samplers[k]
 		params = [params; getparams(sampler)]
 	end
 	params
