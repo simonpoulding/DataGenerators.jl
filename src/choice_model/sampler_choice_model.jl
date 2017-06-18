@@ -19,9 +19,13 @@ type SamplerChoiceModel <: ChoiceModel
 	end
 end
 
+function SamplerChoiceModel(g::Generator; choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
+	SamplerChoiceModel(choicepointinfo(g), choicepointmapping, maxresamplings)
+end
 
 function setsamplerchoicemodel!(g::Generator; choicepointmapping::Function=defaultchoicepointmapping, maxresamplings::Int=9)
-	setchoicemodel!(g, SamplerChoiceModel(choicepointinfo(g), choicepointmapping, maxresamplings))
+	Base.depwarn("Use setchoicemodel!(g, SamplerChoiceModel(g, ...)) in place of setsamplerchoicemodel!(g, ...)", :setsamplerchoicemodel!)
+	setchoicemodel!(g, SamplerChoiceModel(g, choicepointmapping=choicepointmapping, maxresamplings=maxresamplings))
 end
 
 

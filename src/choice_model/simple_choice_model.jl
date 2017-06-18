@@ -5,6 +5,7 @@
 type SimpleChoiceModel <: ChoiceModel; end
 	
 function setsimplechoicemodel!(g::Generator)
+	Base.depwarn("Use setchoicemodel!(g, SimpleChoiceModel()) in place of setsimplechoicemodel!(g, ...)", :setsimplechoicemodel!)
 	setchoicemodel!(g, SimpleChoiceModel())
 end
 

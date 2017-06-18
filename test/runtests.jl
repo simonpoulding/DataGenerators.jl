@@ -42,6 +42,7 @@ const ALPHA = 0.01 # significance level for @mtests based on hypothesis test
 		include(joinpath("internals","sampler_choice_model.jl"))
 		include(joinpath("internals","nmcs_choice_model.jl"))
 		include(joinpath("internals","ge_choice_model.jl"))
+		include(joinpath("internals","switch_choice_model.jl"))
 	end
 
 	@testset "examples" begin

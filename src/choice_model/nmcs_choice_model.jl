@@ -46,9 +46,13 @@ type NMCSChoiceModel <: ChoiceModel
 	end
 end
 
+function NMCSChoiceModel(g::Generator, fitnessfunction::Function, samplesize::Int=1; minimumsamplesize::Int=0, totalsamplelimit::Int=typemax(Int), ruledepthlimit::Int=typemax(Int))
+	NMCSChoiceModel(choicemodel(g), fitnessfunction, samplesize, minimumsamplesize, totalsamplelimit, ruledepthlimit)
+end
 
 function setnmcschoicemodel!(g::Generator, fitnessfunction::Function, samplesize::Int=1; minimumsamplesize::Int=0, totalsamplelimit::Int=typemax(Int), ruledepthlimit::Int=typemax(Int))
-	setchoicemodel!(g, NMCSChoiceModel(choicemodel(g), fitnessfunction, samplesize, minimumsamplesize, totalsamplelimit, ruledepthlimit))
+	Base.depwarn("Use setchoicemodel!(g, NMCSChoiceModel(g, ...)) in place of setnmcschoicemodel!(g, ...)", :setnmcschoicemodel!)
+	setchoicemodel!(g, NMCSChoiceModel(g, fitnessfunction, samplesize; minimumsamplesize=minimumsamplesize, totalsamplelimit=totalsamplelimit, ruledepthlimit=ruledepthlimit))
 end
 
 # reset any state 

@@ -21,13 +21,13 @@ end
 
 	    gn = NMCExampleGen()
 		
-		setsamplerchoicemodel!(gn)
-		setnmcschoicemodel!(gn, x->1.0)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
+		setchoicemodel!(gn, NMCSChoiceModel(gn, x->1.0))
 		cm = choicemodel(gn)
 		
 	    @test typeof(cm) == DataGenerators.NMCSChoiceModel
 
-		setnmcschoicemodel!(gn, x->1.0)
+		setchoicemodel!(gn, NMCSChoiceModel(gn, x->1.0))
 		cm2 = choicemodel(gn)
 
 	    @test typeof(cm2) == DataGenerators.NMCSChoiceModel
@@ -39,9 +39,9 @@ end
 
 	    gn = NMCExampleGen()
 	
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 		scm = deepcopy(choicemodel(gn))
-		setnmcschoicemodel!(gn, x->1.0)
+		setchoicemodel!(gn, NMCSChoiceModel(gn, x->1.0))
 		cm = choicemodel(gn)
 
 		@testset "paramranges" begin
@@ -68,9 +68,9 @@ end
 	@testset "always successful with sufficient samplesize" begin
 	
 		gn = NMCXListGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 		fitness(x) = abs(length(x)-20)
-		setnmcschoicemodel!(gn, fitness, 10)
+		setchoicemodel!(gn, NMCSChoiceModel(gn, fitness, 10))
 	
 		@mtestset "length is always 20" begin
 			y = choose(gn)
@@ -82,9 +82,9 @@ end
 	@testset "sometimes unsuccessful with insufficient samplesize" begin
 	
 		gn = NMCXListGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 		fitness(x) = abs(length(x)-20)
-		setnmcschoicemodel!(gn, fitness, 1)
+		setchoicemodel!(gn, NMCSChoiceModel(gn, fitness, 1))
 	
 		@mtestset "length is sometimes not 20" begin
 			y = choose(gn)
@@ -96,9 +96,9 @@ end
 	@testset "sometimes successful with inbetween samplesize" begin
 	
 		gn = NMCXListGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 		fitness(x) = abs(length(x)-20)
-		setnmcschoicemodel!(gn, fitness, 2)
+		setchoicemodel!(gn, NMCSChoiceModel(gn, fitness, 2))
 	
 		@mtestset "length is sometimes 20" begin
 			y = choose(gn)
@@ -110,9 +110,9 @@ end
 	@testset "state is reset on each choice" begin
 	
 		gn = NMCXYListGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 		fitness(x) = abs(length(x)-20)
-		setnmcschoicemodel!(gn, fitness, 10)
+		setchoicemodel!(gn, NMCSChoiceModel(gn, fitness, 10))
 	
 		@mtestset "length is always 40 but values are different" begin
 			y = choose(gn)

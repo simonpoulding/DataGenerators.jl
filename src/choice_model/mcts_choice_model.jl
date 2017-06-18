@@ -51,9 +51,13 @@ type MCTSChoiceModel <: ChoiceModel
 	end
 end
 
+function MCSTChoiceModel(g::Generator, rewardfunction::Function, visitbudget::Int=1, samplesize::Int=1, cp::Real=1/sqrt(2.0))
+	MCSTChoiceModel(choicemodel(g), rewardfunction, visitbudget, samplesize, cp)
+end
 
-function mctschoicemodel!(g::Generator, rewardfunction::Function, visitbudget::Int=1, samplesize::Int=1, cp::Real=1/sqrt(2.0))
-	setchoicemodel!(g, MCTSChoiceModel(choicemodel(g), rewardfunction, visitbudget, samplesize, cp))
+function setmctschoicemodel!(g::Generator, rewardfunction::Function, visitbudget::Int=1, samplesize::Int=1, cp::Real=1/sqrt(2.0))
+	Base.depwarn("Use setchoicemodel!(g, MCTSChoiceModel(g, ...)) in place of setmtcschoicemodel!(g, ...)", :setmctschoicemodel!)
+	setchoicemodel!(g, MCTSChoiceModel(g, rewardfunction, visitbudget, samplesize, cp))
 end
 
 # reset any state 

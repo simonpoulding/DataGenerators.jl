@@ -205,13 +205,13 @@ Each type choice model provided by `DataGenerators` supplies a function that set
 	julia> g = SmallIntGen()
 	data generator SmallIntGen with 1 choice points using sampler choice model
 	
-	julia> setsimplechoicemodel!(g)
+	julia> setchoicemodel!(g, SimpleChoiceModel())
 	data generator SmallIntGen with 1 choice points using simple choice model
 	
-	julia> setsamplerchoicemodel!(g)
+	julia> setchoicemodel!(g, SamplerChoiceModel(g))
 	data generator SmallIntGen with 1 choice points using sampler choice model
 	
-	julia> setnmcschoicemodel!(g, x->length(x))
+	julia> setchoicemodel!(g, NMCSChoiceModel(g, x->length(x)))
 	data generator SmallIntGen with 1 choice points using NMCS choice model (policy: sampler choice model)
 
 The *simple choice model* is a naive stochastic choice model that is used mainly for testing the `DataGenerators` package.  The *NMCS choice model* is described below in the section 'Optimising the Generation Process'.
@@ -309,7 +309,7 @@ An alternative to optimising the choice model parameters is to optimise each cho
 	# and the third number of choices to evaluate at each choice point: higher numbers improve accuracy 
 	# at the cost of time taken to generate
 	# note that the original choice model is retained as the policy used by NMCS
-	setnmcschoicemodel!(eg, fitness, 2)
+	setchoicemodel!(eg, NMCSChoiceModel(eg, fitness, 2))
 	
 	# generate using the NMCS choice model
 	choose(eg)

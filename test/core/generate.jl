@@ -176,7 +176,7 @@ end
 		# note that to force sufficiently long sequences to reach the default limit
 		# we need to use the sampler choice model rather than a default choice model
 		# (but sampler choice model itself is only tested later)
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 		
 		# sampler choice model should have a single parameter that controls the geometric distribution
 		# set this to a value close to zero so that median length is much larger than the default maxseqreps

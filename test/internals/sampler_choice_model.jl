@@ -49,7 +49,7 @@ end
 	@testset "constructor" begin
 
 	    gn = SCMGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 	    @test typeof(cm) == DataGenerators.SamplerChoiceModel
 
@@ -58,7 +58,7 @@ end
 	@testset "set/get parameters and ranges" begin
 
 		gn = SCMGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 
 		@testset "paramranges" begin
@@ -84,7 +84,7 @@ end
 	@testset "rule choice point" begin
 
 		gn = SCMRuleGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
@@ -128,7 +128,7 @@ end
 	@testset "sequence choice point" begin
 
 		gn = SCMRepsGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
@@ -196,7 +196,7 @@ end
 	@testset "Bool value choice point" begin
 
 		gn = SCMChooseBoolGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
@@ -232,7 +232,7 @@ end
 	@testset "Int value choice point" begin
 
 		gn = SCMChooseIntGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
@@ -325,7 +325,7 @@ end
 	@testset "Float64 value choice point" begin
 
 		gn = SCMChooseFloat64Gen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 		cpi = choicepointinfo(gn)
 		cpids = collect(keys(cpi))
@@ -404,7 +404,7 @@ end
 	@testset "generate for model with multiple choice points" begin
 
 		gn = SCMChooseStringGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    cm = choicemodel(gn)
 	
 		@mtestset "full range of values generated using choice model" reps=Main.REPS alpha=Main.ALPHA begin
@@ -441,7 +441,7 @@ end
 			end
 		end
 
-		setsamplerchoicemodel!(gn, choicepointmapping=nondefaultmapping)
+		setchoicemodel!(gn, SamplerChoiceModel(gn, choicepointmapping=nondefaultmapping))
 	    cm = choicemodel(gn)
 	
 		@test length(cm.samplers) == 1
@@ -453,7 +453,7 @@ end
 	@testset "estimate parameters" begin
 	
 		gn = SCMEstimateParamsGen()
-		setsamplerchoicemodel!(gn)
+		setchoicemodel!(gn, SamplerChoiceModel(gn))
 	    scm1 = choicemodel(gn)
 		scm2 = deepcopy(scm1)
 

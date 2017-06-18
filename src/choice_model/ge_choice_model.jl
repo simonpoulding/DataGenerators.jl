@@ -72,8 +72,4 @@ end
 
 paramranges(cm::GEChoiceModel) = fill((Float64(0),Float64(typemax(UInt32))), length(cm.genome))
 
-
-setgechoicemodel!(g::Generator, genomelength) = setchoicemodel!(g, GEChoiceModel(genomelength))
-
-
 show(io::IO, cm::GEChoiceModel) = print(io, "Grammmatical Evolution choice model (genome: ", cm.genome, ")")
