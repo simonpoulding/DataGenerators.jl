@@ -44,6 +44,10 @@ end
     start() = choose(Int32,-1000,2000)
 end
 
+@generator VCUIntNoRangeGen begin
+    start() = choose(UInt)
+end
+
 @generator VCUIntGen begin
     start() = choose(UInt,4,420)
 end
@@ -174,6 +178,18 @@ end
 		    td = choose(gn)
 		    @test typeof(td) == Int32
 		    @test -1000 <= td <= 2000
+		    @mtest_values_vary td
+		end
+
+	end
+
+	@testset "choose(UInt) with no min nor max specified" begin
+
+		gn = VCUIntNoRangeGen()
+
+		@mtestset reps=Main.REPS alpha=Main.ALPHA begin
+		    td = choose(gn)
+		    @test typeof(td) == UInt
 		    @mtest_values_vary td
 		end
 

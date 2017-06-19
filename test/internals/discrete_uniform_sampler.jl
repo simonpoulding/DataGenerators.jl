@@ -123,11 +123,12 @@
 					@mtest_that_sometimes q2 <= x < q3
 					@mtest_that_sometimes q3 <= x
 				end
-				
-				@testset "range check exception" begin
-		            params[pidx] = bidx == 1 ? prevfloat(pr[bidx]) : nextfloat(pr[bidx])
-		            @test_throws ErrorException DataGenerators.setparams!(s, params)
-				end
+
+				# currently redundant since parameters are adjusted within setparams!
+				# @testset "range check exception" begin
+				# 		            params[pidx] = bidx == 1 ? prevfloat(pr[bidx]) : nextfloat(pr[bidx])
+				# 		            @test_throws ErrorException DataGenerators.setparams!(s, params)
+				# end
 				
 			end
 

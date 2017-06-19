@@ -20,14 +20,26 @@ type DiscreteUniformSampler <: DiscreteDistributionSampler
 end
 
 function setparams!(s::DiscreteUniformSampler, params)
-	checkparamranges(s, params)
 	# note the paramranges check will trap an attempt to sample from the entire UInt range: this cannot be supported
 	# since Distributions.Uniform currently only supports Int range (and then only with the workaround below using a Mixture Model)
+	# therefore adjust parameters and warn
+	adjparams = deepcopy(params)
+	for i in 1:length(adjparams)
+		if adjparams[i] < Float64(typemin(Int))
+			warn("Adjusting parameters of discrete uniform sampler to typemin(Int)")
+			adjparams[i] = Float64(typemin(Int))
+		end
+		if adjparams[i] > Float64(typemax(Int))
+			warn("Adjusting parameters of discrete uniform sampler to typemax(Int)")
+			adjparams[i] = Float64(typemax(Int))
+		end
+	end
+	checkparamranges(s, adjparams)
 	# swap parameters if necessary (as a silent repair during search)
-	if params[1] <= params[2]
-		a, b = params[[1,2]]
+	if adjparams[1] <= adjparams[2]
+		a, b = adjparams[[1,2]]
 	else
-		a, b = params[[2,1]]
+		a, b = adjparams[[2,1]]
 	end
 	# convert to Int, but with a check to avoid InexactError when at bounds since params will be Float64 and imprecision means
 	# that the values can be outside range	
